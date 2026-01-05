@@ -1,0 +1,123 @@
+
+# {"anthropicVersion":"bedrock-2023-05-31","maxTokens":65000,"model":"us.anthropic.claude-sonnet-4-5-20250929-v1:0","temperature":0.8,"topK":500}
+
+<context>
+You are creating a choose-your-own-adventure game. The best choices should lead to the best outcome. Some choices can be puzzles the player needs to figure out or remember. You are creating a plan for the game that will be used in subsequent LLM prompts to generate the narrative and choices.
+</context>
+<instructions>
+Come up with the plan for a choose-your-own-adventure story based on the theme and sample of the inspiration words provided.
+
+- Create a story title
+  - Image description to be passed to an LLM to generate an image
+- Create a cast of characters (up to 5 + narrator)
+  - Name, themed with the content
+    - NEVER put anything but a name -- this value is displayed to the player
+  - Image description to be passed to an LLM to generate an image
+  - Voice actor
+    - Female: "Danielle", "Joanna", "Ruth", or "Salli"
+    - Male: "Matthew" or "Stephen"
+    - ONLY THOSE VOICE ACTORS ARE AVAILABLE
+    - EACH VOICE ACTER CAN ONLY BE USED ONCE
+  - Not all will be encountered in all paths
+  - One character should be the narrator named "Narrator" (no image required)
+    - The narrator needs a voice actor
+- Create a list of possible inventory items
+  - Create the number of items requested
+  - Name of each item, themed with content
+    - NEVER put anything but a name -- this value is displayed to the player
+  - Image description to be passed to an LLM to generate an image
+- Create a list of possible key information
+  - Key information might includes numbers, combinations, words, or phrases
+  - Key numbers must be at least 4 digits
+  - Key information, especially combinations, can be hidden (for example, as a date or time)
+- Create a list of red herring informtion
+  - Red herrings might include numbers, combinations, words, or phrases
+- Create a loss condition
+  - Create a resource name, themed with the content
+    - NEVER put anything but a name -- this value is displayed to the player
+  - The resource needs to be countable (hours, money, etc) or a percent (% lamp oil remaining, etc) NOT something general like time (instead do hours, days, etc)
+  - Resource image description to be passed to an LLM to generate an image
+  - If the condition is `accumulate`, wrong answers add resources
+  - If the condition is `reduce`, wrong answers reduce resources
+  - Generate a starting amount
+  - Determine a loss threshold
+    - Reaching the threshold makes the player lose the game
+- Create a plan for choices
+  - Suggest a number of choice points based on the count provided
+  - Choices can be a puzzle -- anything the player can choose
+  - Each choice needs a narrative
+  - Determine what the player will discover in the narrative
+    - Characters, if any
+    - Inventory items, if any
+    - Key information, if any
+    - Red herrings, if any
+  - Determine what the player will use or lose in the narrative
+  - Determine what choice the player will need to make
+    - Every choice should be a puzzle
+    - Later choices should be harder puzzles
+    - Consider what the player has learned previously (for example, say in choice 1 that the building was established in 1847 then in choice 5 ask for the PIN on a keypad and give 1847 as an option)
+    - Choices should be generic (for example, how to open a box) rather than specific (NOT go to the church and open the donation box)
+    - Choices should NOT directly ask what is a clue or puzzle answer
+      - BAD: 1887 is a combinations
+      - GOOD: What is the combination? (with options 1887, 1934, 1415, and 2003)
+      - BAD: What should you do next? (with option "wait for midnight when guards change shift)
+      - GOOD: When should you sneak in?
+      - BAD: Which of these is the most significant?
+      - GOOD: Which of these should you examine first?
+  - Generate possible options
+    - Each option will add or remove resources, as makes sense
+    - Add negative resources to remove them
+    - Make the correct option require EXTREME thought to figure out
+    - NEVER add commentary to an option (BAD: "1887 (when building built)" GOOD: "1887")
+- Create an outline of the story
+  - Describe how the various pieces come together, the consequences of some choices, etc.
+  - Describe the overall plot
+- NOT ALL inspiration words will be used. THINK ABOUT which are best and should be incorporated into the story. You can use inspiration words directly, use related words, or use random words with similar letters, sounds, or meanings to inspiration words.
+- ALL generated content MUST be inoffensive and not emmotionally charged.
+
+Think deeply about the most engaging and challenging story. Who is it important to meet and who should voice them? What information is or is not important? What makes the most sense as a resource? What options should the player encounter? What should the choice consequences be?
+</instructions>
+<output>
+Output your thinking in <thinking> tags followed by valid JSON with the keys with NOTHING ELSE (double-check that your JSON is valid with \n instead of newlines and " escaped):
+
+{
+  "title": "string",
+  "titleImageDescription": "string",
+  "outline": "string",
+  "characters": [
+    { "name": "string", "imageDescription": "string", "voice": "string" }
+  ],
+  "inventory": [
+    { "name": "string", "imageDescription": "string" }
+  ],
+  "keyInformation": ["string"],
+  "redHerrings": ["string"],
+  "resourceName": "string",
+  "startingResourceValue": number,
+  "lossResourceThreshold": number,
+  "choicePoints": [
+    {
+      "inventoryToIntroduce": ["string"],
+      "keyInformationToIntroduce": ["string"],
+      "redHerringsToIntroduce": ["string"]
+      "inventoryOrInformationConsumed": ["string"],
+      "choice": "string",
+      "options": [
+        { "name": "string", "resourcesToAdd": number }
+      ]
+    }
+  ]
+}
+</output>
+
+<input>
+{
+  "storyType": "Classic Adventure: Focuses on exciting journeys, exploration, and external conflicts like treasure hunts or rescue missions.",
+  "choiceCount": 12,
+  "inspirationWords": [ 'scant', 'alone', 'new', 'big', 'greedy', 'actor',   'concession', 'profile', 'pupil', 'ceiling', 'accuracy', 'editor',  'boy', 'top',     'reaction', 'monitor', 'abolish', 'impress', 'criticize', 'devise',  'reduce', 'adopt',   'judge'],
+  "lossCondition": "reduce",
+  "inventoryCount": 5,
+  "keyInformationCount": 5,
+  "redHerringCount": 10
+}
+</input>
