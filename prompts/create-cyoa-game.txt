@@ -1,5 +1,5 @@
 
-# {"anthropicVersion":"bedrock-2023-05-31","maxTokens":65000,"model":"us.anthropic.claude-sonnet-4-5-20250929-v1:0","temperature":0.8,"topK":500}
+# {"anthropicVersion":"bedrock-2023-05-31","maxTokens":75000,"model":"us.anthropic.claude-sonnet-4-5-20250929-v1:0","temperature":0.8,"topK":500}
 
 <context>
 You are creating a choose-your-own-adventure game. The best choices should lead to the best outcome. Some choices can be puzzles the player needs to figure out or remember. You are creating a plan for the game that will be used in subsequent LLM prompts to generate the narrative and choices.
@@ -114,7 +114,7 @@ Output your thinking in <thinking> tags followed by valid JSON with the keys wit
 {
   "storyType": "Classic Adventure: Focuses on exciting journeys, exploration, and external conflicts like treasure hunts or rescue missions.",
   "choiceCount": 12,
-  "inspirationWords": [ 'scant', 'alone', 'new', 'big', 'greedy', 'actor',   'concession', 'profile', 'pupil', 'ceiling', 'accuracy', 'editor',  'boy', 'top',     'reaction', 'monitor', 'abolish', 'impress', 'criticize', 'devise',  'reduce', 'adopt',   'judge'],
+  "inspirationWords": [ 'tight', 'discreet', 'healthy', 'safe', 'snappy','modification', 'conception','virus',        'good','incidence',    'discretion','cloud',        'quality','percentage',   'lane','investigate','cool','argue','tend','dislike','integrate','walk','discover'],
   "lossCondition": "reduce",
   "inventoryCount": 5,
   "keyInformationCount": 5,

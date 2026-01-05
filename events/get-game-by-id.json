@@ -1,0 +1,11 @@
+{
+  "requestContext": {
+    "http": {
+      "method": "GET",
+      "path": "/v1/games/a-friendly-adventure"
+    }
+  },
+  "pathParameters": {
+    "gameId": "a-friendly-adventure"
+  }
+}

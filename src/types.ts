@@ -1,9 +1,46 @@
 export * from 'aws-lambda'
 export { Operation as PatchOperation } from 'fast-json-patch'
 
-// API
+// Game
 
 export type GameId = string
+
+export interface CyoaGame {
+  title: string
+  description: string
+  image?: string
+  outline: string
+  characters: CreateGamePromptCharacter[]
+  inventory: CreateGamePromptInventory[]
+  keyInformation: string[]
+  redHerrings: string[]
+  resourceName: string
+  startingResourceValue: number
+  lossResourceThreshold: number
+  choicePoints: CreateGamePromptChoicePoint[]
+}
+
+export interface CyoaGameSerialized {
+  title: string
+  description: string
+  image?: string
+  resourceName: string
+}
+
+export interface CyoaCharacter {
+  name: string
+  image?: string
+  voice: string
+}
+
+export interface CyoaInventory {
+  name: string
+  image?: string
+}
+
+export interface CyoaOption {
+  narrative: string
+}
 
 // Config
 
@@ -15,6 +52,45 @@ export interface GameTheme {
 // Prompts
 
 export type PromptId = string
+
+export interface CreateGamePromptCharacter {
+  name?: string
+  imageDescription?: string
+  voice?: string
+}
+
+export interface CreateGamePromptInventory {
+  name?: string
+  imageDescription?: string
+}
+
+export interface CreateGamePromptChoicePoint {
+  inventoryToIntroduce?: string[]
+  keyInformationToIntroduce?: string[]
+  redHerringsToIntroduce?: string[]
+  inventoryOrInformationConsumed?: string[]
+  choice?: string
+  options?: CreateGamePromptOption[]
+}
+
+export interface CreateGamePromptOption {
+  name?: string
+  resourcesToAdd?: number
+}
+
+export interface CreateGamePromptOutput {
+  title?: string
+  titleImageDescription?: string
+  outline?: string
+  characters?: CreateGamePromptCharacter[]
+  inventory?: CreateGamePromptInventory[]
+  keyInformation?: string[]
+  redHerrings?: string[]
+  resourceName?: string
+  startingResourceValue?: number
+  lossResourceThreshold?: number
+  choicePoints?: CreateGamePromptChoicePoint[]
+}
 
 export interface PromptConfig {
   anthropicVersion: string
