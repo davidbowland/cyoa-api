@@ -12,6 +12,7 @@ import {
   getGameById,
   getGames,
   getNarrativeById,
+  getNarrativesByIds,
   getPromptById,
   setGameById,
   setNarrativeById,
@@ -23,6 +24,7 @@ jest.mock('@aws-sdk/client-dynamodb', () => ({
   DynamoDB: jest.fn(() => ({
     send: (...args: any[]) => mockSend(...args),
   })),
+  BatchGetItemCommand: jest.fn().mockImplementation((x) => x),
   GetItemCommand: jest.fn().mockImplementation((x) => x),
   PutItemCommand: jest.fn().mockImplementation((x) => x),
   QueryCommand: jest.fn().mockImplementation((x) => x),
@@ -209,6 +211,102 @@ describe('dynamodb', () => {
         },
         TableName: 'narratives-table',
       })
+    })
+  })
+
+  describe('getNarrativesByIds', () => {
+    it('should return empty array when no narrative IDs provided', async () => {
+      const result = await getNarrativesByIds(gameId, [])
+
+      expect(result).toEqual([])
+      expect(mockSend).not.toHaveBeenCalled()
+    })
+
+    it('should return narratives for multiple IDs using BatchGetItemCommand', async () => {
+      const narrativeIds = ['start-0', 'start-1']
+
+      mockSend.mockResolvedValueOnce({
+        Responses: {
+          'narratives-table': [
+            {
+              GameId: { S: gameId },
+              NarrativeId: { S: 'start-0' },
+              Data: { S: JSON.stringify(cyoaNarrative) },
+            },
+            {
+              GameId: { S: gameId },
+              NarrativeId: { S: 'start-1' },
+              GenerationData: { S: JSON.stringify(narrativeGenerationData) },
+            },
+          ],
+        },
+      })
+
+      const result = await getNarrativesByIds(gameId, narrativeIds)
+
+      expect(mockSend).toHaveBeenCalledWith({
+        RequestItems: {
+          'narratives-table': {
+            Keys: [
+              { GameId: { S: gameId }, NarrativeId: { S: 'start-0' } },
+              { GameId: { S: gameId }, NarrativeId: { S: 'start-1' } },
+            ],
+          },
+        },
+      })
+      expect(result).toEqual([
+        { narrativeId: 'start-0', narrative: cyoaNarrative, generationData: undefined },
+        { narrativeId: 'start-1', narrative: undefined, generationData: narrativeGenerationData },
+      ])
+    })
+
+    it('should handle missing narratives by returning empty response', async () => {
+      const narrativeIds = ['missing-1', 'missing-2']
+
+      mockSend.mockResolvedValueOnce({
+        Responses: {
+          'narratives-table': [], // No items found
+        },
+      })
+
+      const result = await getNarrativesByIds(gameId, narrativeIds)
+
+      expect(result).toEqual([])
+    })
+
+    it('should return items in DynamoDB response order', async () => {
+      const narrativeIds = ['start-2', 'start-0', 'start-1']
+      mockSend.mockResolvedValueOnce({
+        Responses: {
+          'narratives-table': [
+            {
+              GameId: { S: gameId },
+              NarrativeId: { S: 'start-0' },
+              Data: { S: JSON.stringify({ ...cyoaNarrative, narrative: 'Narrative 0' }) },
+            },
+            {
+              GameId: { S: gameId },
+              NarrativeId: { S: 'start-1' },
+              Data: { S: JSON.stringify({ ...cyoaNarrative, narrative: 'Narrative 1' }) },
+            },
+          ],
+        },
+      })
+
+      const result = await getNarrativesByIds(gameId, narrativeIds)
+
+      expect(result).toEqual([
+        {
+          narrativeId: 'start-0',
+          narrative: { ...cyoaNarrative, narrative: 'Narrative 0' },
+          generationData: undefined,
+        },
+        {
+          narrativeId: 'start-1',
+          narrative: { ...cyoaNarrative, narrative: 'Narrative 1' },
+          generationData: undefined,
+        },
+      ])
     })
   })
 })

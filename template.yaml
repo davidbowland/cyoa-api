@@ -274,6 +274,77 @@ Resources:
 
   # Narratives
 
+  GetNarrativeByIdFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/get-narrative-by-id.getNarrativeByIdHandler
+      Runtime: nodejs22.x
+      Architectures:
+        - x86_64
+      MemorySize: 1024
+      Description: Retrieve narrative by ID, creating if needed
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - DynamoDBReadPolicy:
+            TableName: !Ref GamesTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref NarrativesTable
+        - Version: 2012-10-17
+          Statement:
+            - Action:
+                - 'lambda:InvokeFunction'
+              Effect: Allow
+              Resource: !GetAtt CreateNarrativeFunction.Arn
+      Environment:
+        Variables:
+          CREATE_NARRATIVE_FUNCTION_NAME: !Ref CreateNarrativeFunction
+          DEBUG_LOGGING: 'false'
+          DYNAMODB_GAMES_TABLE_NAME: !Ref GamesTable
+          DYNAMODB_NARRATIVES_TABLE_NAME: !Ref NarrativesTable
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /games/{gameId}/narratives/{narrativeId}
+            Method: get
+      Tags:
+        'created-by': 'cyoa-api'
+        'created-for': 'cyoa'
+        'environment': !Ref Environment
+      Timeout: 15
+      Tracing: Active
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: 'es2023'
+        Sourcemap: true
+        EntryPoints:
+          - src/handlers/get-narrative-by-id.ts
+
+  GetNarrativeByIdLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${GetNarrativeByIdFunction}
+      RetentionInDays: 30
+      Tags:
+        - Key: 'created-by'
+          Value: 'cyoa-api'
+        - Key: 'created-for'
+          Value: 'cyoa'
+        - Key: 'environment'
+          Value: !Ref Environment
+
+  GetNarrativeByIdGroupSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      DestinationArn: !Sub
+        - 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${Function}'
+        - Function: !FindInMap [EnvironmentMap, !Ref Environment, logStreamFunction]
+      FilterPattern: '[timestamp, uuid, level="ERROR", message]'
+      LogGroupName: !Ref GetNarrativeByIdLogGroup
+
   # CreateNarrativeFunction is only invoked by other lambdas
   CreateNarrativeFunction:
     Type: AWS::Serverless::Function

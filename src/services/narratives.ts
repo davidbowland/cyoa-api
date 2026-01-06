@@ -32,6 +32,17 @@ import {
 
 const lambda = xrayCapture(new LambdaClient({ region: 'us-east-1' }))
 
+const GENERATION_TIME = 300_000 // 5 minutes
+
+export const isGenerating = (
+  generationData: NarrativeGenerationData | undefined,
+  timeout = GENERATION_TIME,
+): boolean =>
+  !!(
+    generationData?.generationStartTime &&
+    generationData?.generationStartTime + timeout > Date.now()
+  )
+
 export const startNarrativeGeneration = async (
   gameId: GameId,
   narrativeId: NarrativeId,

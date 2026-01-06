@@ -1,4 +1,6 @@
 import {
+  BatchGetItemCommand,
+  BatchGetItemCommandOutput,
   DynamoDB,
   GetItemCommand,
   PutItemCommand,
@@ -87,10 +89,15 @@ export const getGames = async (): Promise<{ gameId: GameId; game: CyoaGame }[]> 
 
 /* Narratives */
 
+interface GetNarrativeResult {
+  narrative?: CyoaNarrative
+  generationData?: NarrativeGenerationData
+}
+
 export const getNarrativeById = async (
   gameId: GameId,
   narrativeId: NarrativeId,
-): Promise<{ narrative?: CyoaNarrative; generationData?: NarrativeGenerationData }> => {
+): Promise<GetNarrativeResult> => {
   const command = new GetItemCommand({
     Key: {
       GameId: {
@@ -107,6 +114,38 @@ export const getNarrativeById = async (
     return { generationData: JSON.parse(response.Item.GenerationData.S) }
   }
   return { narrative: JSON.parse(response.Item.Data.S) }
+}
+
+interface GetNarrativesResult extends GetNarrativeResult {
+  narrativeId: string
+}
+
+export const getNarrativesByIds = async (
+  gameId: GameId,
+  narrativeIds: NarrativeId[],
+): Promise<GetNarrativesResult[]> => {
+  if (narrativeIds.length === 0) {
+    return []
+  }
+
+  const command = new BatchGetItemCommand({
+    RequestItems: {
+      [dynamodbNarrativesTableName]: {
+        Keys: narrativeIds.map((narrativeId) => ({
+          GameId: { S: gameId },
+          NarrativeId: { S: narrativeId },
+        })),
+      },
+    },
+  })
+  const response: BatchGetItemCommandOutput = await dynamodb.send(command)
+
+  const items = response.Responses![dynamodbNarrativesTableName]
+  return items.map((item) => ({
+    generationData: item.GenerationData?.S && JSON.parse(item.GenerationData.S),
+    narrative: item.Data?.S && JSON.parse(item.Data.S),
+    narrativeId: item.NarrativeId?.S as string,
+  }))
 }
 
 export const setNarrativeById = async (

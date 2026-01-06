@@ -1,0 +1,40 @@
+{
+  "version": "2.0",
+  "routeKey": "GET /games/{gameId}/narratives/{narrativeId}",
+  "rawPath": "/v1/games/a-friendly-adventure/narratives/test-narrative-id",
+  "rawQueryString": "",
+  "headers": {
+    "accept": "*/*",
+    "accept-encoding": "gzip, deflate, br",
+    "content-length": "0",
+    "host": "cyoa-api.dbowland.com",
+    "user-agent": "curl/7.68.0",
+    "x-amzn-trace-id": "Root=1-61234567-abcdef1234567890abcdef12",
+    "x-forwarded-for": "203.0.113.12",
+    "x-forwarded-port": "443",
+    "x-forwarded-proto": "https"
+  },
+  "requestContext": {
+    "accountId": "123456789012",
+    "apiId": "abcdef123",
+    "domainName": "cyoa-api.dbowland.com",
+    "domainPrefix": "cyoa-api",
+    "http": {
+      "method": "GET",
+      "path": "/v1/games/a-friendly-adventure/narratives/test-narrative-id",
+      "protocol": "HTTP/1.1",
+      "sourceIp": "203.0.113.12",
+      "userAgent": "curl/7.68.0"
+    },
+    "requestId": "abcdef12-3456-7890-abcd-ef1234567890",
+    "routeKey": "GET /games/{gameId}/narratives/{narrativeId}",
+    "stage": "v1",
+    "time": "01/Jan/2025:12:00:00 +0000",
+    "timeEpoch": 1640995200000
+  },
+  "pathParameters": {
+    "gameId": "a-friendly-adventure",
+    "narrativeId": "test-narrative-id"
+  },
+  "isBase64Encoded": false
+}

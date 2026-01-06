@@ -24,6 +24,7 @@ import { log, logError } from '../utils/logging'
 import { getRandomSample } from '../utils/random'
 import { invokeModel } from './bedrock'
 import { getGameById, getGames, getPromptById, setGameById } from './dynamodb'
+import { InitialNarrativeStrategy } from './narrative-strategies'
 import { startNarrativeGeneration } from './narratives'
 
 export const createGame = async (): Promise<{ game: CyoaGame; gameId: GameId }> => {
@@ -74,24 +75,23 @@ export const createGame = async (): Promise<{ game: CyoaGame; gameId: GameId }> 
   }
   await setGameById(gameId, game)
 
-  const narrativeGenerationData = {
-    recap: 'The game is starting.',
-    currentResourceValue: game.startingResourceValue,
-    lastChoiceMade: '',
-    currentInventory: [],
-  }
+  const narrativeContext = InitialNarrativeStrategy.buildContext({
+    gameId,
+    narrativeId: initialNarrativeId,
+    game,
+  })
   try {
     await startNarrativeGeneration(
       gameId,
       initialNarrativeId,
-      narrativeGenerationData,
+      narrativeContext,
       game.choicePoints[0],
     )
-  } catch (error) {
+  } catch (error: unknown) {
     logError('Error creating narrative', {
       gameId,
       initialNarrativeId,
-      narrativeGenerationData,
+      narrativeContext,
       error,
     })
   }
