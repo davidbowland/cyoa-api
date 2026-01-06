@@ -9,10 +9,18 @@ import {
 
 import {
   dynamodbGamesTableName,
-  dynamodbOptionsTableName,
+  dynamodbNarrativesTableName,
   dynamodbPromptsTableName,
 } from '../config'
-import { CyoaGame, GameId, Prompt, PromptId } from '../types'
+import {
+  CyoaGame,
+  CyoaNarrative,
+  GameId,
+  NarrativeGenerationData,
+  NarrativeId,
+  Prompt,
+  PromptId,
+} from '../types'
 import { xrayCapture } from '../utils/logging'
 
 const dynamodb = xrayCapture(new DynamoDB({ apiVersion: '2012-08-10' }))
@@ -77,19 +85,70 @@ export const getGames = async (): Promise<{ gameId: GameId; game: CyoaGame }[]> 
   )
 }
 
-/* Options */
+/* Narratives */
 
-export const setOptionGenerationStarted = async (gameId: GameId): Promise<PutItemOutput> => {
-  const command = new PutItemCommand({
-    Item: {
+export const getNarrativeById = async (
+  gameId: GameId,
+  narrativeId: NarrativeId,
+): Promise<{ narrative?: CyoaNarrative; generationData?: NarrativeGenerationData }> => {
+  const command = new GetItemCommand({
+    Key: {
       GameId: {
         S: `${gameId}`,
       },
-      GenerationStarted: {
-        N: `${Date.now()}`,
+      NarrativeId: {
+        S: `${narrativeId}`,
       },
     },
-    TableName: dynamodbOptionsTableName,
+    TableName: dynamodbNarrativesTableName,
+  })
+  const response = await dynamodb.send(command)
+  if (response.Item.GenerationData?.S) {
+    return { generationData: JSON.parse(response.Item.GenerationData.S) }
+  }
+  return { narrative: JSON.parse(response.Item.Data.S) }
+}
+
+export const setNarrativeById = async (
+  gameId: GameId,
+  narrativeId: NarrativeId,
+  data: CyoaNarrative,
+): Promise<PutItemOutput> => {
+  const command = new PutItemCommand({
+    Item: {
+      Data: {
+        S: JSON.stringify(data),
+      },
+      GameId: {
+        S: `${gameId}`,
+      },
+      NarrativeId: {
+        S: `${narrativeId}`,
+      },
+    },
+    TableName: dynamodbNarrativesTableName,
+  })
+  return await dynamodb.send(command)
+}
+
+export const setNarrativeGenerationData = async (
+  gameId: GameId,
+  narrativeId: NarrativeId,
+  generationData: NarrativeGenerationData,
+): Promise<PutItemOutput> => {
+  const command = new PutItemCommand({
+    Item: {
+      GenerationData: {
+        S: JSON.stringify(generationData),
+      },
+      GameId: {
+        S: `${gameId}`,
+      },
+      NarrativeId: {
+        S: `${narrativeId}`,
+      },
+    },
+    TableName: dynamodbNarrativesTableName,
   })
   return await dynamodb.send(command)
 }

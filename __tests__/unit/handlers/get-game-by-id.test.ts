@@ -1,12 +1,10 @@
-import { cyoaGame, gameId, serializedGame } from '../__mocks__'
+import { cyoaGame, gameId } from '../__mocks__'
 import { getGameByIdHandler } from '@handlers/get-game-by-id'
 import * as dynamodb from '@services/dynamodb'
 import { APIGatewayProxyEventV2 } from '@types'
-import * as serialize from '@utils/serialize'
 import status from '@utils/status'
 
 jest.mock('@services/dynamodb')
-jest.mock('@utils/serialize')
 jest.mock('@utils/logging', () => ({
   log: jest.fn(),
   logError: jest.fn(),
@@ -18,7 +16,6 @@ describe('get-game-by-id', () => {
 
   beforeAll(() => {
     jest.mocked(dynamodb).getGameById.mockResolvedValue(cyoaGame)
-    jest.mocked(serialize).serializeCyoaGame.mockReturnValue(serializedGame)
   })
 
   describe('getGameByIdHandler', () => {
@@ -26,9 +23,14 @@ describe('get-game-by-id', () => {
       const result: any = await getGameByIdHandler(event)
 
       expect(result).toEqual(expect.objectContaining({ statusCode: status.OK.statusCode }))
-      expect(JSON.parse(result.body)).toEqual(serializedGame)
+      expect(JSON.parse(result.body)).toEqual({
+        description: 'A test adventure game',
+        image: 'test-image.jpg',
+        initialNarrativeId: 'start',
+        resourceName: 'Health',
+        title: 'Test Adventure',
+      })
       expect(dynamodb.getGameById).toHaveBeenCalledWith(gameId)
-      expect(serialize.serializeCyoaGame).toHaveBeenCalledWith(cyoaGame)
     })
 
     it('returns not found when getGameById throws error', async () => {

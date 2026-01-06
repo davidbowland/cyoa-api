@@ -1,11 +1,16 @@
 import Ajv from 'ajv'
 
+import { initialNarrativeId } from '../config'
 import {
   CreateGamePromptOutput,
+  CreateNarrativePromptOutput,
   CyoaCharacter,
   CyoaChoicePoint,
   CyoaGame,
   CyoaInventory,
+  CyoaNarrative,
+  CyoaOption,
+  NarrativeGenerationData,
 } from '../types'
 
 const ajv = new Ajv({ allErrors: true })
@@ -75,7 +80,50 @@ export const formatCyoaGame = (
     startingResourceValue: input.startingResourceValue as number,
     lossResourceThreshold: input.lossResourceThreshold as number,
     choicePoints: input.choicePoints as CyoaChoicePoint[],
+    initialNarrativeId,
+  }
+  return { game, imageDescription: input.titleImageDescription as string }
+}
+
+export const formatNarrative = (
+  input: CreateNarrativePromptOutput,
+  generationData: NarrativeGenerationData,
+): CyoaNarrative => {
+  const jsonTypeDefinition = {
+    type: 'object',
+    required: ['narrative', 'recap', 'choice', 'options', 'inventory'],
+    properties: {
+      narrative: { type: 'string', minLength: 1 },
+      recap: { type: 'string', minLength: 1 },
+      choice: { type: 'string', minLength: 1 },
+      options: {
+        type: 'array',
+        items: {
+          type: 'object',
+          required: ['name', 'resourcesToAdd'],
+          properties: {
+            name: { type: 'string', minLength: 1 },
+            resourcesToAdd: { type: 'number' },
+          },
+        },
+      },
+      inventory: {
+        type: 'array',
+        items: { type: 'string' },
+      },
+    },
+  }
+  if (ajv.validate(jsonTypeDefinition, input) === false) {
+    throw new Error(JSON.stringify(ajv.errors))
   }
 
-  return { game, imageDescription: input.titleImageDescription as string }
+  const narrative: CyoaNarrative = {
+    narrative: input.narrative as string,
+    recap: input.recap as string,
+    choice: input.choice as string,
+    options: input.options as CyoaOption[],
+    inventory: input.inventory as string[],
+    currentResourceValue: generationData.currentResourceValue,
+  }
+  return narrative
 }

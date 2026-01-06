@@ -2,10 +2,12 @@ import { cyoaGame, prompt } from '../__mocks__'
 import * as bedrock from '@services/bedrock'
 import * as dynamodb from '@services/dynamodb'
 import { createGame } from '@services/games'
+import * as narratives from '@services/narratives'
 import { CreateGamePromptOutput } from '@types'
 
 jest.mock('@services/bedrock')
 jest.mock('@services/dynamodb')
+jest.mock('@services/narratives')
 jest.mock('@utils/logging')
 
 describe('games', () => {
@@ -52,7 +54,7 @@ describe('games', () => {
       const result = await createGame()
 
       expect(dynamodb.getGames).toHaveBeenCalledWith()
-      expect(dynamodb.getPromptById).toHaveBeenCalledWith('create-cyoa-game')
+      expect(dynamodb.getPromptById).toHaveBeenCalledWith('create-game')
       expect(bedrock.invokeModel).toHaveBeenCalledWith(
         prompt,
         expect.objectContaining({
@@ -75,12 +77,25 @@ describe('games', () => {
         expect.objectContaining({
           title: 'Test Adventure',
           choicePoints: expect.arrayContaining([expect.any(Object)]),
+          initialNarrativeId: 'start',
         }),
+      )
+      expect(narratives.startNarrativeGeneration).toHaveBeenCalledWith(
+        'test-adventure',
+        'start',
+        {
+          recap: 'The game is starting.',
+          currentResourceValue: 100,
+          lastChoiceMade: '',
+          currentInventory: [],
+        },
+        mockChoice,
       )
       expect(result).toEqual({
         game: expect.objectContaining({
           title: 'Test Adventure',
           choicePoints: expect.arrayContaining([expect.any(Object)]),
+          initialNarrativeId: 'start',
         }),
         gameId: 'test-adventure',
       })
@@ -154,13 +169,31 @@ describe('games', () => {
         'a-special-adventure!',
         expect.objectContaining({
           title: 'A Special Adventure!',
+          initialNarrativeId: 'start',
         }),
       )
       expect(result).toEqual({
         game: expect.objectContaining({
           title: 'A Special Adventure!',
+          initialNarrativeId: 'start',
         }),
         gameId: 'a-special-adventure!',
+      })
+    })
+
+    it('should continue when narrative generation fails', async () => {
+      jest
+        .mocked(narratives)
+        .startNarrativeGeneration.mockRejectedValueOnce(new Error('Narrative error'))
+
+      const result = await createGame()
+
+      expect(result).toEqual({
+        game: expect.objectContaining({
+          title: 'Test Adventure',
+          initialNarrativeId: 'start',
+        }),
+        gameId: 'test-adventure',
       })
     })
   })

@@ -1,112 +1,118 @@
-import { CreateGamePromptOutput } from '@types'
-import { formatCyoaGame } from '@utils/formatting'
+import {
+  cyoaGamePromptOutput,
+  createNarrativePromptOutput,
+  narrativeGenerationData,
+} from '../__mocks__'
+import { formatCyoaGame, formatNarrative } from '@utils/formatting'
 
 describe('formatting', () => {
   describe('formatCyoaGame', () => {
-    const validInput: CreateGamePromptOutput = {
-      choicePoints: [
-        {
-          choice: 'What do you do?',
-          inventoryOrInformationConsumed: [],
-          inventoryToIntroduce: ['Sword'],
-          keyInformationToIntroduce: ['Important clue'],
-          options: [
-            { name: 'Fight', resourcesToAdd: -10 },
-            { name: 'Run', resourcesToAdd: 0 },
-          ],
-          redHerringsToIntroduce: ['False clue'],
-        },
-      ],
-      characters: [{ imageDescription: 'A brave hero', name: 'Hero', voice: 'heroic' }],
-      description: 'A test adventure game',
-      inventory: [{ imageDescription: 'A sharp sword', name: 'Sword' }],
-      keyInformation: ['Important clue 1', 'Important clue 2'],
-      lossResourceThreshold: 0,
-      outline: 'Test outline',
-      redHerrings: ['False clue 1', 'False clue 2'],
-      resourceName: 'Health',
-      startingResourceValue: 100,
-      title: 'Test Adventure',
-      titleImageDescription: 'Epic adventure scene',
-    }
-
-    it('should format valid input correctly', () => {
-      const result = formatCyoaGame(validInput)
+    it('should format valid game prompt output', () => {
+      const result = formatCyoaGame(cyoaGamePromptOutput)
 
       expect(result.game).toEqual({
+        title: 'Generated Adventure',
+        description: 'An AI-generated adventure game',
+        outline: 'A journey through an enchanted forest',
+        characters: [
+          { name: 'Wizard', imageDescription: 'An old wise wizard', voice: 'mystical' },
+          { name: 'Dragon', imageDescription: 'A fierce red dragon', voice: 'menacing' },
+        ],
+        inventory: [
+          { name: 'Magic Wand', imageDescription: 'A glowing wooden wand' },
+          { name: 'Health Potion', imageDescription: 'A red healing potion' },
+        ],
+        keyInformation: ['The dragon guards the treasure', 'The wizard knows ancient spells'],
+        redHerrings: ['There might be goblins nearby', 'The forest has hidden traps'],
+        resourceName: 'Magic Energy',
+        startingResourceValue: 50,
+        lossResourceThreshold: 5,
+        initialNarrativeId: 'start',
         choicePoints: [
           {
-            choice: 'What do you do?',
+            inventoryToIntroduce: ['Magic Wand'],
+            keyInformationToIntroduce: ['The wizard knows ancient spells'],
+            redHerringsToIntroduce: ['There might be goblins nearby'],
             inventoryOrInformationConsumed: [],
-            inventoryToIntroduce: ['Sword'],
-            keyInformationToIntroduce: ['Important clue'],
+            choice: 'You encounter the wizard. What do you do?',
             options: [
-              { name: 'Fight', resourcesToAdd: -10 },
-              { name: 'Run', resourcesToAdd: 0 },
+              { name: 'Ask for help', resourcesToAdd: 5 },
+              { name: 'Challenge the wizard', resourcesToAdd: -15 },
             ],
-            redHerringsToIntroduce: ['False clue'],
           },
         ],
-        characters: [{ imageDescription: 'A brave hero', name: 'Hero', voice: 'heroic' }],
-        description: 'A test adventure game',
-        inventory: [{ imageDescription: 'A sharp sword', name: 'Sword' }],
-        keyInformation: ['Important clue 1', 'Important clue 2'],
-        lossResourceThreshold: 0,
-        outline: 'Test outline',
-        redHerrings: ['False clue 1', 'False clue 2'],
-        resourceName: 'Health',
-        startingResourceValue: 100,
-        title: 'Test Adventure',
       })
-      expect(result.imageDescription).toBe('Epic adventure scene')
+      expect(result.imageDescription).toBe('A mystical forest scene')
     })
 
-    it('should throw error when title is missing', () => {
-      const invalidInput = { ...validInput, title: undefined }
+    it('should throw error for invalid game prompt output', () => {
+      const invalidInput = { ...cyoaGamePromptOutput, title: '' }
 
-      expect(() => formatCyoaGame(invalidInput)).toThrow()
+      expect(() => formatCyoaGame(invalidInput as any)).toThrow()
     })
 
-    it('should throw error when title is wrong type', () => {
-      const invalidInput = { ...validInput, title: 123 as any }
+    it('should throw error for missing required fields', () => {
+      const { title: _, ...incompleteInput } = cyoaGamePromptOutput
 
-      expect(() => formatCyoaGame(invalidInput)).toThrow()
+      expect(() => formatCyoaGame(incompleteInput)).toThrow()
+    })
+  })
+
+  describe('formatNarrative', () => {
+    it('should format valid narrative prompt output', () => {
+      const result = formatNarrative(createNarrativePromptOutput, narrativeGenerationData)
+
+      expect(result).toEqual({
+        narrative: 'You find yourself standing before a massive sleeping dragon...',
+        recap:
+          'After asking the wizard for help, you received a magic wand and learned about the dragon.',
+        choice: 'You see a sleeping dragon. What do you do?',
+        options: [
+          { name: 'Sneak past quietly', resourcesToAdd: 0 },
+          { name: 'Wake the dragon', resourcesToAdd: -20 },
+        ],
+        inventory: ['Sword', 'Magic Wand', 'Health Potion'],
+        currentResourceValue: 75,
+      })
     })
 
-    it('should throw error when startingResourceValue is wrong type', () => {
-      const invalidInput = { ...validInput, startingResourceValue: 'invalid' as any }
+    it('should throw error for invalid narrative prompt output', () => {
+      const invalidInput = { ...createNarrativePromptOutput, narrative: '' }
 
-      expect(() => formatCyoaGame(invalidInput)).toThrow()
+      expect(() => formatNarrative(invalidInput as any, narrativeGenerationData)).toThrow()
     })
 
-    it('should handle empty arrays for optional array fields', () => {
-      const inputWithEmptyArrays = {
-        ...validInput,
-        characters: [],
-        choicePoints: [],
-        inventory: [],
-        keyInformation: [],
-        redHerrings: [],
+    it('should throw error for missing required fields', () => {
+      const { narrative: _, ...incompleteInput } = createNarrativePromptOutput
+
+      expect(() => formatNarrative(incompleteInput, narrativeGenerationData)).toThrow()
+    })
+
+    it('should throw error for invalid option structure', () => {
+      const invalidOptionsInput = {
+        ...createNarrativePromptOutput,
+        options: [{ name: 'Invalid option' }], // Missing resourcesToAdd
       }
 
-      const result = formatCyoaGame(inputWithEmptyArrays)
-
-      expect(result.game.characters).toEqual([])
-      expect(result.game.choicePoints).toEqual([])
-      expect(result.game.inventory).toEqual([])
-      expect(result.game.keyInformation).toEqual([])
-      expect(result.game.redHerrings).toEqual([])
+      expect(() => formatNarrative(invalidOptionsInput as any, narrativeGenerationData)).toThrow()
     })
 
-    it('should extract imageDescription from titleImageDescription', () => {
-      const inputWithDifferentImage = {
-        ...validInput,
-        titleImageDescription: 'Different image description',
+    it('should throw error for empty option name', () => {
+      const emptyNameInput = {
+        ...createNarrativePromptOutput,
+        options: [{ name: '', resourcesToAdd: 0 }],
       }
 
-      const result = formatCyoaGame(inputWithDifferentImage)
+      expect(() => formatNarrative(emptyNameInput as any, narrativeGenerationData)).toThrow()
+    })
 
-      expect(result.imageDescription).toBe('Different image description')
+    it('should throw error for empty required strings', () => {
+      const emptyStringInput = {
+        ...createNarrativePromptOutput,
+        choice: '',
+      }
+
+      expect(() => formatNarrative(emptyStringInput as any, narrativeGenerationData)).toThrow()
     })
   })
 })

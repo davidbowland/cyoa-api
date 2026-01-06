@@ -22,7 +22,7 @@ Mappings:
       domain: cyoa-api.dbowland.com
       gamesTable: cyoa-api-games
       logStreamFunction: log-subscriber
-      optionsTable: cyoa-api-options
+      narrativesTable: cyoa-api-narratives
       project: cyoa
       promptsTable: cyoa-api-prompts
       scheduledGameCreationEnabled: true
@@ -33,7 +33,7 @@ Mappings:
       domain: cyoa-api.bowland.link
       gamesTable: cyoa-api-games-test
       logStreamFunction: log-subscriber-test
-      optionsTable: cyoa-api-options-test
+      narrativesTable: cyoa-api-narratives-test
       project: cyoa-test
       promptsTable: cyoa-api-prompts-test
       scheduledGameCreationEnabled: false
@@ -211,7 +211,6 @@ Resources:
             TableName: !Ref GamesTable
         - DynamoDBReadPolicy:
             TableName: !Ref PromptsTable
-        # Allow invoking a model in Bedrock
         - Version: 2012-10-17
           Statement:
             - Action:
@@ -228,7 +227,7 @@ Resources:
           INSPIRATION_ADJECTIVES_COUNT: 15
           INSPIRATION_NOUNS_COUNT: 25
           INSPIRATION_VERBS_COUNT: 20
-          LLM_PROMPT_ID: create-cyoa-game
+          LLM_PROMPT_ID: create-game
       Events:
         Schedule:
           Type: Schedule
@@ -273,6 +272,88 @@ Resources:
       FilterPattern: '[timestamp, uuid, level="ERROR", message]'
       LogGroupName: !Ref CreateGameLogGroup
 
+  # Narratives
+
+  # CreateNarrativeFunction is only invoked by other lambdas
+  CreateNarrativeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/create-narrative.createNarrativeHandler
+      Runtime: nodejs22.x
+      Architectures:
+        - x86_64
+      MemorySize: 1536
+      Description: Create CYOA game narrative
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - DynamoDBReadPolicy:
+            TableName: !Ref GamesTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref NarrativesTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref PromptsTable
+        - Version: 2012-10-17
+          Statement:
+            - Action:
+                - 'lambda:InvokeFunction'
+              Effect: Allow
+              Resource: !GetAtt CreateNarrativeFunction.Arn
+        - Version: 2012-10-17
+          Statement:
+            - Action:
+                - 'aws-marketplace:ViewSubscriptions'
+                - 'aws-marketplace:Subscribe'
+                - 'bedrock:InvokeModel*'
+              Effect: Allow
+              Resource: '*'
+      Environment:
+        Variables:
+          CREATE_NARRATIVE_FUNCTION_NAME: !Ref CreateNarrativeFunction
+          DEBUG_LOGGING: 'false'
+          DYNAMODB_GAMES_TABLE_NAME: !Ref GamesTable
+          DYNAMODB_NARRATIVES_TABLE_NAME: !Ref NarrativesTable
+          DYNAMODB_PROMPTS_TABLE_NAME: !Ref PromptsTable
+          INSPIRATION_ADJECTIVES_COUNT: 1
+          INSPIRATION_NOUNS_COUNT: 3
+          INSPIRATION_VERBS_COUNT: 2
+          LLM_PROMPT_ID: create-narrative
+      Tags:
+        'created-by': 'cyoa-api'
+        'created-for': 'cyoa'
+        'environment': !Ref Environment
+      Timeout: 295
+      Tracing: Active
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: 'es2023'
+        Sourcemap: true
+        EntryPoints:
+          - src/handlers/create-narrative.ts
+
+  CreateNarrativeLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${CreateNarrativeFunction}
+      RetentionInDays: 30
+      Tags:
+        - Key: 'created-by'
+          Value: 'cyoa-api'
+        - Key: 'created-for'
+          Value: 'cyoa'
+        - Key: 'environment'
+          Value: !Ref Environment
+
+  CreateNarrativeGroupSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      DestinationArn: !Sub
+        - 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${Function}'
+        - Function: !FindInMap [EnvironmentMap, !Ref Environment, logStreamFunction]
+      FilterPattern: '[timestamp, uuid, level="ERROR", message]'
+      LogGroupName: !Ref CreateNarrativeLogGroup
+
   # DynamoDB
 
   GamesTable:
@@ -294,21 +375,21 @@ Resources:
         - Key: 'environment'
           Value: !Ref Environment
 
-  OptionsTable:
+  NarrativesTable:
     Type: AWS::DynamoDB::Table
     Properties:
       AttributeDefinitions:
         - AttributeName: GameId
           AttributeType: S
-        - AttributeName: OptionId
+        - AttributeName: NarrativeId
           AttributeType: S
       BillingMode: PAY_PER_REQUEST
       KeySchema:
         - AttributeName: GameId
           KeyType: HASH
-        - AttributeName: OptionId
+        - AttributeName: NarrativeId
           KeyType: RANGE
-      TableName: !FindInMap [EnvironmentMap, !Ref Environment, optionsTable]
+      TableName: !FindInMap [EnvironmentMap, !Ref Environment, narrativesTable]
       Tags:
         - Key: 'created-by'
           Value: 'cyoa-api'

@@ -8,11 +8,12 @@ axiosRetry(axios, { retries: 3 })
 // DynamoDB
 
 export const dynamodbGamesTableName = process.env.DYNAMODB_GAMES_TABLE_NAME as string
-export const dynamodbOptionsTableName = process.env.DYNAMODB_OPTIONS_TABLE_NAME as string
+export const dynamodbNarrativesTableName = process.env.DYNAMODB_NARRATIVES_TABLE_NAME as string
 export const dynamodbPromptsTableName = process.env.DYNAMODB_PROMPTS_TABLE_NAME as string
 
 // Lambda
-// Note: CREATE_GAME_FUNCTION_NAME environment variable not currently used
+
+export const createNarrativeFunctionName = process.env.CREATE_NARRATIVE_FUNCTION_NAME as string
 
 // LLM
 
@@ -26,6 +27,7 @@ export const inspirationAdjectivesCount = parseInt(
 )
 export const inspirationNounsCount = parseInt(process.env.INSPIRATION_NOUNS_COUNT as string, 10)
 export const inspirationVerbsCount = parseInt(process.env.INSPIRATION_VERBS_COUNT as string, 10)
+export const initialNarrativeId = 'start'
 
 // Logging
 

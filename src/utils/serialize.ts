@@ -5,4 +5,5 @@ export const serializeCyoaGame = (game: CyoaGame): CyoaGameSerialized => ({
   image: game.image,
   resourceName: game.resourceName,
   title: game.title,
+  initialNarrativeId: game.initialNarrativeId,
 })

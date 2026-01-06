@@ -9,6 +9,7 @@ describe('serialize', () => {
       expect(result).toEqual({
         description: 'A test adventure game',
         image: 'test-image.jpg',
+        initialNarrativeId: 'start',
         resourceName: 'Health',
         title: 'Test Adventure',
       })
@@ -21,6 +22,7 @@ describe('serialize', () => {
       expect(result).toEqual({
         description: 'A test adventure game',
         image: undefined,
+        initialNarrativeId: 'start',
         resourceName: 'Health',
         title: 'Test Adventure',
       })

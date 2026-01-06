@@ -12,6 +12,7 @@ import {
 import { nouns } from '../assets/nouns'
 import { verbs } from '../assets/verbs'
 import {
+  initialNarrativeId,
   inspirationAdjectivesCount,
   inspirationNounsCount,
   inspirationVerbsCount,
@@ -19,10 +20,11 @@ import {
 } from '../config'
 import { CreateGamePromptOutput, CyoaGame, GameId } from '../types'
 import { formatCyoaGame } from '../utils/formatting'
-import { log } from '../utils/logging'
+import { log, logError } from '../utils/logging'
 import { getRandomSample } from '../utils/random'
 import { invokeModel } from './bedrock'
 import { getGameById, getGames, getPromptById, setGameById } from './dynamodb'
+import { startNarrativeGeneration } from './narratives'
 
 export const createGame = async (): Promise<{ game: CyoaGame; gameId: GameId }> => {
   const existingGames = await getGames()
@@ -70,7 +72,29 @@ export const createGame = async (): Promise<{ game: CyoaGame; gameId: GameId }> 
     log('Game ID already exists', { gameId })
     throw new Error('Game ID already exists')
   }
-
   await setGameById(gameId, game)
+
+  const narrativeGenerationData = {
+    recap: 'The game is starting.',
+    currentResourceValue: game.startingResourceValue,
+    lastChoiceMade: '',
+    currentInventory: [],
+  }
+  try {
+    await startNarrativeGeneration(
+      gameId,
+      initialNarrativeId,
+      narrativeGenerationData,
+      game.choicePoints[0],
+    )
+  } catch (error) {
+    logError('Error creating narrative', {
+      gameId,
+      initialNarrativeId,
+      narrativeGenerationData,
+      error,
+    })
+  }
+
   return { game, gameId }
 }

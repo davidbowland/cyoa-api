@@ -1,0 +1,60 @@
+<context>
+You are creating a choose-your-own-adventure game. The best choices should lead to the best outcome. Some choices can be puzzles the user needs to figure out or remember. You are writing the narrative and choices based on an outline generated earlier.
+</context>
+<instructions>
+Given the outline, a narrative recap, the choice the player just made, and the choice the player should be faced with, generate the next part of the narrative. If there are consequences to the player's last choice, be sure to include that in the narrative.
+
+- Generate the next part of the narrative
+  - Consider the outline and recap to know what has happened
+  - Think about what inventory or information needs to be introduced
+  - Think about what inventory or information needs to be consumed
+  - Write as clearly as eloquently as possible (channel Christopher Hitchens or P.G. Wodehouse)
+- Generate a recap of the story including your narrative
+  - Include information important for the next LLM prompt to continue the narrative
+- Generate the choice that will be presented to the user
+  - Think about whether the provided next choice makes sense with the narrative and outline
+  - Choices should be EXTREMELY difficult to make
+  - NEVER ask something that can be answered by the generated narrative
+  - Adjust as required
+- Generate the options the user can choose between
+  - Think about whether the provided options make sense with the choice you selected and the narrative you generated
+  - Adjust as required
+  - currentResourceValue will be adjusted by adding resourcesToAdd
+  - NEVER set resourcesToAdd to 0
+- Generate the inventory the user has at the end of the narrative
+  - Consider currentInventory, inventoryToIntroduce, and inventoryOrInformationConsumed
+  - Double-check the inventory to make sure it's correct
+
+Make sure the narrative, recap, choice, and options are inoffensive and not emmotionally charged.
+</instructions>
+<output>
+Output your thinking in <thinking> tags followed by valid JSON with the keys with NOTTHING ELSE (double-check that your JSON is valid with \n instead of newlines and " escaped):
+
+{
+  "narrative": "string",
+  "recap": "string",
+  "choice": "string",
+  "options": [{ "name": "string", "resourcesToAdd": number }],
+  "inventory": ["string"]
+}
+</output>
+
+<input>
+{
+  "outline": "",
+  "recap": "",
+  "resourceName": "",
+  "currentResourceValue": 0,
+  "lossResourceThreshold": 10,
+  "lastChoiceMade": "",
+  "currentInventory": ["string"],
+  "inventoryToIntroduce": ["string"],
+  "keyInformationToIntroduce": ["string"],
+  "redHerringsToIntroduce": ["string"]
+  "inventoryOrInformationConsumed": ["string"],
+  "nextChoice": "string",
+  "options": [
+    { "name": "string", "resourcesToAdd": number }
+  ]
+}
+</input>

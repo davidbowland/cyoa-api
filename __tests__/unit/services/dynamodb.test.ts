@@ -1,16 +1,27 @@
-import { cyoaGame, gameId, prompt, promptConfig, promptId } from '../__mocks__'
+import {
+  cyoaGame,
+  cyoaNarrative,
+  gameId,
+  narrativeGenerationData,
+  narrativeId,
+  prompt,
+  promptConfig,
+  promptId,
+} from '../__mocks__'
 import {
   getGameById,
   getGames,
+  getNarrativeById,
   getPromptById,
   setGameById,
-  setOptionGenerationStarted,
+  setNarrativeById,
+  setNarrativeGenerationData,
 } from '@services/dynamodb'
 
 const mockSend = jest.fn()
 jest.mock('@aws-sdk/client-dynamodb', () => ({
   DynamoDB: jest.fn(() => ({
-    send: (...args) => mockSend(...args),
+    send: (...args: any[]) => mockSend(...args),
   })),
   GetItemCommand: jest.fn().mockImplementation((x) => x),
   PutItemCommand: jest.fn().mockImplementation((x) => x),
@@ -27,6 +38,7 @@ describe('dynamodb', () => {
   beforeAll(() => {
     Date.now = jest.fn().mockReturnValue(mockNow)
   })
+
   describe('getPromptById', () => {
     beforeAll(() => {
       mockSend.mockResolvedValue({
@@ -115,20 +127,87 @@ describe('dynamodb', () => {
     })
   })
 
-  describe('setOptionGenerationStarted', () => {
-    it('should call DynamoDB with GenerationStarted timestamp', async () => {
-      await setOptionGenerationStarted(gameId)
+  describe('getNarrativeById', () => {
+    it('should return generation data when GenerationData exists', async () => {
+      mockSend.mockResolvedValueOnce({
+        Item: {
+          GenerationData: { S: JSON.stringify(narrativeGenerationData) },
+        },
+      })
+
+      const result = await getNarrativeById(gameId, narrativeId)
+
+      expect(mockSend).toHaveBeenCalledWith({
+        Key: {
+          GameId: { S: gameId },
+          NarrativeId: { S: narrativeId },
+        },
+        TableName: 'narratives-table',
+      })
+      expect(result).toEqual({
+        generationData: narrativeGenerationData,
+      })
+    })
+
+    it('should return narrative data when Data exists and GenerationData does not', async () => {
+      mockSend.mockResolvedValueOnce({
+        Item: {
+          Data: { S: JSON.stringify(cyoaNarrative) },
+        },
+      })
+
+      const result = await getNarrativeById(gameId, narrativeId)
+
+      expect(result).toEqual({
+        narrative: cyoaNarrative,
+      })
+    })
+
+    it('should throw error when narrative not found', async () => {
+      mockSend.mockResolvedValueOnce({})
+
+      await expect(getNarrativeById(gameId, narrativeId)).rejects.toThrow()
+    })
+  })
+
+  describe('setNarrativeById', () => {
+    it('should call DynamoDB with the correct arguments', async () => {
+      await setNarrativeById(gameId, narrativeId, cyoaNarrative)
 
       expect(mockSend).toHaveBeenCalledWith({
         Item: {
+          Data: {
+            S: JSON.stringify(cyoaNarrative),
+          },
           GameId: {
             S: gameId,
           },
-          GenerationStarted: {
-            N: mockNow.toString(),
+          NarrativeId: {
+            S: narrativeId,
           },
         },
-        TableName: 'options-table',
+        TableName: 'narratives-table',
+      })
+    })
+  })
+
+  describe('setNarrativeGenerationData', () => {
+    it('should call DynamoDB with the correct arguments', async () => {
+      await setNarrativeGenerationData(gameId, narrativeId, narrativeGenerationData)
+
+      expect(mockSend).toHaveBeenCalledWith({
+        Item: {
+          GenerationData: {
+            S: JSON.stringify(narrativeGenerationData),
+          },
+          GameId: {
+            S: gameId,
+          },
+          NarrativeId: {
+            S: narrativeId,
+          },
+        },
+        TableName: 'narratives-table',
       })
     })
   })

@@ -1,5 +1,15 @@
 /* eslint sort-keys:0 */
-import { CyoaGame, GameId, Prompt, PromptConfig, PromptId } from '@types'
+import {
+  CyoaGame,
+  CyoaNarrative,
+  CreateNarrativeEvent,
+  GameId,
+  NarrativeGenerationData,
+  NarrativeId,
+  Prompt,
+  PromptConfig,
+  PromptId,
+} from '@types'
 
 // Games
 
@@ -17,6 +27,7 @@ export const cyoaGame: CyoaGame = {
   resourceName: 'Health',
   startingResourceValue: 100,
   lossResourceThreshold: 0,
+  initialNarrativeId: 'start',
   choicePoints: [
     {
       inventoryToIntroduce: ['Sword'],
@@ -37,6 +48,7 @@ export const serializedGame = {
   image: 'test-image.jpg',
   resourceName: 'Health',
   title: 'Test Adventure',
+  initialNarrativeId: 'start',
 }
 
 // Prompts
@@ -97,6 +109,69 @@ export const invokeModelCyoaGameResponse = {
       content: [
         {
           text: JSON.stringify(cyoaGamePromptOutput),
+        },
+      ],
+    }),
+  ),
+}
+
+// Narratives
+
+export const narrativeId: NarrativeId = 'test-narrative-id'
+
+export const createNarrativeEvent: CreateNarrativeEvent = {
+  gameId,
+  narrativeId,
+}
+
+export const narrativeGenerationData: NarrativeGenerationData = {
+  recap: 'Previous events recap',
+  currentResourceValue: 75,
+  lastChoiceMade: 'Asked for help',
+  currentInventory: ['Sword', 'Magic Wand'],
+  inventoryToIntroduce: ['Health Potion'],
+  keyInformationToIntroduce: ['The dragon is sleeping'],
+  redHerringsToIntroduce: ['Strange noises in the distance'],
+  inventoryOrInformationConsumed: ['Old Map'],
+  nextChoice: 'You see a sleeping dragon. What do you do?',
+  options: [
+    { name: 'Sneak past quietly', resourcesToAdd: 0 },
+    { name: 'Wake the dragon', resourcesToAdd: -20 },
+  ],
+  generationStartTime: 1640995200000,
+}
+
+export const cyoaNarrative: CyoaNarrative = {
+  narrative: 'You find yourself standing before a massive sleeping dragon...',
+  recap:
+    'After asking the wizard for help, you received a magic wand and learned about the dragon.',
+  choice: 'You see a sleeping dragon. What do you do?',
+  options: [
+    { name: 'Sneak past quietly', resourcesToAdd: 0 },
+    { name: 'Wake the dragon', resourcesToAdd: -20 },
+  ],
+  inventory: ['Sword', 'Magic Wand', 'Health Potion'],
+  currentResourceValue: 75,
+}
+
+export const createNarrativePromptOutput = {
+  narrative: 'You find yourself standing before a massive sleeping dragon...',
+  recap:
+    'After asking the wizard for help, you received a magic wand and learned about the dragon.',
+  choice: 'You see a sleeping dragon. What do you do?',
+  options: [
+    { name: 'Sneak past quietly', resourcesToAdd: 0 },
+    { name: 'Wake the dragon', resourcesToAdd: -20 },
+  ],
+  inventory: ['Sword', 'Magic Wand', 'Health Potion'],
+}
+
+export const invokeModelNarrativeResponse = {
+  body: new TextEncoder().encode(
+    JSON.stringify({
+      content: [
+        {
+          text: JSON.stringify(createNarrativePromptOutput),
         },
       ],
     }),

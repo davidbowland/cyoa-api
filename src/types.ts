@@ -17,6 +17,7 @@ export interface CyoaGame {
   startingResourceValue: number
   lossResourceThreshold: number
   choicePoints: CyoaChoicePoint[]
+  initialNarrativeId: string
 }
 
 export interface CyoaGameSerialized {
@@ -24,6 +25,7 @@ export interface CyoaGameSerialized {
   description: string
   image?: string
   resourceName: string
+  initialNarrativeId: string
 }
 
 export interface CyoaCharacter {
@@ -38,7 +40,7 @@ export interface CyoaChoicePoint {
   redHerringsToIntroduce: string[]
   inventoryOrInformationConsumed: string[]
   choice: string
-  options: CreateGamePromptOption[]
+  options: CyoaOption[]
 }
 
 export interface CyoaInventory {
@@ -46,8 +48,41 @@ export interface CyoaInventory {
   image?: string
 }
 
-export interface CyoaOption {
+export interface CyoaNarrative {
   narrative: string
+  recap: string
+  choice: string
+  options: CyoaOption[]
+  inventory: string[]
+  currentResourceValue: number
+}
+
+// Narrative
+
+export type NarrativeId = string
+
+export interface CreateNarrativeEvent {
+  gameId: GameId
+  narrativeId: NarrativeId
+}
+
+export interface NarrativeGenerationData {
+  recap: string
+  currentResourceValue: number
+  lastChoiceMade: string
+  currentInventory: string[]
+  inventoryToIntroduce: string[]
+  keyInformationToIntroduce: string[]
+  redHerringsToIntroduce: string[]
+  inventoryOrInformationConsumed: string[]
+  nextChoice: string
+  options: CyoaOption[]
+  generationStartTime: number
+}
+
+export interface CyoaOption {
+  name: string
+  resourcesToAdd: number
 }
 
 // Config
@@ -99,6 +134,19 @@ export interface CreateGamePromptOutput {
   startingResourceValue?: number
   lossResourceThreshold?: number
   choicePoints?: CreateGamePromptChoicePoint[]
+}
+
+export interface CreateNarrativePromptOutput {
+  narrative?: string
+  recap?: string
+  choice?: string
+  options?: CreateNarrativePromptOption[]
+  inventory?: string[]
+}
+
+export interface CreateNarrativePromptOption {
+  name?: string
+  resourcesToAdd?: number
 }
 
 export interface PromptConfig {
