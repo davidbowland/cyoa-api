@@ -12,8 +12,7 @@ export const dynamodbOptionsTableName = process.env.DYNAMODB_OPTIONS_TABLE_NAME 
 export const dynamodbPromptsTableName = process.env.DYNAMODB_PROMPTS_TABLE_NAME as string
 
 // Lambda
-
-export const createGameFunctionName = process.env.CREATE_GAME_FUNCTION_NAME as string
+// Note: CREATE_GAME_FUNCTION_NAME environment variable not currently used
 
 // LLM
 

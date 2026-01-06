@@ -83,7 +83,7 @@ Resources:
       Architectures:
         - x86_64
       MemorySize: 1536
-      Description: Retrieve all valid game IDs
+      Description: Retrieve game IDs
       Policies:
         - AWSLambdaBasicExecutionRole
       Environment:
@@ -141,7 +141,7 @@ Resources:
       Architectures:
         - x86_64
       MemorySize: 1024
-      Description: Retrieve a game by ID, creating it if necessary
+      Description: Retrieve game by ID, creating if needed
       Policies:
         - AWSLambdaBasicExecutionRole
         - DynamoDBReadPolicy:
@@ -204,7 +204,7 @@ Resources:
       Architectures:
         - x86_64
       MemorySize: 1536
-      Description: Create daily cyoa game
+      Description: Create CYOA game
       Policies:
         - AWSLambdaBasicExecutionRole
         - DynamoDBCrudPolicy:
@@ -225,16 +225,16 @@ Resources:
           DEBUG_LOGGING: 'false'
           DYNAMODB_GAMES_TABLE_NAME: !Ref GamesTable
           DYNAMODB_PROMPTS_TABLE_NAME: !Ref PromptsTable
-          INSPIRATION_ADJECTIVES_COUNT: 5
-          INSPIRATION_NOUNS_COUNT: 10
-          INSPIRATION_VERBS_COUNT: 8
+          INSPIRATION_ADJECTIVES_COUNT: 15
+          INSPIRATION_NOUNS_COUNT: 25
+          INSPIRATION_VERBS_COUNT: 20
           LLM_PROMPT_ID: create-cyoa-game
       Events:
         Schedule:
           Type: Schedule
           Properties:
             Schedule: 'cron(5 4 2/3 * ? *)'
-            Description: Create a game every three days between 4-5am UTC
+            Description: Create game every three days at 4-5am UTC
             Enabled: !FindInMap [EnvironmentMap, !Ref Environment, scheduledGameCreationEnabled]
       Tags:
         'created-by': 'cyoa-api'

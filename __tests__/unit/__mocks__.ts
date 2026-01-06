@@ -1,11 +1,5 @@
 /* eslint sort-keys:0 */
-import {
-  CyoaGame,
-  GameId,
-  Prompt,
-  PromptConfig,
-  PromptId,
-} from '@types'
+import { CyoaGame, GameId, Prompt, PromptConfig, PromptId } from '@types'
 
 // Games
 
@@ -16,8 +10,8 @@ export const cyoaGame: CyoaGame = {
   description: 'A test adventure game',
   image: 'test-image.jpg',
   outline: 'Test outline',
-  characters: [{ name: 'Hero', imageDescription: 'A brave hero', voice: 'heroic' }],
-  inventory: [{ name: 'Sword', imageDescription: 'A sharp sword' }],
+  characters: [{ name: 'Hero', image: 'hero-image.jpg', voice: 'heroic' }],
+  inventory: [{ name: 'Sword', image: 'sword-image.jpg' }],
   keyInformation: ['Important clue 1', 'Important clue 2'],
   redHerrings: ['False clue 1', 'False clue 2'],
   resourceName: 'Health',
@@ -32,10 +26,10 @@ export const cyoaGame: CyoaGame = {
       choice: 'What do you do?',
       options: [
         { name: 'Fight', resourcesToAdd: -10 },
-        { name: 'Run', resourcesToAdd: 0 }
-      ]
-    }
-  ]
+        { name: 'Run', resourcesToAdd: 0 },
+      ],
+    },
+  ],
 }
 
 export const serializedGame = {
@@ -60,4 +54,51 @@ export const promptId: PromptId = '5253'
 export const prompt: Prompt = {
   config: promptConfig,
   contents: 'You are a helpful assistant. ${data}',
+}
+
+// Bedrock
+
+export const cyoaGamePromptOutput = {
+  title: 'Generated Adventure',
+  description: 'An AI-generated adventure game',
+  titleImageDescription: 'A mystical forest scene',
+  outline: 'A journey through an enchanted forest',
+  characters: [
+    { name: 'Wizard', imageDescription: 'An old wise wizard', voice: 'mystical' },
+    { name: 'Dragon', imageDescription: 'A fierce red dragon', voice: 'menacing' },
+  ],
+  inventory: [
+    { name: 'Magic Wand', imageDescription: 'A glowing wooden wand' },
+    { name: 'Health Potion', imageDescription: 'A red healing potion' },
+  ],
+  keyInformation: ['The dragon guards the treasure', 'The wizard knows ancient spells'],
+  redHerrings: ['There might be goblins nearby', 'The forest has hidden traps'],
+  resourceName: 'Magic Energy',
+  startingResourceValue: 50,
+  lossResourceThreshold: 5,
+  choicePoints: [
+    {
+      inventoryToIntroduce: ['Magic Wand'],
+      keyInformationToIntroduce: ['The wizard knows ancient spells'],
+      redHerringsToIntroduce: ['There might be goblins nearby'],
+      inventoryOrInformationConsumed: [],
+      choice: 'You encounter the wizard. What do you do?',
+      options: [
+        { name: 'Ask for help', resourcesToAdd: 5 },
+        { name: 'Challenge the wizard', resourcesToAdd: -15 },
+      ],
+    },
+  ],
+}
+
+export const invokeModelCyoaGameResponse = {
+  body: new TextEncoder().encode(
+    JSON.stringify({
+      content: [
+        {
+          text: JSON.stringify(cyoaGamePromptOutput),
+        },
+      ],
+    }),
+  ),
 }

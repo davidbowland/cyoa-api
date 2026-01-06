@@ -1,5 +1,4 @@
 import { cyoaGame } from '../__mocks__'
-
 import { serializeCyoaGame } from '@utils/serialize'
 
 describe('serialize', () => {

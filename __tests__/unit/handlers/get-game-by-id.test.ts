@@ -1,10 +1,9 @@
 import { cyoaGame, gameId, serializedGame } from '../__mocks__'
-
 import { getGameByIdHandler } from '@handlers/get-game-by-id'
 import * as dynamodb from '@services/dynamodb'
 import { APIGatewayProxyEventV2 } from '@types'
-import status from '@utils/status'
 import * as serialize from '@utils/serialize'
+import status from '@utils/status'
 
 jest.mock('@services/dynamodb')
 jest.mock('@utils/serialize')

@@ -1,5 +1,4 @@
 export * from 'aws-lambda'
-export { Operation as PatchOperation } from 'fast-json-patch'
 
 // Game
 
@@ -10,14 +9,14 @@ export interface CyoaGame {
   description: string
   image?: string
   outline: string
-  characters: CreateGamePromptCharacter[]
-  inventory: CreateGamePromptInventory[]
+  characters: CyoaCharacter[]
+  inventory: CyoaInventory[]
   keyInformation: string[]
   redHerrings: string[]
   resourceName: string
   startingResourceValue: number
   lossResourceThreshold: number
-  choicePoints: CreateGamePromptChoicePoint[]
+  choicePoints: CyoaChoicePoint[]
 }
 
 export interface CyoaGameSerialized {
@@ -31,6 +30,15 @@ export interface CyoaCharacter {
   name: string
   image?: string
   voice: string
+}
+
+export interface CyoaChoicePoint {
+  inventoryToIntroduce: string[]
+  keyInformationToIntroduce: string[]
+  redHerringsToIntroduce: string[]
+  inventoryOrInformationConsumed: string[]
+  choice: string
+  options: CreateGamePromptOption[]
 }
 
 export interface CyoaInventory {
@@ -80,6 +88,7 @@ export interface CreateGamePromptOption {
 
 export interface CreateGamePromptOutput {
   title?: string
+  description?: string
   titleImageDescription?: string
   outline?: string
   characters?: CreateGamePromptCharacter[]

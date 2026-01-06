@@ -39,12 +39,13 @@
     "@aws-sdk/client-bedrock-runtime": "^3.943.0",
     "@aws-sdk/client-dynamodb": "^3.943.0",
     "@aws-sdk/client-lambda": "^3.943.0",
+    "ajv": "^8.17.1",
     "aws-xray-sdk-core": "^3.12.0",
     "axios": "^1.13.2",
     "axios-retry": "^4.5.0",
     "esbuild": "^0.27.0",
-    "fast-json-patch": "^3.1.1",
-    "husky": "^9.1.7"
+    "husky": "^9.1.7",
+    "slugify": "^1.6.6"
   },
   "devDependencies": {
     "@babel/core": "^7.28.5",

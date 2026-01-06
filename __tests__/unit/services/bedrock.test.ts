@@ -1,4 +1,4 @@
-import { connectionsData, invokeModelCategories, invokeModelResponse, prompt } from '../__mocks__'
+import { cyoaGamePromptOutput, invokeModelCyoaGameResponse, prompt } from '../__mocks__'
 import { invokeModel, invokeModelMessage } from '@services/bedrock'
 
 const mockSend = jest.fn()
@@ -16,13 +16,13 @@ describe('bedrock', () => {
 
   describe('invokeModel', () => {
     beforeAll(() => {
-      mockSend.mockResolvedValue(invokeModelResponse)
+      mockSend.mockResolvedValue(invokeModelCyoaGameResponse)
     })
 
     it('should invoke the correct model based on the prompt', async () => {
       const result = await invokeModel(prompt)
 
-      expect(result).toEqual(invokeModelCategories)
+      expect(result).toEqual(cyoaGamePromptOutput)
       expect(mockSend).toHaveBeenCalledWith({
         body: new TextEncoder().encode(
           JSON.stringify({
@@ -45,7 +45,7 @@ describe('bedrock', () => {
       }
       const result = await invokeModel(promptWithContext, { data })
 
-      expect(result).toEqual({ ...connectionsData, wordList: undefined })
+      expect(result).toEqual(cyoaGamePromptOutput)
       expect(mockSend).toHaveBeenCalledWith({
         body: new TextEncoder().encode(
           JSON.stringify({
@@ -69,12 +69,12 @@ describe('bedrock', () => {
 
   describe('invokeModelMessage', () => {
     beforeAll(() => {
-      mockSend.mockResolvedValue(invokeModelResponse)
+      mockSend.mockResolvedValue(invokeModelCyoaGameResponse)
     })
 
     it('should invoke the correct model based on the prompt', async () => {
       const result = await invokeModelMessage(prompt)
-      expect(result).toEqual({ ...connectionsData, wordList: undefined })
+      expect(result).toEqual(cyoaGamePromptOutput)
       expect(mockSend).toHaveBeenCalledWith({
         body: new TextEncoder().encode(
           JSON.stringify({

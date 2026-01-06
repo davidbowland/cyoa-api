@@ -1,0 +1,7 @@
+### Get all games
+
+GET https://cyoa-api.bowland.link/v1/games HTTP/1.1
+
+### Get specific game
+
+GET https://cyoa-api.bowland.link/v1/games/a-dark-secret HTTP/1.1

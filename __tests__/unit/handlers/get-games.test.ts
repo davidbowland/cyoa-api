@@ -1,5 +1,4 @@
 import { cyoaGame, gameId } from '../__mocks__'
-
 import eventJson from '@events/get-games.json'
 import { getGamesHandler } from '@handlers/get-games'
 import * as dynamodb from '@services/dynamodb'
@@ -29,13 +28,15 @@ describe('get-games', () => {
           description: 'A test adventure game',
           gameId,
           image: 'test-image.jpg',
-          name: 'Test Adventure',
+          resourceName: 'Health',
+          title: 'Test Adventure',
         },
         {
           description: 'A test adventure game',
           gameId: secondGameId,
           image: 'test-image.jpg',
-          name: 'Another Adventure',
+          resourceName: 'Health',
+          title: 'Another Adventure',
         },
       ])
       expect(dynamodb.getGames).toHaveBeenCalledWith()

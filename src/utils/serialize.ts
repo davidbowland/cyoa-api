@@ -1,4 +1,4 @@
-import { CyoaGame, CyoaGameSerialized } from "../types";
+import { CyoaGame, CyoaGameSerialized } from '../types'
 
 export const serializeCyoaGame = (game: CyoaGame): CyoaGameSerialized => ({
   description: game.description,

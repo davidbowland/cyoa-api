@@ -1,8 +1,13 @@
 import { getGameById } from '../services/dynamodb'
-import { APIGatewayProxyEventV2, APIGatewayProxyResultV2, CyoaGameSerialized, GameId } from '../types'
+import {
+  APIGatewayProxyEventV2,
+  APIGatewayProxyResultV2,
+  CyoaGameSerialized,
+  GameId,
+} from '../types'
 import { log } from '../utils/logging'
-import status from '../utils/status'
 import { serializeCyoaGame } from '../utils/serialize'
+import status from '../utils/status'
 
 export const getGameByIdHandler = async (
   event: APIGatewayProxyEventV2,
