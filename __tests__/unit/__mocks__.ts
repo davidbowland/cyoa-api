@@ -11,6 +11,10 @@ import {
   PromptId,
 } from '@types'
 
+// Common
+
+export const uuid = 'test-uuid-123'
+
 // Games
 
 export const gameId: GameId = 'a-friendly-adventure'
@@ -150,7 +154,7 @@ export const cyoaNarrative: CyoaNarrative = {
     { name: 'Sneak past quietly', resourcesToAdd: 0 },
     { name: 'Wake the dragon', resourcesToAdd: -20 },
   ],
-  inventory: ['Sword', 'Magic Wand', 'Health Potion'],
+  inventory: [{ name: 'Sword', image: 'sword-image.jpg' }],
   currentResourceValue: 75,
 }
 

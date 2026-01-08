@@ -2,12 +2,12 @@ import { cyoaGame, prompt } from '../__mocks__'
 import * as bedrock from '@services/bedrock'
 import * as dynamodb from '@services/dynamodb'
 import { createGame } from '@services/games'
-import * as narratives from '@services/narratives'
+import * as narrativeGenerationOrchestrator from '@services/narrative-generation-orchestrator'
 import { CreateGamePromptOutput } from '@types'
 
 jest.mock('@services/bedrock')
 jest.mock('@services/dynamodb')
-jest.mock('@services/narratives')
+jest.mock('@services/narrative-generation-orchestrator')
 jest.mock('@utils/logging')
 
 describe('games', () => {
@@ -80,16 +80,13 @@ describe('games', () => {
           initialNarrativeId: 'start',
         }),
       )
-      expect(narratives.startNarrativeGeneration).toHaveBeenCalledWith(
+      expect(narrativeGenerationOrchestrator.startInitialNarrativeGeneration).toHaveBeenCalledWith(
         'test-adventure',
-        'start',
-        {
-          recap: 'The game is starting.',
-          currentResourceValue: 100,
-          lastChoiceMade: '',
-          currentInventory: [],
-        },
-        mockChoice,
+        expect.objectContaining({
+          title: 'Test Adventure',
+          choicePoints: expect.arrayContaining([expect.any(Object)]),
+          initialNarrativeId: 'start',
+        }),
       )
       expect(result).toEqual({
         game: expect.objectContaining({
@@ -183,8 +180,8 @@ describe('games', () => {
 
     it('should continue when narrative generation fails', async () => {
       jest
-        .mocked(narratives)
-        .startNarrativeGeneration.mockRejectedValueOnce(new Error('Narrative error'))
+        .mocked(narrativeGenerationOrchestrator)
+        .startInitialNarrativeGeneration.mockRejectedValueOnce(new Error('Narrative error'))
 
       const result = await createGame()
 
@@ -195,6 +192,64 @@ describe('games', () => {
         }),
         gameId: 'test-adventure',
       })
+    })
+
+    it('should filter out red herrings that are also in key information', async () => {
+      const gameWithOverlappingInfo: CreateGamePromptOutput = {
+        ...mockGeneratedGame,
+        keyInformation: ['Important clue 1', 'Shared clue', 'Important clue 2'],
+        redHerrings: ['False clue 1', 'Shared clue', 'False clue 2'],
+      }
+      jest.mocked(bedrock).invokeModel.mockResolvedValueOnce(gameWithOverlappingInfo)
+
+      const result = await createGame()
+
+      expect(result.game.keyInformation).toEqual([
+        'Important clue 1',
+        'Shared clue',
+        'Important clue 2',
+      ])
+      expect(result.game.redHerrings).toEqual(['False clue 1', 'False clue 2'])
+      expect(result.game.redHerrings).not.toContain('Shared clue')
+    })
+
+    it('should preserve all red herrings when none overlap with key information', async () => {
+      const gameWithNoOverlap: CreateGamePromptOutput = {
+        ...mockGeneratedGame,
+        keyInformation: ['Important clue 1', 'Important clue 2'],
+        redHerrings: ['False clue 1', 'False clue 2', 'False clue 3'],
+      }
+      jest.mocked(bedrock).invokeModel.mockResolvedValueOnce(gameWithNoOverlap)
+
+      const result = await createGame()
+
+      expect(result.game.keyInformation).toEqual(['Important clue 1', 'Important clue 2'])
+      expect(result.game.redHerrings).toEqual(['False clue 1', 'False clue 2', 'False clue 3'])
+    })
+
+    it('should handle empty red herrings array', async () => {
+      const gameWithEmptyRedHerrings: CreateGamePromptOutput = {
+        ...mockGeneratedGame,
+        keyInformation: ['Important clue 1', 'Important clue 2'],
+        redHerrings: [],
+      }
+      jest.mocked(bedrock).invokeModel.mockResolvedValueOnce(gameWithEmptyRedHerrings)
+
+      const result = await createGame()
+
+      expect(result.game.keyInformation).toEqual(['Important clue 1', 'Important clue 2'])
+      expect(result.game.redHerrings).toEqual([])
+    })
+
+    it('should handle undefined red herrings', async () => {
+      const gameWithUndefinedRedHerrings: CreateGamePromptOutput = {
+        ...mockGeneratedGame,
+        keyInformation: ['Important clue 1', 'Important clue 2'],
+        redHerrings: undefined as any,
+      }
+      jest.mocked(bedrock).invokeModel.mockResolvedValueOnce(gameWithUndefinedRedHerrings)
+
+      await expect(createGame()).rejects.toThrow()
     })
   })
 })

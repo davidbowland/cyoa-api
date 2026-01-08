@@ -1,5 +1,30 @@
 export * from 'aws-lambda'
 
+// Common
+
+export interface StringObject {
+  [key: string]: string
+}
+
+// S3 Types
+
+export interface NarrativeContextS3Data {
+  gameId: string
+  narrativeId: string
+  generationData: NarrativeGenerationData
+  timestamp: number
+}
+
+// SQS Types
+
+export interface SQSNarrativeEvent {
+  Records: Array<{
+    body: string
+    messageId: string
+    receiptHandle: string
+  }>
+}
+
 // Game
 
 export type GameId = string
@@ -20,12 +45,30 @@ export interface CyoaGame {
   initialNarrativeId: string
 }
 
+export interface GameWithTimestamp {
+  game: CyoaGame
+  gameId: GameId
+  createdAt: number
+}
+
 export interface CyoaGameSerialized {
   title: string
   description: string
   image?: string
   resourceName: string
   initialNarrativeId: string
+}
+
+export interface CyoaOptionSerialized {
+  name: string
+}
+
+export interface CyoaNarrativeSerialized {
+  narrative: string
+  choice: string
+  options: CyoaOptionSerialized[]
+  inventory: CyoaInventory[]
+  currentResourceValue: number
 }
 
 export interface CyoaCharacter {
@@ -53,7 +96,7 @@ export interface CyoaNarrative {
   recap: string
   choice: string
   options: CyoaOption[]
-  inventory: string[]
+  inventory: CyoaInventory[]
   currentResourceValue: number
 }
 

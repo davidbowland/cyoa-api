@@ -1,12 +1,21 @@
 import { getGameById } from '../services/dynamodb'
-import { ensureNarrativeExists } from '../services/narrative-orchestrator'
-import { APIGatewayProxyEventV2, APIGatewayProxyResultV2, GameId, NarrativeId } from '../types'
+import { ensureNarrativeExists } from '../services/narrative-generation-orchestrator'
+import {
+  APIGatewayProxyEventV2,
+  APIGatewayProxyResultV2,
+  CyoaNarrativeSerialized,
+  GameId,
+  NarrativeId,
+} from '../types'
 import { log, logError } from '../utils/logging'
+import { serializeCyoaNarrative } from '../utils/serialize'
 import status from '../utils/status'
 
 export const getNarrativeByIdHandler = async (
   event: APIGatewayProxyEventV2,
-): Promise<APIGatewayProxyResultV2<unknown>> => {
+): Promise<
+  APIGatewayProxyResultV2<CyoaNarrativeSerialized | { message: string } | { error: string }>
+> => {
   log('Received event', { ...event, body: undefined })
 
   try {
@@ -18,7 +27,7 @@ export const getNarrativeByIdHandler = async (
 
     switch (result.status) {
     case 'ready':
-      return { ...status.OK, body: JSON.stringify(result.narrative) }
+      return { ...status.OK, body: JSON.stringify(serializeCyoaNarrative(result.narrative!)) }
     case 'generating':
       return { ...status.ACCEPTED, body: JSON.stringify({ message: result.message }) }
     case 'not_found':

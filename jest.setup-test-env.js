@@ -24,3 +24,12 @@ process.env.INSPIRATION_VERBS_COUNT = '2'
 // Logging
 
 process.env.DEBUG_LOGGING = 'true'
+
+// S3
+
+process.env.S3_ASSETS_BUCKET = 'cyoa-api-assets'
+
+// SQS
+
+process.env.SQS_MESSAGE_QUEUE_ID = 'message-queue-id'
+process.env.SQS_QUEUE_URL = 'https://dbowland.com/sqsQueue'

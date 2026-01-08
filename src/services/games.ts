@@ -12,7 +12,6 @@ import {
 import { nouns } from '../assets/nouns'
 import { verbs } from '../assets/verbs'
 import {
-  initialNarrativeId,
   inspirationAdjectivesCount,
   inspirationNounsCount,
   inspirationVerbsCount,
@@ -24,8 +23,7 @@ import { log, logError } from '../utils/logging'
 import { getRandomSample } from '../utils/random'
 import { invokeModel } from './bedrock'
 import { getGameById, getGames, getPromptById, setGameById } from './dynamodb'
-import { InitialNarrativeStrategy } from './narrative-strategies'
-import { startNarrativeGeneration } from './narratives'
+import { startInitialNarrativeGeneration } from './narrative-generation-orchestrator'
 
 export const createGame = async (): Promise<{ game: CyoaGame; gameId: GameId }> => {
   const existingGames = await getGames()
@@ -58,7 +56,12 @@ export const createGame = async (): Promise<{ game: CyoaGame; gameId: GameId }> 
   const generatedGame = await invokeModel<CreateGamePromptOutput>(prompt, modelContext)
   log('Game generated', { generatedGame: JSON.stringify(generatedGame, null, 2) })
 
-  const { game } = formatCyoaGame(generatedGame) // imageDescription ignored for now
+  const { game } = formatCyoaGame({
+    ...generatedGame,
+    redHerrings: generatedGame.redHerrings?.filter(
+      (item) => !generatedGame.keyInformation?.includes(item),
+    ),
+  }) // imageDescription ignored for now
 
   if (game.choicePoints.length !== choiceCount) {
     log('Wrong number of choice points', { choiceCount, choicePoints: game.choicePoints })
@@ -75,23 +78,11 @@ export const createGame = async (): Promise<{ game: CyoaGame; gameId: GameId }> 
   }
   await setGameById(gameId, game)
 
-  const narrativeContext = InitialNarrativeStrategy.buildContext({
-    gameId,
-    narrativeId: initialNarrativeId,
-    game,
-  })
   try {
-    await startNarrativeGeneration(
-      gameId,
-      initialNarrativeId,
-      narrativeContext,
-      game.choicePoints[0],
-    )
+    await startInitialNarrativeGeneration(gameId, game)
   } catch (error: unknown) {
-    logError('Error creating narrative', {
+    logError('Error creating initial narrative', {
       gameId,
-      initialNarrativeId,
-      narrativeContext,
       error,
     })
   }

@@ -1,4 +1,10 @@
-import { CyoaGame, CyoaGameSerialized } from '../types'
+import {
+  CyoaGame,
+  CyoaGameSerialized,
+  CyoaNarrative,
+  CyoaNarrativeSerialized,
+  CyoaOptionSerialized,
+} from '../types'
 
 export const serializeCyoaGame = (game: CyoaGame): CyoaGameSerialized => ({
   description: game.description,
@@ -6,4 +12,16 @@ export const serializeCyoaGame = (game: CyoaGame): CyoaGameSerialized => ({
   resourceName: game.resourceName,
   title: game.title,
   initialNarrativeId: game.initialNarrativeId,
+})
+
+export const serializeCyoaNarrative = (narrative: CyoaNarrative): CyoaNarrativeSerialized => ({
+  narrative: narrative.narrative,
+  choice: narrative.choice,
+  options: narrative.options.map(
+    (option): CyoaOptionSerialized => ({
+      name: option.name,
+    }),
+  ),
+  inventory: narrative.inventory,
+  currentResourceValue: narrative.currentResourceValue,
 })

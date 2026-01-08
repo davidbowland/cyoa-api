@@ -1,5 +1,5 @@
-import { cyoaGame } from '../__mocks__'
-import { serializeCyoaGame } from '@utils/serialize'
+import { cyoaGame, cyoaNarrative } from '../__mocks__'
+import { serializeCyoaGame, serializeCyoaNarrative } from '@utils/serialize'
 
 describe('serialize', () => {
   describe('serializeCyoaGame', () => {
@@ -27,18 +27,19 @@ describe('serialize', () => {
         title: 'Test Adventure',
       })
     })
+  })
 
-    it('should only include specified fields from CyoaGame', () => {
-      const result = serializeCyoaGame(cyoaGame)
+  describe('serializeCyoaNarrative', () => {
+    it('should return serialized narrative with required fields', () => {
+      const result = serializeCyoaNarrative(cyoaNarrative)
 
-      expect(result).not.toHaveProperty('outline')
-      expect(result).not.toHaveProperty('characters')
-      expect(result).not.toHaveProperty('inventory')
-      expect(result).not.toHaveProperty('keyInformation')
-      expect(result).not.toHaveProperty('redHerrings')
-      expect(result).not.toHaveProperty('startingResourceValue')
-      expect(result).not.toHaveProperty('lossResourceThreshold')
-      expect(result).not.toHaveProperty('choicePoints')
+      expect(result).toEqual({
+        narrative: 'You find yourself standing before a massive sleeping dragon...',
+        choice: 'You see a sleeping dragon. What do you do?',
+        options: [{ name: 'Sneak past quietly' }, { name: 'Wake the dragon' }],
+        inventory: [{ name: 'Sword', image: 'sword-image.jpg' }],
+        currentResourceValue: 75,
+      })
     })
   })
 })

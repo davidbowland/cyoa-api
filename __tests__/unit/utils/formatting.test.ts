@@ -3,6 +3,7 @@ import {
   createNarrativePromptOutput,
   narrativeGenerationData,
 } from '../__mocks__'
+import { CyoaGame } from '@types'
 import { formatCyoaGame, formatNarrative } from '@utils/formatting'
 
 describe('formatting', () => {
@@ -59,8 +60,27 @@ describe('formatting', () => {
   })
 
   describe('formatNarrative', () => {
+    const mockGame: CyoaGame = {
+      title: 'Test Game',
+      description: 'Test Description',
+      outline: 'Test Outline',
+      characters: [],
+      inventory: [
+        { name: 'Sword', image: 'sword-image.jpg' },
+        { name: 'Magic Wand' },
+        { name: 'Health Potion' },
+      ],
+      keyInformation: [],
+      redHerrings: [],
+      resourceName: 'Health',
+      startingResourceValue: 100,
+      lossResourceThreshold: 0,
+      choicePoints: [],
+      initialNarrativeId: 'start',
+    }
+
     it('should format valid narrative prompt output', () => {
-      const result = formatNarrative(createNarrativePromptOutput, narrativeGenerationData)
+      const result = formatNarrative(createNarrativePromptOutput, narrativeGenerationData, mockGame)
 
       expect(result).toEqual({
         narrative: 'You find yourself standing before a massive sleeping dragon...',
@@ -71,7 +91,11 @@ describe('formatting', () => {
           { name: 'Sneak past quietly', resourcesToAdd: 0 },
           { name: 'Wake the dragon', resourcesToAdd: -20 },
         ],
-        inventory: ['Sword', 'Magic Wand', 'Health Potion'],
+        inventory: [
+          { name: 'Sword', image: 'sword-image.jpg' },
+          { name: 'Magic Wand' },
+          { name: 'Health Potion' },
+        ],
         currentResourceValue: 75,
       })
     })
@@ -79,13 +103,15 @@ describe('formatting', () => {
     it('should throw error for invalid narrative prompt output', () => {
       const invalidInput = { ...createNarrativePromptOutput, narrative: '' }
 
-      expect(() => formatNarrative(invalidInput as any, narrativeGenerationData)).toThrow()
+      expect(() =>
+        formatNarrative(invalidInput as any, narrativeGenerationData, mockGame),
+      ).toThrow()
     })
 
     it('should throw error for missing required fields', () => {
       const { narrative: _, ...incompleteInput } = createNarrativePromptOutput
 
-      expect(() => formatNarrative(incompleteInput, narrativeGenerationData)).toThrow()
+      expect(() => formatNarrative(incompleteInput, narrativeGenerationData, mockGame)).toThrow()
     })
 
     it('should throw error for invalid option structure', () => {
@@ -94,7 +120,9 @@ describe('formatting', () => {
         options: [{ name: 'Invalid option' }], // Missing resourcesToAdd
       }
 
-      expect(() => formatNarrative(invalidOptionsInput as any, narrativeGenerationData)).toThrow()
+      expect(() =>
+        formatNarrative(invalidOptionsInput as any, narrativeGenerationData, mockGame),
+      ).toThrow()
     })
 
     it('should throw error for empty option name', () => {
@@ -103,7 +131,9 @@ describe('formatting', () => {
         options: [{ name: '', resourcesToAdd: 0 }],
       }
 
-      expect(() => formatNarrative(emptyNameInput as any, narrativeGenerationData)).toThrow()
+      expect(() =>
+        formatNarrative(emptyNameInput as any, narrativeGenerationData, mockGame),
+      ).toThrow()
     })
 
     it('should throw error for empty required strings', () => {
@@ -112,7 +142,9 @@ describe('formatting', () => {
         choice: '',
       }
 
-      expect(() => formatNarrative(emptyStringInput as any, narrativeGenerationData)).toThrow()
+      expect(() =>
+        formatNarrative(emptyStringInput as any, narrativeGenerationData, mockGame),
+      ).toThrow()
     })
   })
 })

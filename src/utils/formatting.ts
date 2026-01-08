@@ -88,6 +88,7 @@ export const formatCyoaGame = (
 export const formatNarrative = (
   input: CreateNarrativePromptOutput,
   generationData: NarrativeGenerationData,
+  game: CyoaGame,
 ): CyoaNarrative => {
   const jsonTypeDefinition = {
     type: 'object',
@@ -117,12 +118,16 @@ export const formatNarrative = (
     throw new Error(JSON.stringify(ajv.errors))
   }
 
+  const inventoryItems = (input.inventory as string[])
+    .map((name) => game.inventory.find((item) => item.name === name))
+    .filter((item): item is CyoaInventory => item !== undefined)
+
   const narrative: CyoaNarrative = {
     narrative: input.narrative as string,
     recap: input.recap as string,
     choice: input.choice as string,
     options: input.options as CyoaOption[],
-    inventory: input.inventory as string[],
+    inventory: inventoryItems,
     currentResourceValue: generationData.currentResourceValue,
   }
   return narrative

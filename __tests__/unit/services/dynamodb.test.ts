@@ -83,11 +83,22 @@ describe('dynamodb', () => {
   })
 
   describe('getGames', () => {
-    it('should return array of games with gameId from scan', async () => {
+    it('should return array of games sorted by CreatedAt descending', async () => {
+      const olderTimestamp = mockNow - 1000
+      const newerTimestamp = mockNow
+
       mockSend.mockResolvedValueOnce({
         Items: [
-          { Data: { S: JSON.stringify(cyoaGame) }, GameId: { S: '2025-01-01' } },
-          { Data: { S: JSON.stringify(cyoaGame) }, GameId: { S: '2025-01-02' } },
+          {
+            Data: { S: JSON.stringify(cyoaGame) },
+            GameId: { S: 'older-game' },
+            CreatedAt: { N: `${olderTimestamp}` },
+          },
+          {
+            Data: { S: JSON.stringify(cyoaGame) },
+            GameId: { S: 'newer-game' },
+            CreatedAt: { N: `${newerTimestamp}` },
+          },
         ],
       })
 
@@ -97,8 +108,8 @@ describe('dynamodb', () => {
         TableName: 'games-table',
       })
       expect(result).toEqual([
-        { game: cyoaGame, gameId: '2025-01-01' },
-        { game: cyoaGame, gameId: '2025-01-02' },
+        { game: cyoaGame, gameId: 'newer-game' },
+        { game: cyoaGame, gameId: 'older-game' },
       ])
     })
 
@@ -117,6 +128,9 @@ describe('dynamodb', () => {
 
       expect(mockSend).toHaveBeenCalledWith({
         Item: {
+          CreatedAt: {
+            N: `${mockNow}`,
+          },
           Data: {
             S: JSON.stringify(cyoaGame),
           },

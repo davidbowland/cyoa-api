@@ -68,7 +68,7 @@ export const ContinuationNarrativeStrategy: GenerationStrategy = {
       recap: lastNarrative?.recap ?? 'The game is starting.',
       currentResourceValue,
       lastChoiceMade: lastOptionSelected?.name ?? '',
-      currentInventory: lastNarrative?.inventory ?? [],
+      currentInventory: lastNarrative?.inventory.map((item) => item.name) ?? [],
     }
   },
 

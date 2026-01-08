@@ -34,6 +34,7 @@ Come up with the plan for a choose-your-own-adventure story based on the theme a
   - Key information, especially combinations, can be hidden (for example, as a date or time)
 - Create a list of red herring informtion
   - Red herrings might include numbers, combinations, words, or phrases
+  - NEVER use key information values as a red herring, red herrings MUST BE UNIQUE
 - Create a loss condition
   - Create a resource name, themed with the content
     - NEVER put anything but a name -- this value is displayed to the player
@@ -53,6 +54,7 @@ Come up with the plan for a choose-your-own-adventure story based on the theme a
     - Inventory items, if any
     - Key information, if any
     - Red herrings, if any
+    - DO NOT DUPLICATE DISCOVERIES. If a player discovers some key information in one choice point, they CANNOT discover it in a future choice point.
   - Determine what the player will use or lose in the narrative
   - Determine what choice the player will need to make
     - Every choice should be a puzzle

@@ -18,6 +18,7 @@ import {
   CyoaGame,
   CyoaNarrative,
   GameId,
+  GameWithTimestamp,
   NarrativeGenerationData,
   NarrativeId,
   Prompt,
@@ -62,6 +63,9 @@ export const getGameById = async (gameId: GameId): Promise<CyoaGame> => {
 export const setGameById = async (gameId: GameId, data: CyoaGame): Promise<PutItemOutput> => {
   const command = new PutItemCommand({
     Item: {
+      CreatedAt: {
+        N: `${Date.now()}`,
+      },
       Data: {
         S: JSON.stringify(data),
       },
@@ -79,12 +83,17 @@ export const getGames = async (): Promise<{ gameId: GameId; game: CyoaGame }[]> 
     TableName: dynamodbGamesTableName,
   })
   const response = await dynamodb.send(command)
-  return (
+
+  const games: GameWithTimestamp[] =
     response.Items?.map((item: any) => ({
       game: JSON.parse(item.Data.S as string) as CyoaGame,
       gameId: item.GameId.S as GameId,
+      createdAt: parseInt(item.CreatedAt.N as string, 10),
     })) || []
-  )
+
+  return games
+    .sort((a: GameWithTimestamp, b: GameWithTimestamp) => b.createdAt - a.createdAt)
+    .map(({ game, gameId }: GameWithTimestamp) => ({ game, gameId }))
 }
 
 /* Narratives */

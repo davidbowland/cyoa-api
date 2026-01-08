@@ -1,43 +1,120 @@
-import { createNarrativeEvent, cyoaNarrative } from '../__mocks__'
+import { cyoaNarrative } from '../__mocks__'
 import eventJson from '@events/create-narrative.json'
 import { createNarrativeHandler } from '@handlers/create-narrative'
-import * as narratives from '@services/narratives'
+import * as narrativeGenerationOrchestrator from '@services/narrative-generation-orchestrator'
+import { SQSNarrativeEvent } from '@types'
+import * as logging from '@utils/logging'
 
-jest.mock('@services/narratives')
+jest.mock('@services/narrative-generation-orchestrator')
 jest.mock('@utils/logging')
 
-const createNarrativeEventTyped = eventJson as typeof createNarrativeEvent
+const sqsEventTyped = eventJson as SQSNarrativeEvent
 
 describe('create-narrative', () => {
   describe('createNarrativeHandler', () => {
-    it('should create a narrative successfully', async () => {
-      jest.mocked(narratives).createNarrative.mockResolvedValueOnce(cyoaNarrative)
+    beforeAll(() => {
+      jest.mocked(narrativeGenerationOrchestrator.createNarrative).mockResolvedValue(cyoaNarrative)
+    })
 
-      await createNarrativeHandler(createNarrativeEventTyped)
+    it('should parse SQS message and create narrative with gameId and narrativeId', async () => {
+      await createNarrativeHandler(sqsEventTyped)
 
-      expect(narratives.createNarrative).toHaveBeenCalledWith(
-        createNarrativeEventTyped.gameId,
-        createNarrativeEventTyped.narrativeId,
+      expect(narrativeGenerationOrchestrator.createNarrative).toHaveBeenCalledWith(
+        'test-game-id',
+        'test-narrative-id',
       )
     })
 
-    it('should retry on narrative creation failure and eventually succeed', async () => {
-      jest.mocked(narratives).createNarrative.mockRejectedValueOnce(new Error('Creation failed'))
-      jest.mocked(narratives).createNarrative.mockResolvedValueOnce(cyoaNarrative)
+    it('should log error and continue processing when message parsing fails', async () => {
+      const invalidSqsEvent = {
+        Records: [
+          {
+            body: 'invalid-json',
+            messageId: 'test-message-id',
+            receiptHandle: 'test-receipt-handle',
+          },
+        ],
+      } as SQSNarrativeEvent
 
-      await createNarrativeHandler(createNarrativeEventTyped)
+      await createNarrativeHandler(invalidSqsEvent)
 
-      expect(narratives.createNarrative).toHaveBeenCalledTimes(2)
+      expect(logging.logError).toHaveBeenCalledWith(
+        'Failed to process narrative creation',
+        expect.objectContaining({
+          error: expect.any(Error),
+          record: 'test-message-id',
+        }),
+      )
     })
 
-    it('should keep retrying until narrative creation succeeds', async () => {
-      jest.mocked(narratives).createNarrative.mockRejectedValueOnce(new Error('First failure'))
-      jest.mocked(narratives).createNarrative.mockRejectedValueOnce(new Error('Second failure'))
-      jest.mocked(narratives).createNarrative.mockResolvedValueOnce(cyoaNarrative)
+    it('should retry narrative creation and eventually succeed', async () => {
+      jest
+        .mocked(narrativeGenerationOrchestrator.createNarrative)
+        .mockRejectedValueOnce(new Error('First failure'))
+      jest
+        .mocked(narrativeGenerationOrchestrator.createNarrative)
+        .mockResolvedValueOnce(cyoaNarrative)
 
-      await createNarrativeHandler(createNarrativeEventTyped)
+      await createNarrativeHandler(sqsEventTyped)
 
-      expect(narratives.createNarrative).toHaveBeenCalledTimes(3)
+      expect(narrativeGenerationOrchestrator.createNarrative).toHaveBeenCalledTimes(2)
+      expect(logging.logError).toHaveBeenCalledWith(
+        'Narrative creation failed, retrying',
+        expect.objectContaining({
+          error: expect.any(Error),
+          gameId: 'test-game-id',
+          narrativeId: 'test-narrative-id',
+        }),
+      )
+    })
+
+    it('should retry narrative creation up to 5 times before giving up', async () => {
+      const error = new Error('Persistent failure')
+      jest.mocked(narrativeGenerationOrchestrator.createNarrative).mockRejectedValue(error)
+
+      await createNarrativeHandler(sqsEventTyped)
+
+      expect(narrativeGenerationOrchestrator.createNarrative).toHaveBeenCalledTimes(5)
+      expect(logging.logError).toHaveBeenCalledWith(
+        'Narrative creation failed, retrying',
+        expect.objectContaining({
+          error,
+          gameId: 'test-game-id',
+          narrativeId: 'test-narrative-id',
+        }),
+      )
+    })
+
+    it('should process multiple SQS records', async () => {
+      const multiRecordEvent = {
+        Records: [
+          sqsEventTyped.Records[0],
+          {
+            body: '{"gameId":"game-2","narrativeId":"narrative-2"}',
+            messageId: 'test-message-id-456',
+            receiptHandle: 'test-receipt-handle-2',
+          },
+        ],
+      } as SQSNarrativeEvent
+
+      jest
+        .mocked(narrativeGenerationOrchestrator.createNarrative)
+        .mockResolvedValueOnce(cyoaNarrative)
+      jest
+        .mocked(narrativeGenerationOrchestrator.createNarrative)
+        .mockResolvedValueOnce(cyoaNarrative)
+
+      await createNarrativeHandler(multiRecordEvent)
+
+      expect(narrativeGenerationOrchestrator.createNarrative).toHaveBeenCalledTimes(2)
+      expect(narrativeGenerationOrchestrator.createNarrative).toHaveBeenCalledWith(
+        'test-game-id',
+        'test-narrative-id',
+      )
+      expect(narrativeGenerationOrchestrator.createNarrative).toHaveBeenCalledWith(
+        'game-2',
+        'narrative-2',
+      )
     })
   })
 })

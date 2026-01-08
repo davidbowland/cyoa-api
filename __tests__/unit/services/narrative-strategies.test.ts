@@ -76,7 +76,7 @@ describe('narrative-strategies', () => {
           currentResourceValue:
             cyoaNarrative.currentResourceValue + cyoaNarrative.options[0].resourcesToAdd,
           lastChoiceMade: cyoaNarrative.options[0].name,
-          currentInventory: cyoaNarrative.inventory,
+          currentInventory: ['Sword'],
         })
       })
 

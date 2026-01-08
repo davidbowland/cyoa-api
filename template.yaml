@@ -17,6 +17,7 @@ Parameters:
 Mappings:
   EnvironmentMap:
     prod:
+      bucketName: cyoa-api-assets
       certificate: adce1a21-90b4-4120-8548-111215e582f0
       corsDomain: https://cyoa.dbowland.com
       domain: cyoa-api.dbowland.com
@@ -25,9 +26,11 @@ Mappings:
       narrativesTable: cyoa-api-narratives
       project: cyoa
       promptsTable: cyoa-api-prompts
+      queueName: cyoa-narratives-to-generate
       scheduledGameCreationEnabled: true
       zoneId: Z072422417XWM8PIXXSFA
     test:
+      bucketName: cyoa-api-assets-test
       certificate: 6a48cba7-feb9-4de5-8cbf-d383140fcdef
       corsDomain: https://cyoa.bowland.link
       domain: cyoa-api.bowland.link
@@ -36,6 +39,7 @@ Mappings:
       narrativesTable: cyoa-api-narratives-test
       project: cyoa-test
       promptsTable: cyoa-api-prompts-test
+      queueName: cyoa-narratives-to-generate-test
       scheduledGameCreationEnabled: false
       zoneId: Z01312547RGU1BYKIJXY
 
@@ -90,9 +94,12 @@ Resources:
       Description: Retrieve available games
       Policies:
         - AWSLambdaBasicExecutionRole
+        - DynamoDBReadPolicy:
+            TableName: !Ref GamesTable
       Environment:
         Variables:
           DEBUG_LOGGING: 'false'
+          DYNAMODB_GAMES_TABLE_NAME: !Ref GamesTable
       Events:
         Api:
           Type: HttpApi
@@ -225,12 +232,10 @@ Resources:
                 - 'bedrock:InvokeModel*'
               Effect: Allow
               Resource: '*'
-        - Version: 2012-10-17
-          Statement:
-            - Action:
-                - 'lambda:InvokeFunction'
-              Effect: Allow
-              Resource: !GetAtt CreateNarrativeFunction.Arn
+        - S3WritePolicy:
+            BucketName: !Ref AssetsBucket
+        - SQSSendMessagePolicy:
+            QueueName: !FindInMap [EnvironmentMap, !Ref Environment, queueName]
       Environment:
         Variables:
           CREATE_NARRATIVE_FUNCTION_NAME: !Ref CreateNarrativeFunction
@@ -242,6 +247,11 @@ Resources:
           INSPIRATION_NOUNS_COUNT: 25
           INSPIRATION_VERBS_COUNT: 20
           PROMPT_ID_CREATE_GAME: create-game
+          S3_ASSETS_BUCKET: !Ref AssetsBucket
+          SQS_MESSAGE_QUEUE_ID: narratives
+          SQS_QUEUE_URL: !Sub
+            - 'https://sqs.us-east-1.amazonaws.com/${AWS::AccountId}/${Queue}'
+            - Queue: !FindInMap [EnvironmentMap, !Ref Environment, queueName]
       Events:
         Schedule:
           Type: Schedule
@@ -303,18 +313,21 @@ Resources:
             TableName: !Ref GamesTable
         - DynamoDBCrudPolicy:
             TableName: !Ref NarrativesTable
-        - Version: 2012-10-17
-          Statement:
-            - Action:
-                - 'lambda:InvokeFunction'
-              Effect: Allow
-              Resource: !GetAtt CreateNarrativeFunction.Arn
+        - S3WritePolicy:
+            BucketName: !Ref AssetsBucket
+        - SQSSendMessagePolicy:
+            QueueName: !FindInMap [EnvironmentMap, !Ref Environment, queueName]
       Environment:
         Variables:
           CREATE_NARRATIVE_FUNCTION_NAME: !Ref CreateNarrativeFunction
           DEBUG_LOGGING: 'false'
           DYNAMODB_GAMES_TABLE_NAME: !Ref GamesTable
           DYNAMODB_NARRATIVES_TABLE_NAME: !Ref NarrativesTable
+          S3_ASSETS_BUCKET: !Ref AssetsBucket
+          SQS_MESSAGE_QUEUE_ID: narratives
+          SQS_QUEUE_URL: !Sub
+            - 'https://sqs.us-east-1.amazonaws.com/${AWS::AccountId}/${Queue}'
+            - Queue: !FindInMap [EnvironmentMap, !Ref Environment, queueName]
       Events:
         Api:
           Type: HttpApi
@@ -359,7 +372,6 @@ Resources:
       FilterPattern: '[timestamp, uuid, level="ERROR", message]'
       LogGroupName: !Ref GetNarrativeByIdLogGroup
 
-  # CreateNarrativeFunction is only invoked by other lambdas
   CreateNarrativeFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -377,6 +389,10 @@ Resources:
             TableName: !Ref NarrativesTable
         - DynamoDBReadPolicy:
             TableName: !Ref PromptsTable
+        - S3CrudPolicy:
+            BucketName: !Ref AssetsBucket
+        - SQSPollerPolicy:
+            QueueName: !GetAtt NarrativeGenerationQueue.QueueName
         - Version: 2012-10-17
           Statement:
             - Action:
@@ -397,6 +413,13 @@ Resources:
           PROMPT_ID_CREATE_NARRATIVE: create-narrative
           PROMPT_ID_LOSE_GAME: lose-game
           PROMPT_ID_WIN_GAME: win-game
+          S3_ASSETS_BUCKET: !Ref AssetsBucket
+      Events:
+        SQSQueueEvent:
+          Type: SQS
+          Properties:
+            BatchSize: 1
+            Queue: !GetAtt NarrativeGenerationQueue.Arn
       Tags:
         'created-by': 'cyoa-api'
         'created-for': 'cyoa'
@@ -442,10 +465,14 @@ Resources:
       AttributeDefinitions:
         - AttributeName: GameId
           AttributeType: S
+        - AttributeName: CreatedAt
+          AttributeType: N
       BillingMode: PAY_PER_REQUEST
       KeySchema:
         - AttributeName: GameId
           KeyType: HASH
+        - AttributeName: CreatedAt
+          KeyType: RANGE
       TableName: !FindInMap [EnvironmentMap, !Ref Environment, gamesTable]
       Tags:
         - Key: 'created-by'
@@ -500,3 +527,54 @@ Resources:
           Value: 'cyoa'
         - Key: 'environment'
           Value: !Ref Environment
+
+  # S3
+
+  AssetsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      BucketName: !FindInMap [EnvironmentMap, !Ref Environment, bucketName]
+      Tags:
+        - Key: 'created-by'
+          Value: 'cyoa-api'
+        - Key: 'created-for'
+          Value: 'cyoa'
+        - Key: 'environment'
+          Value: !Ref Environment
+
+  AssetsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref AssetsBucket
+      PolicyDocument:
+        Statement:
+          - Action: 's3:Get*'
+            Effect: Allow
+            Resource: !Sub 'arn:aws:s3:::${AssetsBucket}/images/*'
+            Principal:
+              CanonicalUser: !GetAtt OriginAccessIdentity.S3CanonicalUserId
+
+  # SQS
+
+  NarrativeGenerationQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      FifoQueue: true
+      KmsMasterKeyId: alias/aws/sqs
+      MessageRetentionPeriod: 1209600 # 14 days
+      QueueName: !Sub
+        - '${Name}.fifo'
+        - Name: !FindInMap [EnvironmentMap, !Ref Environment, queueName]
+      ReceiveMessageWaitTimeSeconds: 20
+      Tags:
+        - Key: 'created-by'
+          Value: 'cyoa-api'
+        - Key: 'created-for'
+          Value: 'cyoa'
+        - Key: 'environment'
+          Value: !Ref Environment
+      VisibilityTimeout: 60

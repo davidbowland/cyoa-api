@@ -4,8 +4,8 @@ GET https://cyoa-api.bowland.link/v1/games HTTP/1.1
 
 ### Get specific game
 
-GET https://cyoa-api.bowland.link/v1/games/a-dark-secret HTTP/1.1
+GET https://cyoa-api.bowland.link/v1/games/the-salt-traverse HTTP/1.1
 
 ### Get narrative by ID
 
-GET https://cyoa-api.bowland.link/v1/games/a-dark-secret/narratives/start HTTP/1.1
+GET https://cyoa-api.bowland.link/v1/games/the-salt-traverse/narratives/start HTTP/1.1
