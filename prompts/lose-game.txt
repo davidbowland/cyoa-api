@@ -24,21 +24,5 @@ Output your thinking in <thinking> tags followed by valid JSON with the keys wit
 </output>
 
 <input>
-{
-  "outline": "",
-  "recap": "",
-  "resourceName": "",
-  "currentResourceValue": 0,
-  "lossResourceThreshold": 10,
-  "lastChoiceMade": "",
-  "currentInventory": ["string"],
-  "inventoryToIntroduce": ["string"],
-  "keyInformationToIntroduce": ["string"],
-  "redHerringsToIntroduce": ["string"]
-  "inventoryOrInformationConsumed": ["string"],
-  "nextChoice": "string",
-  "options": [
-    { "name": "string", "resourcesToAdd": number }
-  ]
-}
+${context}
 </input>

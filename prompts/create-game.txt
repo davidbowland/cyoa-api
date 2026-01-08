@@ -59,6 +59,8 @@ Come up with the plan for a choose-your-own-adventure story based on the theme a
     - Later choices should be harder puzzles
     - Consider what the player has learned previously (for example, say in choice 1 that the building was established in 1847 then in choice 5 ask for the PIN on a keypad and give 1847 as an option)
     - Choices should be generic (for example, how to open a box) rather than specific (NOT go to the church and open the donation box)
+    - NEVER ASK ABOUT INFORMATION INTRODUCED IN THE SAME NARRATIVE AS THE CHOIC
+    - NEVER ASK WHAT FEELS MORE SIGNIFICANT
     - Choices should NOT directly ask what is a clue or puzzle answer
       - BAD: 1887 is a combinations
       - GOOD: What is the combination? (with options 1887, 1934, 1415, and 2003)
@@ -115,13 +117,5 @@ Output your thinking in <thinking> tags followed by valid JSON with the keys wit
 </output>
 
 <input>
-{
-  "storyType": "Classic Adventure: Focuses on exciting journeys, exploration, and external conflicts like treasure hunts or rescue missions.",
-  "choiceCount": 12,
-  "inspirationWords": [ 'tight', 'discreet', 'healthy', 'safe', 'snappy','modification', 'conception','virus',        'good','incidence',    'discretion','cloud',        'quality','percentage',   'lane','investigate','cool','argue','tend','dislike','integrate','walk','discover'],
-  "lossCondition": "reduce",
-  "inventoryCount": 5,
-  "keyInformationCount": 5,
-  "redHerringCount": 10
-}
+${context}
 </input>

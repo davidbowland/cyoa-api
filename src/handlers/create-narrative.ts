@@ -6,14 +6,17 @@ export const createNarrativeHandler = async (event: CreateNarrativeEvent): Promi
   log('Received event', { event })
   const { gameId, narrativeId } = event
 
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
+  for (let index = 0; index < 5; index++) {
     try {
-      const narrative = await createNarrative(gameId, narrativeId)
-      log('Narrative created successfully', { gameId, narrativeId, narrative })
+      await createNarrative(gameId, narrativeId)
+      log('Narrative created successfully', { gameId, narrativeId })
       break
     } catch (error: unknown) {
-      logError('Narrative creation failed, retrying', { error, gameId, narrativeId })
+      if (index === 0) {
+        logError('Narrative creation failed, retrying', { error, gameId, narrativeId })
+      } else {
+        log('Narrative creation failed, retrying', { error, gameId, narrativeId })
+      }
     }
   }
 }

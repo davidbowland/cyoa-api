@@ -56,7 +56,7 @@ export const createGame = async (): Promise<{ game: CyoaGame; gameId: GameId }> 
 
   const prompt = await getPromptById(promptIdCreateGame)
   const generatedGame = await invokeModel<CreateGamePromptOutput>(prompt, modelContext)
-  log('Game generated', { generatedGame })
+  log('Game generated', { generatedGame: JSON.stringify(generatedGame, null, 2) })
 
   const { game } = formatCyoaGame(generatedGame) // imageDescription ignored for now
 

@@ -15,7 +15,7 @@ Given the outline, a narrative recap, the choice the player just made, and the c
   - Include information important for the next LLM prompt to continue the narrative
 - Generate the choice that will be presented to the user
   - Think about whether the provided next choice makes sense with the narrative and outline
-  - Choices should be EXTREMELY difficult to make
+  - Choices should be EXTREMELY difficult to make, but should have hints in previous narratives
   - NEVER ask something that can be answered by the generated narrative
   - Adjust as required
 - Generate the options the user can choose between
@@ -42,21 +42,5 @@ Output your thinking in <thinking> tags followed by valid JSON with the keys wit
 </output>
 
 <input>
-{
-  "outline": "",
-  "recap": "",
-  "resourceName": "",
-  "currentResourceValue": 0,
-  "lossResourceThreshold": 10,
-  "lastChoiceMade": "",
-  "currentInventory": ["string"],
-  "inventoryToIntroduce": ["string"],
-  "keyInformationToIntroduce": ["string"],
-  "redHerringsToIntroduce": ["string"]
-  "inventoryOrInformationConsumed": ["string"],
-  "nextChoice": "string",
-  "options": [
-    { "name": "string", "resourcesToAdd": number }
-  ]
-}
+${context}
 </input>

@@ -213,6 +213,8 @@ Resources:
         - AWSLambdaBasicExecutionRole
         - DynamoDBCrudPolicy:
             TableName: !Ref GamesTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref NarrativesTable
         - DynamoDBReadPolicy:
             TableName: !Ref PromptsTable
         - Version: 2012-10-17
@@ -223,10 +225,18 @@ Resources:
                 - 'bedrock:InvokeModel*'
               Effect: Allow
               Resource: '*'
+        - Version: 2012-10-17
+          Statement:
+            - Action:
+                - 'lambda:InvokeFunction'
+              Effect: Allow
+              Resource: !GetAtt CreateNarrativeFunction.Arn
       Environment:
         Variables:
+          CREATE_NARRATIVE_FUNCTION_NAME: !Ref CreateNarrativeFunction
           DEBUG_LOGGING: 'false'
           DYNAMODB_GAMES_TABLE_NAME: !Ref GamesTable
+          DYNAMODB_NARRATIVES_TABLE_NAME: !Ref NarrativesTable
           DYNAMODB_PROMPTS_TABLE_NAME: !Ref PromptsTable
           INSPIRATION_ADJECTIVES_COUNT: 15
           INSPIRATION_NOUNS_COUNT: 25

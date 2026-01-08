@@ -102,7 +102,7 @@ export const createNarrative = async (
   const promptId = selectPromptId(game, narrativeId, generationData.currentResourceValue)
   const prompt = await getPromptById(promptId)
   const generatedNarrative = await invokeModel<CreateNarrativePromptOutput>(prompt, modelContext)
-  log('Narrative generated', { gameId, narrativeId, generatedNarrative })
+  log('Narrative generated', { generatedNarrative: JSON.stringify(generatedNarrative, null, 2) })
 
   const narrative = formatNarrative(generatedNarrative, generationData)
   await setNarrativeById(gameId, narrativeId, narrative)
