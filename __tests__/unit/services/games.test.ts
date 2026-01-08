@@ -2,11 +2,13 @@ import { cyoaGame, prompt } from '../__mocks__'
 import * as bedrock from '@services/bedrock'
 import * as dynamodb from '@services/dynamodb'
 import { createGame } from '@services/games'
+import * as imageGeneration from '@services/image-generation'
 import * as narrativeGenerationOrchestrator from '@services/narrative-generation-orchestrator'
 import { CreateGamePromptOutput } from '@types'
 
 jest.mock('@services/bedrock')
 jest.mock('@services/dynamodb')
+jest.mock('@services/image-generation')
 jest.mock('@services/narrative-generation-orchestrator')
 jest.mock('@utils/logging')
 
@@ -47,6 +49,11 @@ describe('games', () => {
     jest.mocked(dynamodb).getPromptById.mockResolvedValue(prompt)
     jest.mocked(dynamodb).setGameById.mockResolvedValue({} as any)
     jest.mocked(dynamodb).getGameById.mockRejectedValue(new Error('Game not found'))
+    jest
+      .mocked(imageGeneration)
+      .generateInventoryImages.mockResolvedValue([
+        { name: 'Sword', image: 'test-adventure/inventory/sword' },
+      ])
   })
 
   describe('createGame', () => {
@@ -76,10 +83,14 @@ describe('games', () => {
         'test-adventure',
         expect.objectContaining({
           title: 'Test Adventure',
+          inventory: [{ name: 'Sword', image: 'test-adventure/inventory/sword' }],
           choicePoints: expect.arrayContaining([expect.any(Object)]),
           initialNarrativeId: 'start',
         }),
       )
+      expect(imageGeneration.generateInventoryImages).toHaveBeenCalledWith('test-adventure', [
+        { name: 'Sword', imageDescription: 'A sharp sword' },
+      ])
       expect(narrativeGenerationOrchestrator.startInitialNarrativeGeneration).toHaveBeenCalledWith(
         'test-adventure',
         expect.objectContaining({
@@ -91,6 +102,7 @@ describe('games', () => {
       expect(result).toEqual({
         game: expect.objectContaining({
           title: 'Test Adventure',
+          inventory: [{ name: 'Sword', image: 'test-adventure/inventory/sword' }],
           choicePoints: expect.arrayContaining([expect.any(Object)]),
           initialNarrativeId: 'start',
         }),
@@ -158,6 +170,11 @@ describe('games', () => {
         title: 'A Special Adventure!',
       }
       jest.mocked(bedrock).invokeModel.mockResolvedValueOnce(gameWithSpecialTitle)
+      jest
+        .mocked(imageGeneration)
+        .generateInventoryImages.mockResolvedValueOnce([
+          { name: 'Sword', image: 'a-special-adventure!/inventory/sword' },
+        ])
 
       const result = await createGame()
 
@@ -166,12 +183,14 @@ describe('games', () => {
         'a-special-adventure!',
         expect.objectContaining({
           title: 'A Special Adventure!',
+          inventory: [{ name: 'Sword', image: 'a-special-adventure!/inventory/sword' }],
           initialNarrativeId: 'start',
         }),
       )
       expect(result).toEqual({
         game: expect.objectContaining({
           title: 'A Special Adventure!',
+          inventory: [{ name: 'Sword', image: 'a-special-adventure!/inventory/sword' }],
           initialNarrativeId: 'start',
         }),
         gameId: 'a-special-adventure!',
@@ -188,6 +207,32 @@ describe('games', () => {
       expect(result).toEqual({
         game: expect.objectContaining({
           title: 'Test Adventure',
+          inventory: [{ name: 'Sword', image: 'test-adventure/inventory/sword' }],
+          initialNarrativeId: 'start',
+        }),
+        gameId: 'test-adventure',
+      })
+    })
+
+    it('should continue when image generation fails', async () => {
+      jest
+        .mocked(imageGeneration)
+        .generateInventoryImages.mockRejectedValueOnce(new Error('Image generation error'))
+
+      const result = await createGame()
+
+      expect(dynamodb.setGameById).toHaveBeenCalledWith(
+        'test-adventure',
+        expect.objectContaining({
+          title: 'Test Adventure',
+          inventory: [{ name: 'Sword', imageDescription: 'A sharp sword' }],
+          initialNarrativeId: 'start',
+        }),
+      )
+      expect(result).toEqual({
+        game: expect.objectContaining({
+          title: 'Test Adventure',
+          inventory: [{ name: 'Sword', imageDescription: 'A sharp sword' }],
           initialNarrativeId: 'start',
         }),
         gameId: 'test-adventure',

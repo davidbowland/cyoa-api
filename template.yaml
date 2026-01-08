@@ -247,6 +247,7 @@ Resources:
           INSPIRATION_NOUNS_COUNT: 25
           INSPIRATION_VERBS_COUNT: 20
           PROMPT_ID_CREATE_GAME: create-game
+          PROMPT_ID_IMAGE_NEGATIVE: image-negative
           S3_ASSETS_BUCKET: !Ref AssetsBucket
           SQS_MESSAGE_QUEUE_ID: narratives
           SQS_QUEUE_URL: !Sub
@@ -411,6 +412,7 @@ Resources:
           INSPIRATION_NOUNS_COUNT: 3
           INSPIRATION_VERBS_COUNT: 2
           PROMPT_ID_CREATE_NARRATIVE: create-narrative
+          PROMPT_ID_IMAGE_NEGATIVE: image-negative
           PROMPT_ID_LOSE_GAME: lose-game
           PROMPT_ID_WIN_GAME: win-game
           S3_ASSETS_BUCKET: !Ref AssetsBucket

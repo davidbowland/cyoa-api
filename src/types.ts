@@ -192,12 +192,21 @@ export interface CreateNarrativePromptOption {
   resourcesToAdd?: number
 }
 
-export interface PromptConfig {
+export interface TextPromptConfig {
   anthropicVersion: string
   maxTokens: number
   model: string
   temperature: number
   topK: number
+}
+
+export interface ImagePromptConfig {
+  model: string
+  quality: 'standard' | 'premium'
+  cfgScale: number
+  height: number
+  width: number
+  seed: number
 }
 
 export interface LargePromptOptions {
@@ -206,7 +215,27 @@ export interface LargePromptOptions {
   systemMessage?: string
 }
 
-export interface Prompt {
-  config: PromptConfig
+export interface TextPrompt {
+  config: TextPromptConfig
   contents: string
+}
+
+export interface ImagePrompt {
+  config: ImagePromptConfig
+  contents: string
+}
+
+// Image Generation
+
+export interface ImageGenerationOptions {
+  quality?: 'standard' | 'premium'
+  cfgScale?: number
+  height?: number
+  width?: number
+  seed?: number
+  negativeText?: string
+}
+
+export interface ImageGenerationResponse {
+  imageData: Uint8Array
 }

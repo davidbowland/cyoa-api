@@ -17,12 +17,13 @@ import {
   inspirationVerbsCount,
   promptIdCreateGame,
 } from '../config'
-import { CreateGamePromptOutput, CyoaGame, GameId } from '../types'
+import { CreateGamePromptOutput, CyoaGame, GameId, TextPrompt } from '../types'
 import { formatCyoaGame } from '../utils/formatting'
 import { log, logError } from '../utils/logging'
 import { getRandomSample } from '../utils/random'
 import { invokeModel } from './bedrock'
 import { getGameById, getGames, getPromptById, setGameById } from './dynamodb'
+import { generateInventoryImages } from './image-generation'
 import { startInitialNarrativeGeneration } from './narrative-generation-orchestrator'
 
 export const createGame = async (): Promise<{ game: CyoaGame; gameId: GameId }> => {
@@ -52,7 +53,7 @@ export const createGame = async (): Promise<{ game: CyoaGame; gameId: GameId }> 
   }
   log('Creating game with context', { modelContext })
 
-  const prompt = await getPromptById(promptIdCreateGame)
+  const prompt = await getPromptById<TextPrompt>(promptIdCreateGame)
   const generatedGame = await invokeModel<CreateGamePromptOutput>(prompt, modelContext)
   log('Game generated', { generatedGame: JSON.stringify(generatedGame, null, 2) })
 
@@ -76,6 +77,21 @@ export const createGame = async (): Promise<{ game: CyoaGame; gameId: GameId }> 
     log('Game ID already exists', { gameId })
     throw new Error('Game ID already exists')
   }
+
+  try {
+    const inventoryWithImages = await generateInventoryImages(gameId, game.inventory)
+    game.inventory = inventoryWithImages
+    log('Generated images for inventory items', {
+      gameId,
+      inventoryCount: inventoryWithImages.length,
+    })
+  } catch (error: unknown) {
+    logError('Error generating inventory images', {
+      gameId,
+      error,
+    })
+  }
+
   await setGameById(gameId, game)
 
   try {

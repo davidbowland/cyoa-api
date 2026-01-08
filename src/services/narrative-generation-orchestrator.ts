@@ -15,6 +15,7 @@ import {
   GameId,
   NarrativeGenerationData,
   NarrativeId,
+  TextPrompt,
 } from '../types'
 import { formatNarrative } from '../utils/formatting'
 import { log, logError } from '../utils/logging'
@@ -190,7 +191,7 @@ export const createNarrative = async (
   log('Creating narrative with context', { gameId, narrativeId, modelContext })
 
   const promptId = selectPromptId(game, narrativeId, generationData.currentResourceValue)
-  const prompt = await getPromptById(promptId)
+  const prompt = await getPromptById<TextPrompt>(promptId)
   const generatedNarrative = await invokeModel<CreateNarrativePromptOutput>(prompt, modelContext)
   log('Narrative generated', {
     gameId,

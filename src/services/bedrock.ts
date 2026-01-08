@@ -1,18 +1,22 @@
 import { BedrockRuntimeClient, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime'
 
-import { Prompt } from '../types'
-import { logDebug } from '../utils/logging'
+import { bedrockImageModelId, bedrockRegion } from '../config'
+import { ImageGenerationOptions, ImageGenerationResponse, TextPrompt } from '../types'
+import { logDebug, xrayCapture } from '../utils/logging'
 
-const runtimeClient = new BedrockRuntimeClient({ region: 'us-east-1' })
+const runtimeClient = xrayCapture(new BedrockRuntimeClient({ region: bedrockRegion }))
 
-export const invokeModel = async <T>(prompt: Prompt, context?: Record<string, any>): Promise<T> => {
+export const invokeModel = async <T>(
+  prompt: TextPrompt,
+  context?: Record<string, any>,
+): Promise<T> => {
   const promptWithContext = context
     ? { ...prompt, contents: prompt.contents.replace('${context}', JSON.stringify(context)) }
     : prompt
   return invokeModelMessage(promptWithContext)
 }
 
-const invokeModelMessage = async <T>(prompt: Prompt): Promise<T> => {
+const invokeModelMessage = async <T>(prompt: TextPrompt): Promise<T> => {
   logDebug('Invoking model', { prompt })
   const messageBody = {
     anthropic_version: prompt.config.anthropicVersion,
@@ -39,4 +43,59 @@ const invokeModelMessage = async <T>(prompt: Prompt): Promise<T> => {
       '',
     ),
   )
+}
+
+export const generateImage = async (
+  promptText: string,
+  options: ImageGenerationOptions = {},
+): Promise<ImageGenerationResponse> => {
+  const {
+    quality = 'standard',
+    cfgScale = 8.0,
+    height = 512,
+    width = 512,
+    seed = 0,
+    negativeText,
+  } = options
+
+  logDebug('Generating image with Bedrock', {
+    promptText,
+    quality,
+    dimensions: `${width}x${height}`,
+    negativeText,
+  })
+
+  const negativeParams = negativeText ? { negativeText } : {}
+  const input = {
+    body: JSON.stringify({
+      taskType: 'TEXT_IMAGE',
+      textToImageParams: {
+        ...negativeParams,
+        text: promptText,
+      },
+      imageGenerationConfig: {
+        numberOfImages: 1,
+        quality,
+        cfgScale,
+        height,
+        width,
+        seed,
+      },
+    }),
+    contentType: 'application/json',
+    accept: '*/*',
+    modelId: bedrockImageModelId,
+  }
+
+  const command = new InvokeModelCommand(input)
+  const response = await runtimeClient.send(command)
+  const textDecoder = new TextDecoder('utf-8')
+  const jsonString = textDecoder.decode(response.body)
+  const parsedData = JSON.parse(jsonString)
+  const base64Image = parsedData.images[0]
+  const imageData = new Uint8Array(Buffer.from(base64Image, 'base64'))
+
+  logDebug('Image generated successfully', { imageSizeBytes: imageData.length })
+
+  return { imageData }
 }

@@ -6,8 +6,8 @@ import {
   GameId,
   NarrativeGenerationData,
   NarrativeId,
-  Prompt,
-  PromptConfig,
+  TextPrompt,
+  TextPromptConfig,
   PromptId,
 } from '@types'
 
@@ -57,7 +57,7 @@ export const serializedGame = {
 
 // Prompts
 
-export const promptConfig: PromptConfig = {
+export const promptConfig: TextPromptConfig = {
   anthropicVersion: 'bedrock-2023-05-31',
   maxTokens: 256,
   model: 'the-best-ai:1.0',
@@ -67,7 +67,7 @@ export const promptConfig: PromptConfig = {
 
 export const promptId: PromptId = '5253'
 
-export const prompt: Prompt = {
+export const prompt: TextPrompt = {
   config: promptConfig,
   contents: 'You are a helpful assistant. ${data}',
 }

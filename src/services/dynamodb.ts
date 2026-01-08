@@ -21,7 +21,6 @@ import {
   GameWithTimestamp,
   NarrativeGenerationData,
   NarrativeId,
-  Prompt,
   PromptId,
 } from '../types'
 import { xrayCapture } from '../utils/logging'
@@ -30,7 +29,7 @@ const dynamodb = xrayCapture(new DynamoDB({ apiVersion: '2012-08-10' }))
 
 /* Prompts */
 
-export const getPromptById = async (promptId: PromptId): Promise<Prompt> => {
+export const getPromptById = async <T>(promptId: PromptId): Promise<T> => {
   const command = new QueryCommand({
     ExpressionAttributeValues: { ':promptId': { S: `${promptId}` } },
     KeyConditionExpression: 'PromptId = :promptId',
@@ -42,7 +41,7 @@ export const getPromptById = async (promptId: PromptId): Promise<Prompt> => {
   return {
     config: JSON.parse(response.Items?.[0]?.Config?.S as string),
     contents: response.Items?.[0]?.SystemPrompt?.S as string,
-  }
+  } as T
 }
 
 /* Games */

@@ -19,6 +19,7 @@ export const createNarrativeFunctionName = process.env.CREATE_NARRATIVE_FUNCTION
 
 export const promptIdCreateGame = process.env.PROMPT_ID_CREATE_GAME as string
 export const promptIdCreateNarrative = process.env.PROMPT_ID_CREATE_NARRATIVE as string
+export const promptIdImageNegative = process.env.PROMPT_ID_IMAGE_NEGATIVE as string
 export const promptIdLoseGame = process.env.PROMPT_ID_LOSE_GAME as string
 export const promptIdWinGame = process.env.PROMPT_ID_WIN_GAME as string
 
@@ -35,6 +36,11 @@ export const initialNarrativeId = 'start'
 // Logging
 
 export const debugLogging = (process.env.DEBUG_LOGGING as string) === 'true'
+
+// Bedrock
+
+export const bedrockRegion = process.env.BEDROCK_REGION || 'us-east-1'
+export const bedrockImageModelId = process.env.BEDROCK_IMAGE_MODEL_ID || 'amazon.nova-canvas-v1:0'
 
 // S3
 
