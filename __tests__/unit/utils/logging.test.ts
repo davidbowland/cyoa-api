@@ -1,15 +1,7 @@
 import { DynamoDB } from '@aws-sdk/client-dynamodb'
 import * as AWSXRay from 'aws-xray-sdk-core'
-import https from 'https'
 
-import {
-  extractRequestError,
-  log,
-  logDebug,
-  logError,
-  xrayCapture,
-  xrayCaptureHttps,
-} from '@utils/logging'
+import { log, logDebug, logError, xrayCapture } from '@utils/logging'
 
 jest.mock('aws-xray-sdk-core')
 
@@ -17,22 +9,6 @@ describe('logging', () => {
   beforeAll(() => {
     console.error = jest.fn()
     console.log = jest.fn()
-  })
-
-  describe('extractRequestError', () => {
-    it('should return JSON data as an object', async () => {
-      const data = { hello: 'world' }
-      const output = extractRequestError(JSON.stringify(data))
-
-      expect(output).toEqual({ errors: data })
-    })
-
-    it('should return non-JSON data as a string', async () => {
-      const data = 'fnord'
-      const output = extractRequestError(data)
-
-      expect(output).toEqual({ message: data })
-    })
   })
 
   describe('log', () => {
@@ -94,22 +70,6 @@ describe('logging', () => {
 
       expect(AWSXRay.captureAWSv3Client).toHaveBeenCalledTimes(0)
       expect(result).toEqual(dynamodb)
-    })
-  })
-
-  describe('xrayCaptureHttps', () => {
-    it('should invoke AWSXRay.captureHTTPsGlobal when x-ray is enabled (not running locally)', () => {
-      process.env.AWS_SAM_LOCAL = 'false'
-      xrayCaptureHttps()
-
-      expect(AWSXRay.captureHTTPsGlobal).toHaveBeenCalledWith(https)
-    })
-
-    it('should return the same object when x-ray is disabled (running locally)', () => {
-      process.env.AWS_SAM_LOCAL = 'true'
-      xrayCaptureHttps()
-
-      expect(AWSXRay.captureHTTPsGlobal).toHaveBeenCalledTimes(0)
     })
   })
 })

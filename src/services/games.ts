@@ -16,7 +16,7 @@ import {
   inspirationAdjectivesCount,
   inspirationNounsCount,
   inspirationVerbsCount,
-  llmPromptId,
+  promptIdCreateGame,
 } from '../config'
 import { CreateGamePromptOutput, CyoaGame, GameId } from '../types'
 import { formatCyoaGame } from '../utils/formatting'
@@ -54,7 +54,7 @@ export const createGame = async (): Promise<{ game: CyoaGame; gameId: GameId }> 
   }
   log('Creating game with context', { modelContext })
 
-  const prompt = await getPromptById(llmPromptId)
+  const prompt = await getPromptById(promptIdCreateGame)
   const generatedGame = await invokeModel<CreateGamePromptOutput>(prompt, modelContext)
   log('Game generated', { generatedGame })
 

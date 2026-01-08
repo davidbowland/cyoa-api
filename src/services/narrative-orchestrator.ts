@@ -71,29 +71,25 @@ export const ensureNarrativeExists = async (
     return { status: 'generating', message: 'Narrative is being generated' }
   }
 
-  if (strategy.shouldGenerate(existing)) {
-    try {
-      const lastNarrative = await buildLastNarrativeContext(gameId, narrativeId)
-      const contextParams: GenerationContextParams = {
-        gameId,
-        narrativeId,
-        game,
-        lastNarrative,
-      }
-
-      const narrativeContext = strategy.buildContext(contextParams)
-      const { choicePointIndex } = parseNarrativeId(narrativeId)
-      const currentChoice = game.choicePoints[choicePointIndex]
-
-      await startNarrativeGeneration(gameId, narrativeId, narrativeContext, currentChoice)
-
-      log('Started narrative generation', { gameId, narrativeId })
-      return { status: 'generating', message: 'Narrative is being generated' }
-    } catch (error: unknown) {
-      log('Failed to start narrative generation', { gameId, narrativeId, error })
-      return { status: 'not_found' }
+  try {
+    const lastNarrative = await buildLastNarrativeContext(gameId, narrativeId)
+    const contextParams: GenerationContextParams = {
+      gameId,
+      narrativeId,
+      game,
+      lastNarrative,
     }
-  }
 
-  return { status: 'not_found' }
+    const narrativeContext = strategy.buildContext(contextParams)
+    const { choicePointIndex } = parseNarrativeId(narrativeId)
+    const currentChoice = game.choicePoints[choicePointIndex]
+
+    await startNarrativeGeneration(gameId, narrativeId, narrativeContext, currentChoice)
+
+    log('Started narrative generation', { gameId, narrativeId })
+    return { status: 'generating', message: 'Narrative is being generated' }
+  } catch (error: unknown) {
+    log('Failed to start narrative generation', { gameId, narrativeId, error })
+    return { status: 'not_found' }
+  }
 }

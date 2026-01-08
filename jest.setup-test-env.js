@@ -10,7 +10,10 @@ process.env.CREATE_NARRATIVE_FUNCTION_NAME = 'create-narrative-function'
 
 // LLM
 
-process.env.LLM_PROMPT_ID = 'create-game'
+process.env.PROMPT_ID_CREATE_GAME = 'create-game'
+process.env.PROMPT_ID_CREATE_NARRATIVE = 'create-narrative'
+process.env.PROMPT_ID_LOSE_GAME = 'lose-game'
+process.env.PROMPT_ID_WIN_GAME = 'win-game'
 
 // Games
 

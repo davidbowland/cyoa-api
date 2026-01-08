@@ -1,6 +1,6 @@
 # Lambdas for CYOA API
 
-Lambdas for CYOA API, which handles sessions as a back-end for cyoa-ui.
+Lambdas for CYOA API, which orchestrates the generation and playing of choose-your-own-adventure style narration games as a back-end for cyoa-ui.
 
 ## Setup
 
@@ -78,7 +78,7 @@ npm run deploy
 
 ## Infrastructure
 
-See `infrastructure` folder for information on updating infrastructure.
+See `template.yaml` for AWS infrastructure definitions including Lambda functions, DynamoDB tables, and API Gateway configuration.
 
 ## Additional Documentation
 

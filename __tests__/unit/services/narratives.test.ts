@@ -10,10 +10,12 @@ import {
 import * as bedrockService from '@services/bedrock'
 import * as dynamodbService from '@services/dynamodb'
 import { createNarrative, isGenerating, startNarrativeGeneration } from '@services/narratives'
+import * as promptSelection from '@services/prompt-selection'
 import * as formattingUtils from '@utils/formatting'
 
 jest.mock('@services/bedrock')
 jest.mock('@services/dynamodb')
+jest.mock('@services/prompt-selection')
 jest.mock('@utils/formatting')
 const mockSend = jest.fn()
 jest.mock('@aws-sdk/client-lambda', () => ({
@@ -36,6 +38,7 @@ describe('narratives', () => {
   beforeAll(() => {
     Date.now = jest.fn().mockReturnValue(mockNow)
     jest.mocked(bedrockService).invokeModel.mockResolvedValue(createNarrativePromptOutput)
+    jest.mocked(promptSelection).selectPromptId.mockReturnValue('create-narrative')
     jest.mocked(dynamodbService).getGameById.mockResolvedValue(cyoaGame)
     jest
       .mocked(dynamodbService)
@@ -49,6 +52,7 @@ describe('narratives', () => {
   describe('isGenerating', () => {
     it('returns true when generation is within timeout window', () => {
       const generationData = {
+        ...narrativeGenerationData,
         generationStartTime: mockNow - 60000, // 1 minute ago
       }
 
@@ -59,6 +63,7 @@ describe('narratives', () => {
 
     it('returns false when generation is outside timeout window', () => {
       const generationData = {
+        ...narrativeGenerationData,
         generationStartTime: mockNow - 400000, // 6.67 minutes ago (beyond 5 minute default)
       }
 
@@ -74,7 +79,10 @@ describe('narratives', () => {
     })
 
     it('returns false when generationStartTime is undefined', () => {
-      const generationData = {}
+      const generationData = {
+        ...narrativeGenerationData,
+        generationStartTime: undefined as any,
+      }
 
       const result = isGenerating(generationData)
 
@@ -83,6 +91,7 @@ describe('narratives', () => {
 
     it('respects custom timeout parameter', () => {
       const generationData = {
+        ...narrativeGenerationData,
         generationStartTime: mockNow - 120000, // 2 minutes ago
       }
 
@@ -140,7 +149,7 @@ describe('narratives', () => {
 
       expect(dynamodbService.getGameById).toHaveBeenCalledWith(gameId)
       expect(dynamodbService.getNarrativeById).toHaveBeenCalledWith(gameId, narrativeId)
-      expect(dynamodbService.getPromptById).toHaveBeenCalledWith('create-game')
+      expect(dynamodbService.getPromptById).toHaveBeenCalledWith('create-narrative')
       expect(bedrockService.invokeModel).toHaveBeenCalledWith(prompt, {
         ...narrativeGenerationData,
         outline: cyoaGame.outline,

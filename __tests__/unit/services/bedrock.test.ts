@@ -1,5 +1,5 @@
 import { cyoaGamePromptOutput, invokeModelCyoaGameResponse, prompt } from '../__mocks__'
-import { invokeModel, invokeModelMessage } from '@services/bedrock'
+import { invokeModel } from '@services/bedrock'
 
 const mockSend = jest.fn()
 jest.mock('@aws-sdk/client-bedrock-runtime', () => ({
@@ -57,30 +57,6 @@ describe('bedrock', () => {
                 role: 'user',
               },
             ],
-            temperature: 0.5,
-            top_k: 250,
-          }),
-        ),
-        contentType: 'application/json',
-        modelId: 'the-best-ai:1.0',
-      })
-    })
-  })
-
-  describe('invokeModelMessage', () => {
-    beforeAll(() => {
-      mockSend.mockResolvedValue(invokeModelCyoaGameResponse)
-    })
-
-    it('should invoke the correct model based on the prompt', async () => {
-      const result = await invokeModelMessage(prompt)
-      expect(result).toEqual(cyoaGamePromptOutput)
-      expect(mockSend).toHaveBeenCalledWith({
-        body: new TextEncoder().encode(
-          JSON.stringify({
-            anthropic_version: 'bedrock-2023-05-31',
-            max_tokens: 256,
-            messages: [{ content: prompt.contents, role: 'user' }],
             temperature: 0.5,
             top_k: 250,
           }),

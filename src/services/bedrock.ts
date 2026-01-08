@@ -12,7 +12,7 @@ export const invokeModel = async <T>(prompt: Prompt, context?: Record<string, an
   return invokeModelMessage(promptWithContext)
 }
 
-export const invokeModelMessage = async <T>(prompt: Prompt): Promise<T> => {
+const invokeModelMessage = async <T>(prompt: Prompt): Promise<T> => {
   logDebug('Invoking model', { prompt })
   const messageBody = {
     anthropic_version: prompt.config.anthropicVersion,

@@ -72,6 +72,10 @@ Resources:
           HostedZoneId: !FindInMap [EnvironmentMap, !Ref Environment, zoneId]
       FailOnWarnings: true
       StageName: v1
+      Tags:
+        'created-by': 'cyoa-api'
+        'created-for': 'cyoa'
+        'environment': !Ref Environment
 
   # Games
 
@@ -83,7 +87,7 @@ Resources:
       Architectures:
         - x86_64
       MemorySize: 1536
-      Description: Retrieve game IDs
+      Description: Retrieve available games
       Policies:
         - AWSLambdaBasicExecutionRole
       Environment:
@@ -141,7 +145,7 @@ Resources:
       Architectures:
         - x86_64
       MemorySize: 1024
-      Description: Retrieve game by ID, creating if needed
+      Description: Retrieve game by ID
       Policies:
         - AWSLambdaBasicExecutionRole
         - DynamoDBReadPolicy:
@@ -204,7 +208,7 @@ Resources:
       Architectures:
         - x86_64
       MemorySize: 1536
-      Description: Create CYOA game
+      Description: Create new CYOA game
       Policies:
         - AWSLambdaBasicExecutionRole
         - DynamoDBCrudPolicy:
@@ -227,7 +231,7 @@ Resources:
           INSPIRATION_ADJECTIVES_COUNT: 15
           INSPIRATION_NOUNS_COUNT: 25
           INSPIRATION_VERBS_COUNT: 20
-          LLM_PROMPT_ID: create-game
+          PROMPT_ID_CREATE_GAME: create-game
       Events:
         Schedule:
           Type: Schedule
@@ -282,7 +286,7 @@ Resources:
       Architectures:
         - x86_64
       MemorySize: 1024
-      Description: Retrieve narrative by ID, creating if needed
+      Description: Retrieve narrative by ID
       Policies:
         - AWSLambdaBasicExecutionRole
         - DynamoDBReadPolicy:
@@ -354,7 +358,7 @@ Resources:
       Architectures:
         - x86_64
       MemorySize: 1536
-      Description: Create CYOA game narrative
+      Description: Create CYOA narrative
       Policies:
         - AWSLambdaBasicExecutionRole
         - DynamoDBReadPolicy:
@@ -366,12 +370,6 @@ Resources:
         - Version: 2012-10-17
           Statement:
             - Action:
-                - 'lambda:InvokeFunction'
-              Effect: Allow
-              Resource: !GetAtt CreateNarrativeFunction.Arn
-        - Version: 2012-10-17
-          Statement:
-            - Action:
                 - 'aws-marketplace:ViewSubscriptions'
                 - 'aws-marketplace:Subscribe'
                 - 'bedrock:InvokeModel*'
@@ -379,7 +377,6 @@ Resources:
               Resource: '*'
       Environment:
         Variables:
-          CREATE_NARRATIVE_FUNCTION_NAME: !Ref CreateNarrativeFunction
           DEBUG_LOGGING: 'false'
           DYNAMODB_GAMES_TABLE_NAME: !Ref GamesTable
           DYNAMODB_NARRATIVES_TABLE_NAME: !Ref NarrativesTable
@@ -387,7 +384,9 @@ Resources:
           INSPIRATION_ADJECTIVES_COUNT: 1
           INSPIRATION_NOUNS_COUNT: 3
           INSPIRATION_VERBS_COUNT: 2
-          LLM_PROMPT_ID: create-narrative
+          PROMPT_ID_CREATE_NARRATIVE: create-narrative
+          PROMPT_ID_LOSE_GAME: lose-game
+          PROMPT_ID_WIN_GAME: win-game
       Tags:
         'created-by': 'cyoa-api'
         'created-for': 'cyoa'

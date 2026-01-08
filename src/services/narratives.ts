@@ -8,7 +8,6 @@ import {
   inspirationAdjectivesCount,
   inspirationNounsCount,
   inspirationVerbsCount,
-  llmPromptId,
 } from '../config'
 import {
   CreateNarrativePromptOutput,
@@ -29,6 +28,7 @@ import {
   setNarrativeById,
   setNarrativeGenerationData,
 } from './dynamodb'
+import { selectPromptId } from './prompt-selection'
 
 const lambda = xrayCapture(new LambdaClient({ region: 'us-east-1' }))
 
@@ -99,7 +99,8 @@ export const createNarrative = async (
   }
   log('Creating narrative with context', { gameId, narrativeId, modelContext })
 
-  const prompt = await getPromptById(llmPromptId)
+  const promptId = selectPromptId(game, narrativeId, generationData.currentResourceValue)
+  const prompt = await getPromptById(promptId)
   const generatedNarrative = await invokeModel<CreateNarrativePromptOutput>(prompt, modelContext)
   log('Narrative generated', { gameId, narrativeId, generatedNarrative })
 

@@ -10,7 +10,7 @@ Given the outline, a narrative recap, the choice the player just made, and the c
   - Consider the outline and recap to know what has happened
   - Think about what inventory or information needs to be introduced
   - Think about what inventory or information needs to be consumed
-  - Write as clearly as eloquently as possible (channel Christopher Hitchens or P.G. Wodehouse)
+  - Write as clearly as eloquently as possible (channel Christopher Hitchens, Earnest Hemmingway, and P.G. Wodehouse)
 - Generate a recap of the story including your narrative
   - Include information important for the next LLM prompt to continue the narrative
 - Generate the choice that will be presented to the user

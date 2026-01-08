@@ -1,4 +1,4 @@
-import { CyoaNarrative, NarrativeId } from '../types'
+import { CyoaGame, CyoaNarrative, NarrativeId } from '../types'
 
 interface NarrativeIdParts {
   lastNarrativeId: NarrativeId
@@ -20,5 +20,16 @@ export const determineRequiredNarratives = (
   narrative: CyoaNarrative,
   narrativeId: NarrativeId,
 ): NarrativeId[] => narrative.options.map((_, index) => `${narrativeId}-${index}`)
+
+export const isGameLost = (game: CyoaGame, currentResourceValue: number): boolean => {
+  const isAscending = game.startingResourceValue < game.lossResourceThreshold
+  return (
+    (isAscending && currentResourceValue >= game.lossResourceThreshold) ||
+    (!isAscending && currentResourceValue <= game.lossResourceThreshold)
+  )
+}
+
+export const isGameWon = (game: CyoaGame, choicePointIndex: number): boolean =>
+  choicePointIndex >= game.choicePoints.length
 
 export const isInitialNarrative = (narrativeId: NarrativeId): boolean => !narrativeId.includes('-')

@@ -1,11 +1,13 @@
-import { cyoaNarrative } from '../__mocks__'
+import { cyoaGame, cyoaNarrative } from '../__mocks__'
 import {
   parseNarrativeId,
   determineRequiredNarratives,
   isInitialNarrative,
+  isGameLost,
+  isGameWon,
 } from '@utils/narratives'
 
-describe('narrative-domain', () => {
+describe('narratives', () => {
   describe('parseNarrativeId', () => {
     it('parses initial narrative ID', () => {
       const result = parseNarrativeId('start')
@@ -99,6 +101,74 @@ describe('narrative-domain', () => {
     it('returns true for complex initial narrative ID without dashes', () => {
       const result = isInitialNarrative('complexgametitle')
       expect(result).toBe(true)
+    })
+  })
+
+  describe('isGameLost', () => {
+    it('returns true when ascending game reaches loss threshold', () => {
+      const ascendingGame = {
+        ...cyoaGame,
+        startingResourceValue: 10,
+        lossResourceThreshold: 100,
+      }
+
+      const result = isGameLost(ascendingGame, 100)
+      expect(result).toBe(true)
+    })
+
+    it('returns false when ascending game is below loss threshold', () => {
+      const ascendingGame = {
+        ...cyoaGame,
+        startingResourceValue: 10,
+        lossResourceThreshold: 100,
+      }
+
+      const result = isGameLost(ascendingGame, 50)
+      expect(result).toBe(false)
+    })
+
+    it('returns true when descending game reaches loss threshold', () => {
+      const descendingGame = {
+        ...cyoaGame,
+        startingResourceValue: 100,
+        lossResourceThreshold: 0,
+      }
+
+      const result = isGameLost(descendingGame, 0)
+      expect(result).toBe(true)
+    })
+
+    it('returns false when descending game is above loss threshold', () => {
+      const descendingGame = {
+        ...cyoaGame,
+        startingResourceValue: 100,
+        lossResourceThreshold: 0,
+      }
+
+      const result = isGameLost(descendingGame, 50)
+      expect(result).toBe(false)
+    })
+  })
+
+  describe('isGameWon', () => {
+    it('returns true when choice point index exceeds available choice points', () => {
+      const gameWithOneChoice = {
+        ...cyoaGame,
+        choicePoints: [cyoaGame.choicePoints[0]],
+      }
+
+      const result = isGameWon(gameWithOneChoice, 1)
+      expect(result).toBe(true)
+    })
+
+    it('returns false when choice point index is within available choice points', () => {
+      const gameWithTwoChoices = {
+        ...cyoaGame,
+        choicePoints: [cyoaGame.choicePoints[0], cyoaGame.choicePoints[0]],
+      }
+
+      const result = isGameWon(gameWithTwoChoices, 1)
+      expect(result).toBe(false)
     })
   })
 })
