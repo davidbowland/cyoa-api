@@ -19,7 +19,8 @@ export const createNarrativeFunctionName = process.env.CREATE_NARRATIVE_FUNCTION
 
 export const promptIdCreateGame = process.env.PROMPT_ID_CREATE_GAME as string
 export const promptIdCreateNarrative = process.env.PROMPT_ID_CREATE_NARRATIVE as string
-export const promptIdImageNegative = process.env.PROMPT_ID_IMAGE_NEGATIVE as string
+export const promptIdInventoryImage = process.env.PROMPT_ID_INVENTORY_IMAGE as string
+export const promptIdCoverImage = process.env.PROMPT_ID_COVER_IMAGE as string
 export const promptIdLoseGame = process.env.PROMPT_ID_LOSE_GAME as string
 export const promptIdWinGame = process.env.PROMPT_ID_WIN_GAME as string
 

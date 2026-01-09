@@ -23,7 +23,7 @@ import { log, logError } from '../utils/logging'
 import { getRandomSample } from '../utils/random'
 import { invokeModel } from './bedrock'
 import { getGameById, getGames, getPromptById, setGameById } from './dynamodb'
-import { generateInventoryImages } from './image-generation'
+import { generateGameCoverImageForGame, generateInventoryImagesForGame } from './image-generation'
 import { startInitialNarrativeGeneration } from './narrative-generation-orchestrator'
 
 export const createGame = async (): Promise<{ game: CyoaGame; gameId: GameId }> => {
@@ -57,12 +57,12 @@ export const createGame = async (): Promise<{ game: CyoaGame; gameId: GameId }> 
   const generatedGame = await invokeModel<CreateGamePromptOutput>(prompt, modelContext)
   log('Game generated', { generatedGame: JSON.stringify(generatedGame, null, 2) })
 
-  const { game } = formatCyoaGame({
+  const { game, imageDescription } = formatCyoaGame({
     ...generatedGame,
     redHerrings: generatedGame.redHerrings?.filter(
       (item) => !generatedGame.keyInformation?.includes(item),
     ),
-  }) // imageDescription ignored for now
+  })
 
   if (game.choicePoints.length !== choiceCount) {
     log('Wrong number of choice points', { choiceCount, choicePoints: game.choicePoints })
@@ -78,24 +78,15 @@ export const createGame = async (): Promise<{ game: CyoaGame; gameId: GameId }> 
     throw new Error('Game ID already exists')
   }
 
-  try {
-    const inventoryWithImages = await generateInventoryImages(gameId, game.inventory)
-    game.inventory = inventoryWithImages
-    log('Generated images for inventory items', {
-      gameId,
-      inventoryCount: inventoryWithImages.length,
-    })
-  } catch (error: unknown) {
-    logError('Error generating inventory images', {
-      gameId,
-      error,
-    })
-  }
+  const coverImageData = await generateGameCoverImageForGame(gameId, imageDescription)
+  const inventoryImageData = await generateInventoryImagesForGame(gameId, game.inventory)
 
-  await setGameById(gameId, game)
+  const gameWithImages = { ...game, ...coverImageData, ...inventoryImageData }
+
+  await setGameById(gameId, gameWithImages)
 
   try {
-    await startInitialNarrativeGeneration(gameId, game)
+    await startInitialNarrativeGeneration(gameId, gameWithImages)
   } catch (error: unknown) {
     logError('Error creating initial narrative', {
       gameId,
@@ -103,5 +94,5 @@ export const createGame = async (): Promise<{ game: CyoaGame; gameId: GameId }> 
     })
   }
 
-  return { game, gameId }
+  return { game: gameWithImages, gameId }
 }

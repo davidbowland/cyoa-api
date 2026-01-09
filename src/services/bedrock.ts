@@ -1,6 +1,6 @@
 import { BedrockRuntimeClient, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime'
 
-import { bedrockImageModelId, bedrockRegion } from '../config'
+import { bedrockRegion } from '../config'
 import { ImageGenerationOptions, ImageGenerationResponse, TextPrompt } from '../types'
 import { logDebug, xrayCapture } from '../utils/logging'
 
@@ -47,6 +47,7 @@ const invokeModelMessage = async <T>(prompt: TextPrompt): Promise<T> => {
 
 export const generateImage = async (
   promptText: string,
+  modelId: string,
   options: ImageGenerationOptions = {},
 ): Promise<ImageGenerationResponse> => {
   const {
@@ -60,6 +61,7 @@ export const generateImage = async (
 
   logDebug('Generating image with Bedrock', {
     promptText,
+    modelId,
     quality,
     dimensions: `${width}x${height}`,
     negativeText,
@@ -84,7 +86,7 @@ export const generateImage = async (
     }),
     contentType: 'application/json',
     accept: '*/*',
-    modelId: bedrockImageModelId,
+    modelId,
   }
 
   const command = new InvokeModelCommand(input)

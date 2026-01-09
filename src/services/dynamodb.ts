@@ -47,16 +47,15 @@ export const getPromptById = async <T>(promptId: PromptId): Promise<T> => {
 /* Games */
 
 export const getGameById = async (gameId: GameId): Promise<CyoaGame> => {
-  const command = new GetItemCommand({
-    Key: {
-      GameId: {
-        S: `${gameId}`,
-      },
-    },
+  const command = new QueryCommand({
+    ExpressionAttributeValues: { ':gameId': { S: `${gameId}` } },
+    KeyConditionExpression: 'GameId = :gameId',
+    Limit: 1,
+    ScanIndexForward: false,
     TableName: dynamodbGamesTableName,
   })
   const response = await dynamodb.send(command)
-  return JSON.parse(response.Item.Data.S as string)
+  return JSON.parse(response.Items[0].Data.S as string)
 }
 
 export const setGameById = async (gameId: GameId, data: CyoaGame): Promise<PutItemOutput> => {

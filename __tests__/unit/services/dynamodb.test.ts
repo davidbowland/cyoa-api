@@ -67,15 +67,16 @@ describe('dynamodb', () => {
   describe('getGameById', () => {
     it('should return game data when game exists', async () => {
       mockSend.mockResolvedValueOnce({
-        Item: { Data: { S: JSON.stringify(cyoaGame) } },
+        Items: [{ Data: { S: JSON.stringify(cyoaGame) } }],
       })
 
       const result = await getGameById(gameId)
 
       expect(mockSend).toHaveBeenCalledWith({
-        Key: {
-          GameId: { S: gameId },
-        },
+        ExpressionAttributeValues: { ':gameId': { S: gameId } },
+        KeyConditionExpression: 'GameId = :gameId',
+        Limit: 1,
+        ScanIndexForward: false,
         TableName: 'games-table',
       })
       expect(result).toEqual(cyoaGame)

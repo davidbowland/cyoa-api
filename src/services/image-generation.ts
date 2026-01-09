@@ -1,26 +1,76 @@
 import slugify from 'slugify'
 
-import { promptIdImageNegative } from '../config'
+import { promptIdInventoryImage, promptIdCoverImage } from '../config'
 import { CyoaInventory, GameId, ImageGenerationOptions, ImagePrompt } from '../types'
-import { log } from '../utils/logging'
+import { log, logError } from '../utils/logging'
 import { generateImage } from './bedrock'
 import { getPromptById } from './dynamodb'
 import { putS3Object } from './s3'
+
+export const generateGameCoverImage = async (
+  gameId: GameId,
+  imageDescription: string,
+): Promise<string | undefined> => {
+  const negativePrompt = await getPromptById<ImagePrompt>(promptIdCoverImage)
+  const negativePromptConfig = negativePrompt.config
+  const negativeText = negativePrompt.contents
+
+  const imageGenerationOptions: ImageGenerationOptions = {
+    quality: negativePromptConfig.quality,
+    cfgScale: negativePromptConfig.cfgScale,
+    height: negativePromptConfig.height,
+    width: negativePromptConfig.width,
+    seed: negativePromptConfig.seed,
+    negativeText,
+  }
+
+  try {
+    log('Generating cover image for game', { gameId, imageDescription })
+
+    const { imageData } = await generateImage(
+      imageDescription,
+      negativePromptConfig.model,
+      imageGenerationOptions,
+    )
+    const imageKey = `images/${gameId}/cover.png`
+
+    await putS3Object(imageKey, Buffer.from(imageData), {
+      'Content-Type': 'image/png',
+      'game-id': gameId,
+      'image-type': 'cover',
+    })
+
+    log('Cover image generated and saved for game', {
+      gameId,
+      imageKey,
+      imageSizeBytes: imageData.length,
+    })
+
+    return `${gameId}/cover.png`
+  } catch (error: unknown) {
+    log('Failed to generate cover image for game', {
+      gameId,
+      imageDescription,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    })
+    return undefined
+  }
+}
 
 export const generateInventoryImages = async (
   gameId: GameId,
   inventory: Array<{ name: string }>,
 ): Promise<Array<CyoaInventory>> => {
-  const negativePrompt = await getPromptById<ImagePrompt>(promptIdImageNegative)
+  const negativePrompt = await getPromptById<ImagePrompt>(promptIdInventoryImage)
   const negativePromptConfig = negativePrompt.config
   const negativeText = negativePrompt.contents
 
   const imageGenerationOptions: ImageGenerationOptions = {
-    quality: negativePromptConfig.quality || 'standard',
-    cfgScale: negativePromptConfig.cfgScale || 8,
-    height: negativePromptConfig.height || 512,
-    width: negativePromptConfig.width || 512,
-    seed: negativePromptConfig.seed || 0,
+    quality: negativePromptConfig.quality,
+    cfgScale: negativePromptConfig.cfgScale,
+    height: negativePromptConfig.height,
+    width: negativePromptConfig.width,
+    seed: negativePromptConfig.seed,
     negativeText,
   }
 
@@ -30,7 +80,11 @@ export const generateInventoryImages = async (
     try {
       log('Generating image for inventory item', { gameId, itemName: item.name })
 
-      const { imageData } = await generateImage(item.name, imageGenerationOptions)
+      const { imageData } = await generateImage(
+        item.name,
+        negativePromptConfig.model,
+        imageGenerationOptions,
+      )
       const imageKey = `images/${gameId}/inventory/${slugify(item.name, { lower: true })}`
 
       await putS3Object(imageKey, Buffer.from(imageData), {
@@ -65,4 +119,44 @@ export const generateInventoryImages = async (
   }
 
   return inventoryWithImages
+}
+
+export const generateGameCoverImageForGame = async (
+  gameId: GameId,
+  imageDescription: string,
+): Promise<{ image?: string }> => {
+  try {
+    const coverImagePath = await generateGameCoverImage(gameId, imageDescription)
+    if (coverImagePath) {
+      log('Generated cover image for game', { gameId, coverImagePath })
+      return { image: coverImagePath }
+    }
+    return {}
+  } catch (error: unknown) {
+    logError('Error generating game cover image', {
+      gameId,
+      error,
+    })
+    return {}
+  }
+}
+
+export const generateInventoryImagesForGame = async (
+  gameId: GameId,
+  inventory: Array<{ name: string }>,
+): Promise<{ inventory: Array<CyoaInventory> }> => {
+  try {
+    const inventoryWithImages = await generateInventoryImages(gameId, inventory)
+    log('Generated images for inventory items', {
+      gameId,
+      inventoryCount: inventoryWithImages.length,
+    })
+    return { inventory: inventoryWithImages }
+  } catch (error: unknown) {
+    logError('Error generating inventory images', {
+      gameId,
+      error,
+    })
+    return { inventory }
+  }
 }

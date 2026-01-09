@@ -30,7 +30,7 @@ describe('generateImage', () => {
   })
 
   it('should generate image with default parameters', async () => {
-    const result = await generateImage('A test prompt')
+    const result = await generateImage('A test prompt', 'amazon.nova-canvas-v1:0')
 
     expect(mockSend).toHaveBeenCalledWith({
       body: JSON.stringify({
@@ -63,7 +63,7 @@ describe('generateImage', () => {
       seed: 42,
     }
 
-    await generateImage('Custom prompt', options)
+    await generateImage('Custom prompt', 'custom-model-id', options)
 
     expect(mockSend).toHaveBeenCalledWith({
       body: JSON.stringify({
@@ -80,14 +80,14 @@ describe('generateImage', () => {
       }),
       contentType: 'application/json',
       accept: '*/*',
-      modelId: 'amazon.nova-canvas-v1:0',
+      modelId: 'custom-model-id',
     })
   })
 
   it('should include negative text when provided', async () => {
     const options = { negativeText: 'no text, no deformed' }
 
-    await generateImage('A beautiful landscape', options)
+    await generateImage('A beautiful landscape', 'test-model', options)
 
     expect(mockSend).toHaveBeenCalledWith({
       body: JSON.stringify({
@@ -107,14 +107,14 @@ describe('generateImage', () => {
       }),
       contentType: 'application/json',
       accept: '*/*',
-      modelId: 'amazon.nova-canvas-v1:0',
+      modelId: 'test-model',
     })
   })
 
   it('should handle missing response body', async () => {
     mockSend.mockResolvedValueOnce({ body: null })
 
-    await expect(generateImage('Test prompt')).rejects.toThrow()
+    await expect(generateImage('Test prompt', 'test-model')).rejects.toThrow()
   })
 
   it('should handle missing image data in response', async () => {
@@ -123,14 +123,14 @@ describe('generateImage', () => {
     }
     mockSend.mockResolvedValueOnce(invalidResponse)
 
-    await expect(generateImage('Test prompt')).rejects.toThrow()
+    await expect(generateImage('Test prompt', 'test-model')).rejects.toThrow()
   })
 
   it('should handle AWS SDK errors', async () => {
     const awsError = new Error('AWS service error')
     mockSend.mockRejectedValueOnce(awsError)
 
-    await expect(generateImage('Test prompt')).rejects.toThrow('AWS service error')
+    await expect(generateImage('Test prompt', 'test-model')).rejects.toThrow('AWS service error')
   })
 
   it('should handle JSON parsing errors', async () => {
@@ -139,6 +139,6 @@ describe('generateImage', () => {
     }
     mockSend.mockResolvedValueOnce(invalidJsonResponse)
 
-    await expect(generateImage('Test prompt')).rejects.toThrow()
+    await expect(generateImage('Test prompt', 'test-model')).rejects.toThrow()
   })
 })
