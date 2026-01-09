@@ -14,6 +14,8 @@ Given the outline, a narrative recap, the choice the player just made, and the c
   - Red herrings need to provide some indication that they are incorrect, less reliable, not related, etc, but think about how not to make it obvious
   - If the payer made the best choice, give them some indication that they succeeded (example: "the safe opens easily", "you are pleased to find...")
   - If the player DIDN'T make the best choice, give them some indication that they
+  - It should be long enough to take the reader about 45-60 seconds to finish
+- Generate a short title for the chapter for this narrative.
 - Generate a recap of the story including your narrative
   - Include information important for the next LLM prompt to continue the narrative
 - Generate the choice that will be presented to the user
@@ -36,6 +38,7 @@ Make sure the narrative, recap, choice, and options are inoffensive and not emmo
 Output your thinking in <thinking> tags followed by valid JSON with the keys with NOTTHING ELSE (double-check that your JSON is valid with \n instead of newlines and " escaped):
 
 {
+  "chapterTitle": "string"
   "narrative": "string",
   "recap": "string",
   "choice": "string",

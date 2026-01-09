@@ -92,10 +92,11 @@ export const formatNarrative = (
 ): CyoaNarrative => {
   const jsonTypeDefinition = {
     type: 'object',
-    required: ['narrative', 'recap', 'choice', 'options', 'inventory'],
+    required: ['narrative', 'recap', 'chapterTitle', 'choice', 'options', 'inventory'],
     properties: {
       narrative: { type: 'string', minLength: 1 },
       recap: { type: 'string', minLength: 1 },
+      chapterTitle: { type: 'string', minLength: 1 },
       choice: { type: 'string', minLength: 1 },
       options: {
         type: 'array',
@@ -125,6 +126,7 @@ export const formatNarrative = (
   const narrative: CyoaNarrative = {
     narrative: input.narrative as string,
     recap: input.recap as string,
+    chapterTitle: input.chapterTitle as string,
     choice: input.choice as string,
     options: input.options as CyoaOption[],
     inventory: inventoryItems,

@@ -151,6 +151,7 @@ export const cyoaNarrative: CyoaNarrative = {
   narrative: 'You find yourself standing before a massive sleeping dragon...',
   recap:
     'After asking the wizard for help, you received a magic wand and learned about the dragon.',
+  chapterTitle: "The Dragon's Lair",
   choice: 'You see a sleeping dragon. What do you do?',
   options: [
     { name: 'Sneak past quietly', resourcesToAdd: 0 },
@@ -164,6 +165,7 @@ export const createNarrativePromptOutput = {
   narrative: 'You find yourself standing before a massive sleeping dragon...',
   recap:
     'After asking the wizard for help, you received a magic wand and learned about the dragon.',
+  chapterTitle: "The Dragon's Lair",
   choice: 'You see a sleeping dragon. What do you do?',
   options: [
     { name: 'Sneak past quietly', resourcesToAdd: 0 },

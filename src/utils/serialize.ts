@@ -18,6 +18,7 @@ export const serializeCyoaGame = (game: CyoaGame): CyoaGameSerialized => ({
 
 export const serializeCyoaNarrative = (narrative: CyoaNarrative): CyoaNarrativeSerialized => ({
   narrative: narrative.narrative,
+  chapterTitle: narrative.chapterTitle,
   choice: narrative.choice,
   options: narrative.options.map(
     (option): CyoaOptionSerialized => ({

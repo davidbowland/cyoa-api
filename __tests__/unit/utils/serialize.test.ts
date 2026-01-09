@@ -39,6 +39,7 @@ describe('serialize', () => {
 
       expect(result).toEqual({
         narrative: 'You find yourself standing before a massive sleeping dragon...',
+        chapterTitle: "The Dragon's Lair",
         choice: 'You see a sleeping dragon. What do you do?',
         options: [{ name: 'Sneak past quietly' }, { name: 'Wake the dragon' }],
         inventory: [{ name: 'Sword', image: 'sword-image.jpg' }],
