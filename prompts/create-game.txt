@@ -28,6 +28,7 @@ Come up with the plan for a choose-your-own-adventure story based on the theme a
   - Name of each item, themed with content
     - NEVER put anything but a name -- this value is displayed to the player
   - Image description to be passed to an LLM to generate an image
+    - Focus on a physical representation of the item alone
 - Create a list of possible key information
   - Key information might includes numbers, combinations, words, or phrases
   - Key numbers must be at least 4 digits

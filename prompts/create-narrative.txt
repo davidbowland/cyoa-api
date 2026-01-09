@@ -11,6 +11,9 @@ Given the outline, a narrative recap, the choice the player just made, and the c
   - Think about what inventory or information needs to be introduced
   - Think about what inventory or information needs to be consumed
   - Write as clearly as eloquently as possible (channel Christopher Hitchens, Earnest Hemmingway, and P.G. Wodehouse)
+  - Red herrings need to provide some indication that they are incorrect, less reliable, not related, etc, but think about how not to make it obvious
+  - If the payer made the best choice, give them some indication that they succeeded (example: "the safe opens easily", "you are pleased to find...")
+  - If the player DIDN'T make the best choice, give them some indication that they
 - Generate a recap of the story including your narrative
   - Include information important for the next LLM prompt to continue the narrative
 - Generate the choice that will be presented to the user

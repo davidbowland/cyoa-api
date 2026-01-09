@@ -1,4 +1,11 @@
-import { CyoaGame, CyoaNarrative, GameId, NarrativeGenerationData, NarrativeId } from '../types'
+import {
+  CyoaGame,
+  CyoaNarrative,
+  CyoaOption,
+  GameId,
+  NarrativeGenerationData,
+  NarrativeId,
+} from '../types'
 import { parseNarrativeId } from '../utils/narratives'
 
 export interface GenerationContextParams {
@@ -17,6 +24,8 @@ interface NarrativeContext {
   recap: string
   currentResourceValue: number
   lastChoiceMade: string
+  lastOptionSelected: string
+  bestOption: string
   currentInventory: string[]
 }
 
@@ -39,11 +48,22 @@ export const InitialNarrativeStrategy: GenerationStrategy = {
     recap: 'The game is starting.',
     currentResourceValue: game.startingResourceValue,
     lastChoiceMade: '',
+    lastOptionSelected: '',
+    bestOption: '',
     currentInventory: [],
   }),
 
   shouldGenerate: (existing: NarrativeData | undefined): boolean =>
     !existing?.narrative && !isGenerating(existing?.generationData),
+}
+
+export const getBestOption = (options: CyoaOption[] | undefined): CyoaOption | undefined => {
+  if (!options?.length) {
+    return undefined
+  }
+  return options.reduce((acc, curr) =>
+    Math.abs(acc.resourcesToAdd) > Math.abs(curr.resourcesToAdd) ? acc : curr,
+  )
 }
 
 export const ContinuationNarrativeStrategy: GenerationStrategy = {
@@ -59,6 +79,7 @@ export const ContinuationNarrativeStrategy: GenerationStrategy = {
       throw new Error('Selected option not found')
     }
 
+    const bestOption = getBestOption(lastNarrative?.options)
     const currentResourceValue =
       lastNarrative && lastOptionSelected
         ? lastNarrative.currentResourceValue + lastOptionSelected.resourcesToAdd
@@ -67,7 +88,9 @@ export const ContinuationNarrativeStrategy: GenerationStrategy = {
     return {
       recap: lastNarrative?.recap ?? 'The game is starting.',
       currentResourceValue,
-      lastChoiceMade: lastOptionSelected?.name ?? '',
+      lastChoiceMade: lastNarrative?.choice ?? '',
+      lastOptionSelected: lastOptionSelected?.name ?? '',
+      bestOption: bestOption?.name ?? '',
       currentInventory: lastNarrative?.inventory.map((item) => item.name) ?? [],
     }
   },

@@ -30,7 +30,11 @@ import {
   setNarrativeById,
   setNarrativeGenerationData,
 } from './dynamodb'
-import { GenerationContextParams, selectGenerationStrategy } from './narrative-strategies'
+import {
+  GenerationContextParams,
+  getBestOption,
+  selectGenerationStrategy,
+} from './narrative-strategies'
 import { selectPromptId } from './prompt-selection'
 import { addToQueue } from './sqs'
 
@@ -58,7 +62,12 @@ const startNarrativeGeneration = async (
   narrativeId: NarrativeId,
   generationData: Pick<
     NarrativeGenerationData,
-    'recap' | 'currentResourceValue' | 'lastChoiceMade' | 'currentInventory'
+    | 'recap'
+    | 'currentResourceValue'
+    | 'lastChoiceMade'
+    | 'lastOptionSelected'
+    | 'bestOption'
+    | 'currentInventory'
   >,
   currentChoice: CyoaChoicePoint,
 ): Promise<void> => {
@@ -101,11 +110,14 @@ const ensureUpcomingNarratives = async (
       continue
     }
 
+    const bestOption = getBestOption(narrative.options)
     const { optionId, choicePointIndex } = parseNarrativeId(nextNarrativeId)
     const nextNarrativeContext = {
       recap: narrative?.recap ?? 'The game is starting.',
       currentResourceValue: narrative.currentResourceValue,
-      lastChoiceMade: narrative.options[optionId]?.name,
+      lastChoiceMade: narrative.choice,
+      lastOptionSelected: narrative.options[optionId]?.name,
+      bestOption: bestOption?.name ?? '',
       currentInventory: narrative?.inventory.map((item) => item.name) ?? [],
     }
     const currentChoice = game.choicePoints[choicePointIndex]

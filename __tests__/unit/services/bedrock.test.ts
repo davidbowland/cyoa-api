@@ -1,4 +1,4 @@
-import { generateImage } from '@services/bedrock'
+import { generateImage, invokeModel } from '@services/bedrock'
 
 const mockSend = jest.fn()
 jest.mock('@aws-sdk/client-bedrock-runtime', () => ({
@@ -13,6 +13,90 @@ jest.mock('@utils/logging', () => ({
   logError: jest.fn(),
   xrayCapture: jest.fn().mockImplementation((x) => x),
 }))
+
+describe('invokeModel', () => {
+  const mockPrompt = {
+    contents: 'Test prompt with ${context}',
+    config: {
+      model: 'anthropic.claude-3-sonnet-20240229-v1:0',
+      anthropicVersion: 'bedrock-2023-05-31',
+      maxTokens: 1000,
+      temperature: 0.7,
+      topK: 250,
+    },
+  }
+
+  const mockSuccessResponse = {
+    body: new TextEncoder().encode(
+      JSON.stringify({
+        content: [{ text: '{"result": "success"}' }],
+      }),
+    ),
+  }
+
+  beforeAll(() => {
+    mockSend.mockResolvedValue(mockSuccessResponse)
+  })
+
+  it('should invoke model without context', async () => {
+    const result = await invokeModel(mockPrompt)
+
+    expect(mockSend).toHaveBeenCalledWith({
+      body: new TextEncoder().encode(
+        JSON.stringify({
+          anthropic_version: 'bedrock-2023-05-31',
+          max_tokens: 1000,
+          messages: [{ content: 'Test prompt with ${context}', role: 'user' }],
+          temperature: 0.7,
+          top_k: 250,
+        }),
+      ),
+      contentType: 'application/json',
+      modelId: 'anthropic.claude-3-sonnet-20240229-v1:0',
+    })
+
+    expect(result).toEqual({ result: 'success' })
+  })
+
+  it('should invoke model with context replacement', async () => {
+    const context = { gameId: 'test-game', status: 'active' }
+
+    await invokeModel(mockPrompt, context)
+
+    expect(mockSend).toHaveBeenCalledWith({
+      body: new TextEncoder().encode(
+        JSON.stringify({
+          anthropic_version: 'bedrock-2023-05-31',
+          max_tokens: 1000,
+          messages: [
+            { content: 'Test prompt with {"gameId":"test-game","status":"active"}', role: 'user' },
+          ],
+          temperature: 0.7,
+          top_k: 250,
+        }),
+      ),
+      contentType: 'application/json',
+      modelId: 'anthropic.claude-3-sonnet-20240229-v1:0',
+    })
+  })
+
+  it('should handle response with thinking tags', async () => {
+    const responseWithThinking = {
+      body: new TextEncoder().encode(
+        JSON.stringify({
+          content: [
+            { text: '<thinking>This is my thought process</thinking>{"result": "cleaned"}' },
+          ],
+        }),
+      ),
+    }
+    mockSend.mockResolvedValueOnce(responseWithThinking)
+
+    const result = await invokeModel(mockPrompt)
+
+    expect(result).toEqual({ result: 'cleaned' })
+  })
+})
 
 describe('generateImage', () => {
   const mockSuccessResponse = {

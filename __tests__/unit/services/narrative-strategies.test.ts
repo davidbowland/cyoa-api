@@ -3,6 +3,7 @@ import {
   InitialNarrativeStrategy,
   ContinuationNarrativeStrategy,
   selectGenerationStrategy,
+  getBestOption,
 } from '@services/narrative-strategies'
 
 jest.mock('@utils/logging', () => ({
@@ -27,6 +28,8 @@ describe('narrative-strategies', () => {
           recap: 'The game is starting.',
           currentResourceValue: cyoaGame.startingResourceValue,
           lastChoiceMade: '',
+          lastOptionSelected: '',
+          bestOption: '',
           currentInventory: [],
         })
       })
@@ -75,7 +78,9 @@ describe('narrative-strategies', () => {
           recap: cyoaNarrative.recap,
           currentResourceValue:
             cyoaNarrative.currentResourceValue + cyoaNarrative.options[0].resourcesToAdd,
-          lastChoiceMade: cyoaNarrative.options[0].name,
+          lastChoiceMade: cyoaNarrative.choice,
+          lastOptionSelected: cyoaNarrative.options[0].name,
+          bestOption: 'Wake the dragon',
           currentInventory: ['Sword'],
         })
       })
@@ -92,6 +97,8 @@ describe('narrative-strategies', () => {
         expect(result.recap).toBe('The game is starting.')
         expect(result.currentResourceValue).toBe(cyoaGame.startingResourceValue)
         expect(result.lastChoiceMade).toBe('')
+        expect(result.lastOptionSelected).toBe('')
+        expect(result.bestOption).toBe('')
         expect(result.currentInventory).toEqual([])
       })
 
@@ -147,6 +154,43 @@ describe('narrative-strategies', () => {
     it('returns ContinuationNarrativeStrategy for deep continuation narrative ID', () => {
       const result = selectGenerationStrategy('start-0-1-2')
       expect(result).toBe(ContinuationNarrativeStrategy)
+    })
+  })
+
+  describe('getBestOption', () => {
+    it('returns undefined for empty options array', () => {
+      const result = getBestOption([])
+      expect(result).toBeUndefined()
+    })
+
+    it('returns undefined for undefined options', () => {
+      const result = getBestOption(undefined)
+      expect(result).toBeUndefined()
+    })
+
+    it('returns the option with highest absolute resource value', () => {
+      const options = [
+        { name: 'Option 1', resourcesToAdd: 5 },
+        { name: 'Option 2', resourcesToAdd: -10 },
+        { name: 'Option 3', resourcesToAdd: 3 },
+      ]
+      const result = getBestOption(options)
+      expect(result).toEqual({ name: 'Option 2', resourcesToAdd: -10 })
+    })
+
+    it('returns the second option when absolute values are equal', () => {
+      const options = [
+        { name: 'Option 1', resourcesToAdd: 5 },
+        { name: 'Option 2', resourcesToAdd: -5 },
+      ]
+      const result = getBestOption(options)
+      expect(result).toEqual({ name: 'Option 2', resourcesToAdd: -5 })
+    })
+
+    it('handles single option', () => {
+      const options = [{ name: 'Only Option', resourcesToAdd: 7 }]
+      const result = getBestOption(options)
+      expect(result).toEqual({ name: 'Only Option', resourcesToAdd: 7 })
     })
   })
 })

@@ -132,6 +132,8 @@ export const narrativeGenerationData: NarrativeGenerationData = {
   recap: 'Previous events recap',
   currentResourceValue: 75,
   lastChoiceMade: 'Asked for help',
+  lastOptionSelected: 'Ask for help',
+  bestOption: 'Ask for help',
   currentInventory: ['Sword', 'Magic Wand'],
   inventoryToIntroduce: ['Health Potion'],
   keyInformationToIntroduce: ['The dragon is sleeping'],

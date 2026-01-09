@@ -78,6 +78,84 @@ describe('narrative-generation-orchestrator', () => {
       expect(dynamodb.getNarrativesByIds).toHaveBeenCalled()
     })
 
+    it('returns existing narrative and ensures upcoming narratives', async () => {
+      const upcomingNarrativeIds = ['start-0-1', 'start-0-2']
+      jest
+        .mocked(narrativeUtils)
+        .determineRequiredNarratives.mockReturnValueOnce(upcomingNarrativeIds)
+      jest.mocked(dynamodb).getNarrativeById.mockResolvedValueOnce({
+        narrative: cyoaNarrative,
+        generationData: narrativeGenerationData,
+      })
+      jest.mocked(dynamodb).getNarrativesByIds.mockResolvedValueOnce([])
+      jest.mocked(narrativeUtils).parseNarrativeId.mockReturnValue({
+        lastNarrativeId: 'start',
+        optionId: 0,
+        choicePointIndex: 0, // Use index 0 since that's what exists in the mock
+      })
+
+      const result = await ensureNarrativeExists(gameId, testNarrativeId, cyoaGame)
+
+      expect(result).toEqual({
+        status: 'ready',
+        narrative: cyoaNarrative,
+      })
+      expect(dynamodb.getNarrativesByIds).toHaveBeenCalledWith(gameId, upcomingNarrativeIds)
+      expect(dynamodb.setNarrativeGenerationData).toHaveBeenCalledTimes(2) // Once for each upcoming narrative
+    })
+
+    it('skips upcoming narratives that are already generating', async () => {
+      const upcomingNarrativeIds = ['start-0-1']
+      jest
+        .mocked(narrativeUtils)
+        .determineRequiredNarratives.mockReturnValueOnce(upcomingNarrativeIds)
+      jest.mocked(dynamodb).getNarrativeById.mockResolvedValueOnce({
+        narrative: cyoaNarrative,
+        generationData: narrativeGenerationData,
+      })
+      jest.mocked(dynamodb).getNarrativesByIds.mockResolvedValueOnce([
+        {
+          narrativeId: 'start-0-1',
+          generationData: { ...narrativeGenerationData, generationStartTime: mockNow - 60000 },
+        },
+      ])
+
+      const result = await ensureNarrativeExists(gameId, testNarrativeId, cyoaGame)
+
+      expect(result).toEqual({
+        status: 'ready',
+        narrative: cyoaNarrative,
+      })
+      // Should not call setNarrativeGenerationData for the generating narrative
+      expect(dynamodb.setNarrativeGenerationData).not.toHaveBeenCalled()
+    })
+
+    it('skips upcoming narratives that already exist', async () => {
+      const upcomingNarrativeIds = ['start-0-1']
+      jest
+        .mocked(narrativeUtils)
+        .determineRequiredNarratives.mockReturnValueOnce(upcomingNarrativeIds)
+      jest.mocked(dynamodb).getNarrativeById.mockResolvedValueOnce({
+        narrative: cyoaNarrative,
+        generationData: narrativeGenerationData,
+      })
+      jest.mocked(dynamodb).getNarrativesByIds.mockResolvedValueOnce([
+        {
+          narrativeId: 'start-0-1',
+          narrative: cyoaNarrative,
+        },
+      ])
+
+      const result = await ensureNarrativeExists(gameId, testNarrativeId, cyoaGame)
+
+      expect(result).toEqual({
+        status: 'ready',
+        narrative: cyoaNarrative,
+      })
+      // Should not call setNarrativeGenerationData for the existing narrative
+      expect(dynamodb.setNarrativeGenerationData).not.toHaveBeenCalled()
+    })
+
     it('returns generating status when generation is in progress', async () => {
       const generatingData = {
         ...narrativeGenerationData,

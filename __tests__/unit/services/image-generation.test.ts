@@ -342,6 +342,17 @@ describe('generateGameCoverImageForGame', () => {
 
       expect(result).toEqual({})
     })
+
+    it('should handle unexpected errors in generateGameCoverImageForGame', async () => {
+      jest.mocked(dynamodb.getPromptById).mockRejectedValueOnce(new Error('Database error'))
+
+      const gameId = 'test-game'
+      const imageDescription = 'Test description'
+
+      const result = await generateGameCoverImageForGame(gameId, imageDescription)
+
+      expect(result).toEqual({})
+    })
   })
 })
 
@@ -393,6 +404,18 @@ describe('generateInventoryImagesForGame', () => {
 
     it('should return original inventory when generation fails', async () => {
       jest.mocked(bedrock.generateImage).mockRejectedValueOnce(new Error('Image generation failed'))
+
+      const gameId = 'test-game'
+      const inventory = [{ name: 'Magic Sword' }]
+
+      const result = await generateInventoryImagesForGame(gameId, inventory)
+
+      expect(result).toEqual({ inventory: [{ name: 'Magic Sword' }] })
+    })
+
+    it('should handle unexpected errors in generateInventoryImagesForGame', async () => {
+      // Mock generateInventoryImages to throw an error directly
+      jest.mocked(dynamodb.getPromptById).mockRejectedValueOnce(new Error('Database error'))
 
       const gameId = 'test-game'
       const inventory = [{ name: 'Magic Sword' }]

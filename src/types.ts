@@ -113,6 +113,8 @@ export interface NarrativeGenerationData {
   recap: string
   currentResourceValue: number
   lastChoiceMade: string
+  lastOptionSelected: string
+  bestOption: string
   currentInventory: string[]
   inventoryToIntroduce: string[]
   keyInformationToIntroduce: string[]
