@@ -27,7 +27,9 @@ describe('get-game-by-id', () => {
         description: 'A test adventure game',
         image: 'test-image.jpg',
         initialNarrativeId: 'start',
+        lossResourceThreshold: 0,
         resourceName: 'Health',
+        startingResourceValue: 100,
         title: 'Test Adventure',
       })
       expect(dynamodb.getGameById).toHaveBeenCalledWith(gameId)

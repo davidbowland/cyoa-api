@@ -10,7 +10,9 @@ describe('serialize', () => {
         description: 'A test adventure game',
         image: 'test-image.jpg',
         initialNarrativeId: 'start',
+        lossResourceThreshold: 0,
         resourceName: 'Health',
+        startingResourceValue: 100,
         title: 'Test Adventure',
       })
     })
@@ -23,7 +25,9 @@ describe('serialize', () => {
         description: 'A test adventure game',
         image: undefined,
         initialNarrativeId: 'start',
+        lossResourceThreshold: 0,
         resourceName: 'Health',
+        startingResourceValue: 100,
         title: 'Test Adventure',
       })
     })

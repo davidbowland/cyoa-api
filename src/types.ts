@@ -1,74 +1,25 @@
 export * from 'aws-lambda'
 
-// Common
+// Common Types
 
 export interface StringObject {
   [key: string]: string
 }
 
-// S3 Types
-
-export interface NarrativeContextS3Data {
-  gameId: string
-  narrativeId: string
-  generationData: NarrativeGenerationData
-  timestamp: number
-}
-
-// SQS Types
-
-export interface SQSNarrativeEvent {
-  Records: Array<{
-    body: string
-    messageId: string
-    receiptHandle: string
-  }>
-}
-
-// Game
+// Core Game Domain Types
 
 export type GameId = string
+export type NarrativeId = string
+export type PromptId = string
 
-export interface CyoaGame {
-  title: string
-  description: string
-  image?: string
-  outline: string
-  characters: CyoaCharacter[]
-  inventory: CyoaInventory[]
-  keyInformation: string[]
-  redHerrings: string[]
-  resourceName: string
-  startingResourceValue: number
-  lossResourceThreshold: number
-  choicePoints: CyoaChoicePoint[]
-  initialNarrativeId: string
-}
-
-export interface GameWithTimestamp {
-  game: CyoaGame
-  gameId: GameId
-  createdAt: number
-}
-
-export interface CyoaGameSerialized {
-  title: string
-  description: string
-  image?: string
-  resourceName: string
-  initialNarrativeId: string
-}
-
-export interface CyoaOptionSerialized {
+export interface CyoaOption {
   name: string
+  resourcesToAdd: number
 }
 
-export interface CyoaNarrativeSerialized {
-  narrative: string
-  choice: string
-  options: CyoaOptionSerialized[]
-  inventory: CyoaInventory[]
-  currentResourceValue: number
+export interface CyoaInventory {
+  name: string
+  image?: string
 }
 
 export interface CyoaCharacter {
@@ -86,9 +37,20 @@ export interface CyoaChoicePoint {
   options: CyoaOption[]
 }
 
-export interface CyoaInventory {
-  name: string
+export interface CyoaGame {
+  title: string
+  description: string
   image?: string
+  outline: string
+  characters: CyoaCharacter[]
+  inventory: CyoaInventory[]
+  keyInformation: string[]
+  redHerrings: string[]
+  resourceName: string
+  startingResourceValue: number
+  lossResourceThreshold: number
+  choicePoints: CyoaChoicePoint[]
+  initialNarrativeId: string
 }
 
 export interface CyoaNarrative {
@@ -100,14 +62,37 @@ export interface CyoaNarrative {
   currentResourceValue: number
 }
 
-// Narrative
-
-export type NarrativeId = string
-
-export interface CreateNarrativeEvent {
+export interface GameWithTimestamp {
+  game: CyoaGame
   gameId: GameId
-  narrativeId: NarrativeId
+  createdAt: number
 }
+
+// Serialized Types (for API responses)
+
+export interface CyoaGameSerialized {
+  title: string
+  description: string
+  image?: string
+  resourceName: string
+  startingResourceValue: number
+  lossResourceThreshold: number
+  initialNarrativeId: string
+}
+
+export interface CyoaOptionSerialized {
+  name: string
+}
+
+export interface CyoaNarrativeSerialized {
+  narrative: string
+  choice: string
+  options: CyoaOptionSerialized[]
+  inventory: CyoaInventory[]
+  currentResourceValue: number
+}
+
+// Generation and Processing Types
 
 export interface NarrativeGenerationData {
   recap: string
@@ -125,74 +110,34 @@ export interface NarrativeGenerationData {
   generationStartTime: number
 }
 
-export interface CyoaOption {
-  name: string
-  resourcesToAdd: number
-}
-
-// Config
-
 export interface GameTheme {
   name: string
   description: string
 }
 
-// Prompts
+// Event Types
 
-export type PromptId = string
-
-export interface CreateGamePromptCharacter {
-  name?: string
-  imageDescription?: string
-  voice?: string
+export interface CreateNarrativeEvent {
+  gameId: GameId
+  narrativeId: NarrativeId
 }
 
-export interface CreateGamePromptInventory {
-  name?: string
-  imageDescription?: string
+export interface SQSNarrativeEvent {
+  Records: Array<{
+    body: string
+    messageId: string
+    receiptHandle: string
+  }>
 }
 
-export interface CreateGamePromptChoicePoint {
-  inventoryToIntroduce?: string[]
-  keyInformationToIntroduce?: string[]
-  redHerringsToIntroduce?: string[]
-  inventoryOrInformationConsumed?: string[]
-  choice?: string
-  options?: CreateGamePromptOption[]
+export interface NarrativeContextS3Data {
+  gameId: string
+  narrativeId: string
+  generationData: NarrativeGenerationData
+  timestamp: number
 }
 
-export interface CreateGamePromptOption {
-  name?: string
-  resourcesToAdd?: number
-}
-
-export interface CreateGamePromptOutput {
-  title?: string
-  description?: string
-  titleImageDescription?: string
-  outline?: string
-  characters?: CreateGamePromptCharacter[]
-  inventory?: CreateGamePromptInventory[]
-  keyInformation?: string[]
-  redHerrings?: string[]
-  resourceName?: string
-  startingResourceValue?: number
-  lossResourceThreshold?: number
-  choicePoints?: CreateGamePromptChoicePoint[]
-}
-
-export interface CreateNarrativePromptOutput {
-  narrative?: string
-  recap?: string
-  choice?: string
-  options?: CreateNarrativePromptOption[]
-  inventory?: string[]
-}
-
-export interface CreateNarrativePromptOption {
-  name?: string
-  resourcesToAdd?: number
-}
+// Prompt Configuration Types
 
 export interface TextPromptConfig {
   anthropicVersion: string
@@ -227,7 +172,62 @@ export interface ImagePrompt {
   contents: string
 }
 
-// Image Generation
+// Prompt Input/Output Types
+
+export interface CreateGamePromptCharacter {
+  name?: string
+  imageDescription?: string
+  voice?: string
+}
+
+export interface CreateGamePromptInventory {
+  name?: string
+  imageDescription?: string
+}
+
+export interface CreateGamePromptOption {
+  name?: string
+  resourcesToAdd?: number
+}
+
+export interface CreateGamePromptChoicePoint {
+  inventoryToIntroduce?: string[]
+  keyInformationToIntroduce?: string[]
+  redHerringsToIntroduce?: string[]
+  inventoryOrInformationConsumed?: string[]
+  choice?: string
+  options?: CreateGamePromptOption[]
+}
+
+export interface CreateGamePromptOutput {
+  title?: string
+  description?: string
+  titleImageDescription?: string
+  outline?: string
+  characters?: CreateGamePromptCharacter[]
+  inventory?: CreateGamePromptInventory[]
+  keyInformation?: string[]
+  redHerrings?: string[]
+  resourceName?: string
+  startingResourceValue?: number
+  lossResourceThreshold?: number
+  choicePoints?: CreateGamePromptChoicePoint[]
+}
+
+export interface CreateNarrativePromptOption {
+  name?: string
+  resourcesToAdd?: number
+}
+
+export interface CreateNarrativePromptOutput {
+  narrative?: string
+  recap?: string
+  choice?: string
+  options?: CreateNarrativePromptOption[]
+  inventory?: string[]
+}
+
+// Image Generation Types
 
 export interface ImageGenerationOptions {
   quality?: 'standard' | 'premium'

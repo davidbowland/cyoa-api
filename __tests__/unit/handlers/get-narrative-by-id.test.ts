@@ -6,7 +6,6 @@ import { APIGatewayProxyEventV2 } from '@types'
 import status from '@utils/status'
 
 jest.mock('@services/dynamodb')
-jest.mock('@services/narratives')
 jest.mock('@services/narrative-generation-orchestrator')
 jest.mock('@utils/logging', () => ({
   log: jest.fn(),
