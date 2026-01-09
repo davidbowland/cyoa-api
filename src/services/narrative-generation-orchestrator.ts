@@ -112,11 +112,14 @@ const ensureUpcomingNarratives = async (
 
     const bestOption = getBestOption(narrative.options)
     const { optionId, choicePointIndex } = parseNarrativeId(nextNarrativeId)
+    const selectedOption = narrative.options[optionId]
     const nextNarrativeContext = {
       recap: narrative?.recap ?? 'The game is starting.',
-      currentResourceValue: narrative.currentResourceValue,
+      currentResourceValue: selectedOption
+        ? narrative.currentResourceValue + selectedOption.resourcesToAdd
+        : narrative.currentResourceValue,
       lastChoiceMade: narrative.choice,
-      lastOptionSelected: narrative.options[optionId]?.name,
+      lastOptionSelected: selectedOption?.name ?? '',
       bestOption: bestOption?.name ?? '',
       currentInventory: narrative?.inventory.map((item) => item.name) ?? [],
     }

@@ -22,6 +22,7 @@ Given the outline, a narrative recap, the choice the player just made, and the c
   - Think about whether the provided next choice makes sense with the narrative and outline
   - Choices should be EXTREMELY difficult to make, but should have hints in previous narratives
   - NEVER ask something that can be answered by the generated narrative
+  - NEVER ask about key information or red herrings you introduced in this narrative
   - Adjust as required
 - Generate the options the user can choose between
   - Think about whether the provided options make sense with the choice you selected and the narrative you generated

@@ -162,11 +162,11 @@ describe('generateInventoryImages', () => {
       expect(result).toEqual([
         {
           name: 'Magic Sword',
-          image: 'https://cyoa-assets.dbowland.com/images/test-game/inventory/magic-sword',
+          image: 'https://cyoa-assets.dbowland.com/images/test-game/inventory/magic-sword.png',
         },
         {
           name: 'Health Potion',
-          image: 'https://cyoa-assets.dbowland.com/images/test-game/inventory/health-potion',
+          image: 'https://cyoa-assets.dbowland.com/images/test-game/inventory/health-potion.png',
         },
       ])
     })
@@ -203,7 +203,7 @@ describe('generateInventoryImages', () => {
       await generateInventoryImages(gameId, inventory)
 
       expect(s3.putS3Object).toHaveBeenCalledWith(
-        'images/test-game/inventory/magic-sword',
+        'images/test-game/inventory/magic-sword.png',
         Buffer.from(mockImageData),
         {
           'Content-Type': 'image/png',
@@ -235,7 +235,7 @@ describe('generateInventoryImages', () => {
         { name: 'Failed Item' },
         {
           name: 'Success Item',
-          image: 'https://cyoa-assets.dbowland.com/images/test-game/inventory/success-item',
+          image: 'https://cyoa-assets.dbowland.com/images/test-game/inventory/success-item.png',
         },
       ])
     })
@@ -403,11 +403,11 @@ describe('generateInventoryImagesForGame', () => {
         inventory: [
           {
             name: 'Magic Sword',
-            image: 'https://cyoa-assets.dbowland.com/images/test-game/inventory/magic-sword',
+            image: 'https://cyoa-assets.dbowland.com/images/test-game/inventory/magic-sword.png',
           },
           {
             name: 'Health Potion',
-            image: 'https://cyoa-assets.dbowland.com/images/test-game/inventory/health-potion',
+            image: 'https://cyoa-assets.dbowland.com/images/test-game/inventory/health-potion.png',
           },
         ],
       })

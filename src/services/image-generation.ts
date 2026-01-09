@@ -1,8 +1,7 @@
-import slugify from 'slugify'
-
 import { promptIdInventoryImage, promptIdCoverImage, s3AssetsDomain } from '../config'
 import { CyoaInventory, GameId, ImageGenerationOptions, ImagePrompt } from '../types'
 import { log, logError } from '../utils/logging'
+import { slugify } from '../utils/slugify'
 import { generateImage } from './bedrock'
 import { getPromptById } from './dynamodb'
 import { putS3Object } from './s3'
@@ -85,7 +84,7 @@ export const generateInventoryImages = async (
         negativePromptConfig.model,
         imageGenerationOptions,
       )
-      const imageKey = `images/${gameId}/inventory/${slugify(item.name, { lower: true })}`
+      const imageKey = `images/${gameId}/inventory/${slugify(item.name)}.png`
 
       await putS3Object(imageKey, Buffer.from(imageData), {
         'Content-Type': 'image/png',
@@ -95,7 +94,7 @@ export const generateInventoryImages = async (
 
       inventoryWithImages.push({
         name: item.name,
-        image: `https://${s3AssetsDomain}/images/${gameId}/inventory/${slugify(item.name, { lower: true })}`,
+        image: `https://${s3AssetsDomain}/images/${gameId}/inventory/${slugify(item.name)}.png`,
       })
 
       log('Image generated and saved for inventory item', {

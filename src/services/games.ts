@@ -1,5 +1,3 @@
-import slugify from 'slugify'
-
 import { adjectives } from '../assets/adjectives'
 import {
   choiceCounts,
@@ -21,6 +19,7 @@ import { CreateGamePromptOutput, CyoaGame, GameId, TextPrompt } from '../types'
 import { formatCyoaGame } from '../utils/formatting'
 import { log, logError } from '../utils/logging'
 import { getRandomSample } from '../utils/random'
+import { slugify } from '../utils/slugify'
 import { invokeModel } from './bedrock'
 import { getGameById, getGames, getPromptById, setGameById } from './dynamodb'
 import { generateGameCoverImageForGame, generateInventoryImagesForGame } from './image-generation'
@@ -69,7 +68,7 @@ export const createGame = async (): Promise<{ game: CyoaGame; gameId: GameId }> 
     throw new Error('Wrong number of choice points')
   }
 
-  const gameId: GameId = slugify(game.title).toLowerCase()
+  const gameId: GameId = slugify(game.title)
   const gameIdExists = await getGameById(gameId)
     .then(() => true)
     .catch(() => false)

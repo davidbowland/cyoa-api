@@ -179,32 +179,32 @@ describe('games', () => {
       }
       jest.mocked(bedrock).invokeModel.mockResolvedValueOnce(gameWithSpecialTitle)
       jest.mocked(imageGeneration).generateInventoryImagesForGame.mockResolvedValueOnce({
-        inventory: [{ name: 'Sword', image: 'a-special-adventure!/inventory/sword' }],
+        inventory: [{ name: 'Sword', image: 'a-special-adventure/inventory/sword' }],
       })
       jest.mocked(imageGeneration).generateGameCoverImageForGame.mockResolvedValueOnce({
-        image: 'a-special-adventure!/cover.png',
+        image: 'a-special-adventure/cover.png',
       })
 
       const result = await createGame()
 
-      expect(dynamodb.getGameById).toHaveBeenCalledWith('a-special-adventure!')
+      expect(dynamodb.getGameById).toHaveBeenCalledWith('a-special-adventure')
       expect(dynamodb.setGameById).toHaveBeenCalledWith(
-        'a-special-adventure!',
+        'a-special-adventure',
         expect.objectContaining({
           title: 'A Special Adventure!',
-          image: 'a-special-adventure!/cover.png',
-          inventory: [{ name: 'Sword', image: 'a-special-adventure!/inventory/sword' }],
+          image: 'a-special-adventure/cover.png',
+          inventory: [{ name: 'Sword', image: 'a-special-adventure/inventory/sword' }],
           initialNarrativeId: 'start',
         }),
       )
       expect(result).toEqual({
         game: expect.objectContaining({
           title: 'A Special Adventure!',
-          image: 'a-special-adventure!/cover.png',
-          inventory: [{ name: 'Sword', image: 'a-special-adventure!/inventory/sword' }],
+          image: 'a-special-adventure/cover.png',
+          inventory: [{ name: 'Sword', image: 'a-special-adventure/inventory/sword' }],
           initialNarrativeId: 'start',
         }),
-        gameId: 'a-special-adventure!',
+        gameId: 'a-special-adventure',
       })
     })
 
