@@ -1,6 +1,6 @@
 import slugify from 'slugify'
 
-import { promptIdInventoryImage, promptIdCoverImage } from '../config'
+import { promptIdInventoryImage, promptIdCoverImage, s3AssetsDomain } from '../config'
 import { CyoaInventory, GameId, ImageGenerationOptions, ImagePrompt } from '../types'
 import { log, logError } from '../utils/logging'
 import { generateImage } from './bedrock'
@@ -46,7 +46,7 @@ export const generateGameCoverImage = async (
       imageSizeBytes: imageData.length,
     })
 
-    return `${gameId}/cover.png`
+    return `https://${s3AssetsDomain}/images/${gameId}/cover.png`
   } catch (error: unknown) {
     log('Failed to generate cover image for game', {
       gameId,
@@ -95,7 +95,7 @@ export const generateInventoryImages = async (
 
       inventoryWithImages.push({
         name: item.name,
-        image: `${gameId}/inventory/${slugify(item.name, { lower: true })}`,
+        image: `https://${s3AssetsDomain}/images/${gameId}/inventory/${slugify(item.name, { lower: true })}`,
       })
 
       log('Image generated and saved for inventory item', {

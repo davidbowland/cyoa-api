@@ -35,6 +35,7 @@ process.env.BEDROCK_IMAGE_MODEL_ID = 'amazon.nova-canvas-v1:0'
 // S3
 
 process.env.S3_ASSETS_BUCKET = 'cyoa-api-assets'
+process.env.S3_ASSETS_DOMAIN = 'cyoa-assets.dbowland.com'
 
 // SQS
 

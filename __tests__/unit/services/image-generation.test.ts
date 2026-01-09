@@ -48,7 +48,7 @@ describe('generateGameCoverImage', () => {
 
       const result = await generateGameCoverImage(gameId, imageDescription)
 
-      expect(result).toBe('test-game/cover.png')
+      expect(result).toBe('https://cyoa-assets.dbowland.com/images/test-game/cover.png')
     })
 
     it('should retrieve negative prompt configuration', async () => {
@@ -160,8 +160,14 @@ describe('generateInventoryImages', () => {
       const result = await generateInventoryImages(gameId, inventory)
 
       expect(result).toEqual([
-        { name: 'Magic Sword', image: 'test-game/inventory/magic-sword' },
-        { name: 'Health Potion', image: 'test-game/inventory/health-potion' },
+        {
+          name: 'Magic Sword',
+          image: 'https://cyoa-assets.dbowland.com/images/test-game/inventory/magic-sword',
+        },
+        {
+          name: 'Health Potion',
+          image: 'https://cyoa-assets.dbowland.com/images/test-game/inventory/health-potion',
+        },
       ])
     })
 
@@ -227,7 +233,10 @@ describe('generateInventoryImages', () => {
 
       expect(result).toEqual([
         { name: 'Failed Item' },
-        { name: 'Success Item', image: 'test-game/inventory/success-item' },
+        {
+          name: 'Success Item',
+          image: 'https://cyoa-assets.dbowland.com/images/test-game/inventory/success-item',
+        },
       ])
     })
 
@@ -311,7 +320,9 @@ describe('generateGameCoverImageForGame', () => {
       const result = await generateGameCoverImageForGame(gameId, imageDescription)
 
       expect(dynamodb.getPromptById).toHaveBeenCalledWith('cover-image')
-      expect(result).toEqual({ image: 'test-game/cover.png' })
+      expect(result).toEqual({
+        image: 'https://cyoa-assets.dbowland.com/images/test-game/cover.png',
+      })
     })
   })
 
@@ -390,8 +401,14 @@ describe('generateInventoryImagesForGame', () => {
       expect(dynamodb.getPromptById).toHaveBeenCalledWith('inventory-image')
       expect(result).toEqual({
         inventory: [
-          { name: 'Magic Sword', image: 'test-game/inventory/magic-sword' },
-          { name: 'Health Potion', image: 'test-game/inventory/health-potion' },
+          {
+            name: 'Magic Sword',
+            image: 'https://cyoa-assets.dbowland.com/images/test-game/inventory/magic-sword',
+          },
+          {
+            name: 'Health Potion',
+            image: 'https://cyoa-assets.dbowland.com/images/test-game/inventory/health-potion',
+          },
         ],
       })
     })
