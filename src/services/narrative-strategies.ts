@@ -61,9 +61,7 @@ export const getBestOption = (options: CyoaOption[] | undefined): CyoaOption | u
   if (!options?.length) {
     return undefined
   }
-  return options.reduce((acc, curr) =>
-    Math.abs(acc.resourcesToAdd) > Math.abs(curr.resourcesToAdd) ? acc : curr,
-  )
+  return options.find((opt) => opt.rank === 1)
 }
 
 export const ContinuationNarrativeStrategy: GenerationStrategy = {

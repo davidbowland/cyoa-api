@@ -80,7 +80,7 @@ describe('narrative-strategies', () => {
             cyoaNarrative.currentResourceValue + cyoaNarrative.options[0].resourcesToAdd,
           lastChoiceMade: cyoaNarrative.choice,
           lastOptionSelected: cyoaNarrative.options[0].name,
-          bestOption: 'Wake the dragon',
+          bestOption: 'Sneak past quietly',
           currentInventory: ['Sword'],
         })
       })
@@ -168,29 +168,29 @@ describe('narrative-strategies', () => {
       expect(result).toBeUndefined()
     })
 
-    it('returns the option with highest absolute resource value', () => {
+    it('returns the option with rank 1', () => {
       const options = [
-        { name: 'Option 1', resourcesToAdd: 5 },
-        { name: 'Option 2', resourcesToAdd: -10 },
-        { name: 'Option 3', resourcesToAdd: 3 },
+        { name: 'Option 1', rank: 2, resourcesToAdd: 5 },
+        { name: 'Option 2', rank: 1, resourcesToAdd: -10 },
+        { name: 'Option 3', rank: 3, resourcesToAdd: 3 },
       ]
       const result = getBestOption(options)
-      expect(result).toEqual({ name: 'Option 2', resourcesToAdd: -10 })
+      expect(result).toEqual({ name: 'Option 2', rank: 1, resourcesToAdd: -10 })
     })
 
-    it('returns the second option when absolute values are equal', () => {
+    it('returns undefined when no option has rank 1', () => {
       const options = [
-        { name: 'Option 1', resourcesToAdd: 5 },
-        { name: 'Option 2', resourcesToAdd: -5 },
+        { name: 'Option 1', rank: 2, resourcesToAdd: 5 },
+        { name: 'Option 2', rank: 3, resourcesToAdd: -5 },
       ]
       const result = getBestOption(options)
-      expect(result).toEqual({ name: 'Option 2', resourcesToAdd: -5 })
+      expect(result).toBeUndefined()
     })
 
-    it('handles single option', () => {
-      const options = [{ name: 'Only Option', resourcesToAdd: 7 }]
+    it('handles single option with rank 1', () => {
+      const options = [{ name: 'Only Option', rank: 1, resourcesToAdd: 7 }]
       const result = getBestOption(options)
-      expect(result).toEqual({ name: 'Only Option', resourcesToAdd: 7 })
+      expect(result).toEqual({ name: 'Only Option', rank: 1, resourcesToAdd: 7 })
     })
   })
 })

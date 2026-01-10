@@ -33,8 +33,11 @@ jest.mock('@utils/logging')
 describe('narrative-generation-orchestrator', () => {
   const mockNow = 1640995200000
   const testNarrativeId = 'start-0'
+  const mockMathRandom = jest.fn()
 
   beforeAll(() => {
+    Math.random = mockMathRandom
+    mockMathRandom.mockReturnValue(0.5)
     Date.now = jest.fn().mockReturnValue(mockNow)
     jest.mocked(narrativeStrategies).selectGenerationStrategy.mockReturnValue({
       buildContext: jest.fn().mockReturnValue({

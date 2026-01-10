@@ -102,8 +102,8 @@ export const cyoaGamePromptOutput = {
       inventoryOrInformationConsumed: [],
       choice: 'You encounter the wizard. What do you do?',
       options: [
-        { name: 'Ask for help', resourcesToAdd: 5 },
-        { name: 'Challenge the wizard', resourcesToAdd: -15 },
+        { name: 'Ask for help', rank: 1 },
+        { name: 'Challenge the wizard', rank: 2 },
       ],
     },
   ],
@@ -143,8 +143,8 @@ export const narrativeGenerationData: NarrativeGenerationData = {
   inventoryOrInformationConsumed: ['Old Map'],
   nextChoice: 'You see a sleeping dragon. What do you do?',
   options: [
-    { name: 'Sneak past quietly', resourcesToAdd: 0 },
-    { name: 'Wake the dragon', resourcesToAdd: -20 },
+    { name: 'Sneak past quietly', rank: 1, resourcesToAdd: 0 },
+    { name: 'Wake the dragon', rank: 2, resourcesToAdd: -20 },
   ],
   generationStartTime: 1640995200000,
 }
@@ -157,8 +157,8 @@ export const cyoaNarrative: CyoaNarrative = {
   image: 'https://cyoa-assets.dbowland.com/images/a-friendly-adventure/test-narrative-id.png',
   choice: 'You see a sleeping dragon. What do you do?',
   options: [
-    { name: 'Sneak past quietly', resourcesToAdd: 0 },
-    { name: 'Wake the dragon', resourcesToAdd: -20 },
+    { name: 'Sneak past quietly', rank: 1, resourcesToAdd: -42 },
+    { name: 'Wake the dragon', rank: 2, resourcesToAdd: -124 },
   ],
   inventory: [{ name: 'Sword', image: 'sword-image.jpg' }],
   currentResourceValue: 75,
@@ -172,8 +172,8 @@ export const createNarrativePromptOutput = {
   imageDescription: 'A dark cave with a massive sleeping dragon surrounded by treasure',
   choice: 'You see a sleeping dragon. What do you do?',
   options: [
-    { name: 'Sneak past quietly', resourcesToAdd: 0 },
-    { name: 'Wake the dragon', resourcesToAdd: -20 },
+    { name: 'Sneak past quietly', rank: 1 },
+    { name: 'Wake the dragon', rank: 2 },
   ],
   inventory: ['Sword', 'Magic Wand', 'Health Potion'],
 }

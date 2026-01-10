@@ -7,6 +7,12 @@ import { CyoaGame } from '@types'
 import { formatCyoaGame, formatNarrative } from '@utils/formatting'
 
 describe('formatting', () => {
+  const mockMathRandom = jest.fn()
+
+  beforeAll(() => {
+    Math.random = mockMathRandom
+    mockMathRandom.mockReturnValue(0.5)
+  })
   describe('formatCyoaGame', () => {
     it('should format valid game prompt output', () => {
       const result = formatCyoaGame(cyoaGamePromptOutput)
@@ -37,14 +43,60 @@ describe('formatting', () => {
             inventoryOrInformationConsumed: [],
             choice: 'You encounter the wizard. What do you do?',
             options: [
-              { name: 'Ask for help', resourcesToAdd: 5 },
-              { name: 'Challenge the wizard', resourcesToAdd: -15 },
+              { name: 'Ask for help', rank: 1 },
+              { name: 'Challenge the wizard', rank: 2 },
             ],
           },
         ],
       })
       expect(result.imageDescription).toBe('A mystical forest scene')
       expect(result.resourceImageDescription).toBe('A glowing magical energy crystal')
+    })
+
+    it('should clamp resource range when difference is too small', () => {
+      const inputWithSmallRange = {
+        ...cyoaGamePromptOutput,
+        startingResourceValue: 10,
+        lossResourceThreshold: 8,
+        choicePoints: [
+          cyoaGamePromptOutput.choicePoints[0],
+          cyoaGamePromptOutput.choicePoints[0],
+          cyoaGamePromptOutput.choicePoints[0],
+        ], // 3 choice points, minRange = 15
+      }
+
+      const result = formatCyoaGame(inputWithSmallRange)
+
+      expect(result.game.startingResourceValue).toBe(0)
+      expect(result.game.lossResourceThreshold).toBe(15)
+    })
+
+    it('should clamp resource range when ending is zero', () => {
+      const inputWithZeroEnding = {
+        ...cyoaGamePromptOutput,
+        startingResourceValue: 2,
+        lossResourceThreshold: 0,
+        choicePoints: [cyoaGamePromptOutput.choicePoints[0], cyoaGamePromptOutput.choicePoints[0]], // 2 choice points, minRange = 10
+      }
+
+      const result = formatCyoaGame(inputWithZeroEnding)
+
+      expect(result.game.startingResourceValue).toBe(10)
+      expect(result.game.lossResourceThreshold).toBe(0)
+    })
+
+    it('should not clamp when range is already sufficient', () => {
+      const inputWithSufficientRange = {
+        ...cyoaGamePromptOutput,
+        startingResourceValue: 100,
+        lossResourceThreshold: 0,
+        choicePoints: [cyoaGamePromptOutput.choicePoints[0]], // 1 choice point, minRange = 5
+      }
+
+      const result = formatCyoaGame(inputWithSufficientRange)
+
+      expect(result.game.startingResourceValue).toBe(100)
+      expect(result.game.lossResourceThreshold).toBe(0)
     })
 
     it('should throw error for invalid game prompt output', () => {
@@ -76,7 +128,19 @@ describe('formatting', () => {
       resourceName: 'Health',
       startingResourceValue: 100,
       lossResourceThreshold: 0,
-      choicePoints: [],
+      choicePoints: [
+        {
+          inventoryToIntroduce: [],
+          keyInformationToIntroduce: [],
+          redHerringsToIntroduce: [],
+          inventoryOrInformationConsumed: [],
+          choice: 'Test choice',
+          options: [
+            { name: 'Test option 1', rank: 1, resourcesToAdd: 0 },
+            { name: 'Test option 2', rank: 2, resourcesToAdd: 0 },
+          ],
+        },
+      ],
       initialNarrativeId: 'start',
     }
 
@@ -91,8 +155,8 @@ describe('formatting', () => {
           chapterTitle: "The Dragon's Lair",
           choice: 'You see a sleeping dragon. What do you do?',
           options: [
-            { name: 'Sneak past quietly', resourcesToAdd: 0 },
-            { name: 'Wake the dragon', resourcesToAdd: -20 },
+            { name: 'Sneak past quietly', rank: 1, resourcesToAdd: -42 },
+            { name: 'Wake the dragon', rank: 2, resourcesToAdd: -124 },
           ],
           inventory: [
             { name: 'Sword', image: 'sword-image.jpg' },
@@ -122,7 +186,7 @@ describe('formatting', () => {
     it('should throw error for invalid option structure', () => {
       const invalidOptionsInput = {
         ...createNarrativePromptOutput,
-        options: [{ name: 'Invalid option' }], // Missing resourcesToAdd
+        options: [{ name: 'Invalid option' }], // Missing rank
       }
 
       expect(() =>
@@ -133,7 +197,7 @@ describe('formatting', () => {
     it('should throw error for empty option name', () => {
       const emptyNameInput = {
         ...createNarrativePromptOutput,
-        options: [{ name: '', resourcesToAdd: 0 }],
+        options: [{ name: '', rank: 1 }],
       }
 
       expect(() =>

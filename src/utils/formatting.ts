@@ -1,6 +1,6 @@
 import Ajv from 'ajv'
 
-import { initialNarrativeId } from '../config'
+import { initialNarrativeId, resourceToAddPercent } from '../config'
 import {
   CreateGamePromptOutput,
   CreateNarrativePromptOutput,
@@ -9,11 +9,53 @@ import {
   CyoaGame,
   CyoaInventory,
   CyoaNarrative,
-  CyoaOption,
+  CyoaNarrativeOption,
   NarrativeGenerationData,
 } from '../types'
 
 const ajv = new Ajv({ allErrors: true })
+
+interface Option {
+  name: string
+  rank: number
+}
+
+const transformRankValues = (
+  options: Option[],
+  choiceCount: number,
+  startingResourceValue: number,
+  lossResourceThreshold: number,
+): CyoaNarrativeOption[] => {
+  const range = Math.abs(lossResourceThreshold - startingResourceValue)
+  const multiplier = Math.sign(lossResourceThreshold - startingResourceValue) || 1
+  const choiceRange = Math.max(range / choiceCount, 1)
+  const percentRange = resourceToAddPercent / options.length
+
+  return options.map((o) => {
+    const percent = percentRange * o.rank - Math.random() * percentRange
+    const randomRange = Math.max(Math.ceil(percent * choiceRange), 1)
+    return {
+      ...o,
+      resourcesToAdd: randomRange * multiplier,
+    }
+  })
+}
+
+const clampResourceRange = (
+  choiceCount: number,
+  starting: number,
+  ending: number,
+): { starting: number; ending: number } => {
+  const minRange = Math.ceil(choiceCount * 5)
+  if (Math.abs(starting - ending) >= minRange) {
+    return { starting, ending }
+  }
+  if (ending === 0) {
+    return { starting: minRange, ending }
+  } else {
+    return { starting: 0, ending: minRange }
+  }
+}
 
 export const formatCyoaGame = (
   input: CreateGamePromptOutput,
@@ -70,6 +112,13 @@ export const formatCyoaGame = (
     throw new Error(JSON.stringify(ajv.errors))
   }
 
+  const choiceCount = (input.choicePoints as CyoaChoicePoint[]).length
+  const { starting, ending } = clampResourceRange(
+    choiceCount,
+    input.startingResourceValue as number,
+    input.lossResourceThreshold as number,
+  )
+
   const game: CyoaGame = {
     title: input.title as string,
     description: input.description as string,
@@ -79,8 +128,8 @@ export const formatCyoaGame = (
     keyInformation: input.keyInformation as string[],
     redHerrings: input.redHerrings as string[],
     resourceName: input.resourceName as string,
-    startingResourceValue: input.startingResourceValue as number,
-    lossResourceThreshold: input.lossResourceThreshold as number,
+    startingResourceValue: starting,
+    lossResourceThreshold: ending,
     choicePoints: input.choicePoints as CyoaChoicePoint[],
     initialNarrativeId,
   }
@@ -117,10 +166,10 @@ export const formatNarrative = (
         type: 'array',
         items: {
           type: 'object',
-          required: ['name', 'resourcesToAdd'],
+          required: ['name', 'rank'],
           properties: {
             name: { type: 'string', minLength: 1 },
-            resourcesToAdd: { type: 'number' },
+            rank: { type: 'number' },
           },
         },
       },
@@ -138,12 +187,19 @@ export const formatNarrative = (
     .map((name) => game.inventory.find((item) => item.name === name))
     .filter((item): item is CyoaInventory => item !== undefined)
 
+  const transformedOptions = transformRankValues(
+    input.options as Option[],
+    game.choicePoints.length,
+    game.startingResourceValue,
+    game.lossResourceThreshold,
+  )
+
   const narrative: CyoaNarrative = {
     narrative: input.narrative as string,
     recap: input.recap as string,
     chapterTitle: input.chapterTitle as string,
     choice: input.choice as string,
-    options: input.options as CyoaOption[],
+    options: transformedOptions,
     inventory: inventoryItems,
     currentResourceValue: generationData.currentResourceValue,
   }

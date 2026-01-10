@@ -14,6 +14,10 @@ export type PromptId = string
 
 export interface CyoaOption {
   name: string
+  rank: number
+}
+
+export interface CyoaNarrativeOption extends CyoaOption {
   resourcesToAdd: number
 }
 
@@ -60,7 +64,7 @@ export interface CyoaNarrative {
   chapterTitle: string
   image?: string
   choice: string
-  options: CyoaOption[]
+  options: CyoaNarrativeOption[]
   inventory: CyoaInventory[]
   currentResourceValue: number
 }
@@ -193,7 +197,7 @@ export interface CreateGamePromptInventory {
 
 export interface CreateGamePromptOption {
   name?: string
-  resourcesToAdd?: number
+  rank?: number
 }
 
 export interface CreateGamePromptChoicePoint {
@@ -223,7 +227,7 @@ export interface CreateGamePromptOutput {
 
 export interface CreateNarrativePromptOption {
   name?: string
-  resourcesToAdd?: number
+  rank?: number
 }
 
 export interface CreateNarrativePromptOutput {

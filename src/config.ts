@@ -35,6 +35,8 @@ export const inspirationAdjectivesCount = parseInt(
 export const inspirationNounsCount = parseInt(process.env.INSPIRATION_NOUNS_COUNT as string, 10)
 export const inspirationVerbsCount = parseInt(process.env.INSPIRATION_VERBS_COUNT as string, 10)
 export const initialNarrativeId = 'start'
+export const resourceToAddPercent =
+  parseInt(process.env.RESOURCE_TO_ADD_PERCENT as string, 10) / 100
 
 // Logging
 

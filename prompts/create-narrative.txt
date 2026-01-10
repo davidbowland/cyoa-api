@@ -31,8 +31,8 @@ Given the outline, a narrative recap, the choice the player just made, and the c
 - Generate the options the user can choose between
   - Think about whether the provided options make sense with the choice you selected and the narrative you generated
   - Adjust as required
-  - currentResourceValue will be adjusted by adding resourcesToAdd
-  - NEVER set resourcesToAdd to 0
+  - Rank each option, with 1 being the best choice
+  - NEVER skip a number when ranking
 - Generate the inventory the user has at the end of the narrative
   - Consider currentInventory, inventoryToIntroduce, and inventoryOrInformationConsumed
   - Double-check the inventory to make sure it's correct
@@ -48,7 +48,7 @@ Output your thinking in <thinking> tags followed by valid JSON with the keys wit
   "recap": "string",
   "imageDescription": "string",
   "choice": "string",
-  "options": [{ "name": "string", "resourcesToAdd": number }],
+  "options": [{ "name": "string", "rank": number }],
   "inventory": ["string"]
 }
 </output>
