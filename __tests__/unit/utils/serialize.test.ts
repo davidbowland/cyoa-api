@@ -9,26 +9,28 @@ describe('serialize', () => {
       expect(result).toEqual({
         description: 'A test adventure game',
         image: 'test-image.jpg',
-        initialNarrativeId: 'start',
-        lossResourceThreshold: 0,
         resourceName: 'Health',
+        resourceImage: 'https://cyoa-assets.dbowland.com/images/a-friendly-adventure/resource.png',
         startingResourceValue: 100,
+        lossResourceThreshold: 0,
         title: 'Test Adventure',
+        initialNarrativeId: 'start',
       })
     })
 
-    it('should handle game without optional image field', () => {
-      const gameWithoutImage = { ...cyoaGame, image: undefined }
-      const result = serializeCyoaGame(gameWithoutImage)
+    it('should handle game without optional image fields', () => {
+      const gameWithoutImages = { ...cyoaGame, image: undefined, resourceImage: undefined }
+      const result = serializeCyoaGame(gameWithoutImages)
 
       expect(result).toEqual({
         description: 'A test adventure game',
         image: undefined,
-        initialNarrativeId: 'start',
-        lossResourceThreshold: 0,
         resourceName: 'Health',
+        resourceImage: undefined,
         startingResourceValue: 100,
+        lossResourceThreshold: 0,
         title: 'Test Adventure',
+        initialNarrativeId: 'start',
       })
     })
   })

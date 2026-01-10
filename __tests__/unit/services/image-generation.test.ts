@@ -7,6 +7,8 @@ import {
   generateInventoryImagesForGame,
   generateNarrativeImage,
   generateNarrativeImageForNarrative,
+  generateResourceImage,
+  generateResourceImageForGame,
 } from '@services/image-generation'
 import * as s3 from '@services/s3'
 
@@ -639,6 +641,194 @@ describe('generateNarrativeImageForNarrative', () => {
       const imageDescription = 'A mystical scene'
 
       const result = await generateNarrativeImageForNarrative(gameId, narrativeId, imageDescription)
+
+      expect(result).toEqual({})
+    })
+  })
+})
+describe('generateResourceImage', () => {
+  const mockImageData = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10])
+  const mockPrompt = {
+    config: {
+      model: 'amazon.nova-canvas-v1:0',
+      quality: 'standard',
+      cfgScale: 8,
+      height: 1024,
+      width: 1024,
+      seed: 0,
+    },
+    contents: 'No text, not deformed, no surreal',
+  }
+
+  const setupMocks = () => {
+    jest.mocked(dynamodb.getPromptById).mockResolvedValue(mockPrompt)
+    jest.mocked(bedrock.generateImage).mockResolvedValue({ imageData: mockImageData })
+    jest.mocked(s3.putS3Object).mockResolvedValue({} as any)
+  }
+
+  describe('successful resource image generation', () => {
+    beforeAll(() => {
+      setupMocks()
+    })
+
+    it('should generate resource image', async () => {
+      const gameId = 'test-game'
+      const imageDescription = 'A magical energy crystal glowing with power'
+
+      const result = await generateResourceImage(gameId, imageDescription)
+
+      expect(result).toBe('https://cyoa-assets.dbowland.com/images/test-game/resource.png')
+    })
+
+    it('should retrieve resource image prompt configuration', async () => {
+      const gameId = 'test-game'
+      const imageDescription = 'Test description'
+
+      await generateResourceImage(gameId, imageDescription)
+
+      expect(dynamodb.getPromptById).toHaveBeenCalledWith('resource-image')
+    })
+
+    it('should generate image with correct options', async () => {
+      const gameId = 'test-game'
+      const imageDescription = 'Test description'
+
+      await generateResourceImage(gameId, imageDescription)
+
+      expect(bedrock.generateImage).toHaveBeenCalledWith(
+        'Test description',
+        'amazon.nova-canvas-v1:0',
+        {
+          quality: 'standard',
+          cfgScale: 8,
+          height: 1024,
+          width: 1024,
+          seed: 0,
+          negativeText: 'No text, not deformed, no surreal',
+        },
+      )
+    })
+
+    it('should save image to S3 with correct key and metadata', async () => {
+      const gameId = 'test-game'
+      const imageDescription = 'Test description'
+
+      await generateResourceImage(gameId, imageDescription)
+
+      expect(s3.putS3Object).toHaveBeenCalledWith(
+        'images/test-game/resource.png',
+        Buffer.from(mockImageData),
+        {
+          'Content-Type': 'image/png',
+          'game-id': 'test-game',
+          'image-type': 'resource',
+        },
+      )
+    })
+  })
+
+  describe('resource image generation failure', () => {
+    beforeAll(() => {
+      jest.mocked(dynamodb.getPromptById).mockResolvedValue(mockPrompt)
+    })
+
+    it('should return undefined when image generation fails', async () => {
+      jest.mocked(bedrock.generateImage).mockRejectedValueOnce(new Error('Bedrock error'))
+
+      const gameId = 'test-game'
+      const imageDescription = 'Test description'
+
+      const result = await generateResourceImage(gameId, imageDescription)
+
+      expect(result).toBeUndefined()
+    })
+
+    it('should return undefined when S3 upload fails', async () => {
+      jest.mocked(bedrock.generateImage).mockResolvedValue({ imageData: mockImageData })
+      jest.mocked(s3.putS3Object).mockRejectedValueOnce(new Error('S3 upload failed'))
+
+      const gameId = 'test-game'
+      const imageDescription = 'Test description'
+
+      const result = await generateResourceImage(gameId, imageDescription)
+
+      expect(result).toBeUndefined()
+    })
+  })
+})
+
+describe('generateResourceImageForGame', () => {
+  const mockImageData = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10])
+  const mockPrompt = {
+    config: {
+      model: 'amazon.nova-canvas-v1:0',
+      quality: 'standard',
+      cfgScale: 8,
+      height: 1024,
+      width: 1024,
+      seed: 0,
+    },
+    contents: 'No text, not deformed, no surreal',
+  }
+
+  const setupMocks = () => {
+    jest.mocked(dynamodb.getPromptById).mockResolvedValue(mockPrompt)
+    jest.mocked(bedrock.generateImage).mockResolvedValue({ imageData: mockImageData })
+    jest.mocked(s3.putS3Object).mockResolvedValue({} as any)
+  }
+
+  describe('successful resource image generation', () => {
+    beforeAll(() => {
+      setupMocks()
+    })
+
+    it('should generate resource image and return path', async () => {
+      const gameId = 'test-game'
+      const imageDescription = 'A magical energy source'
+
+      const result = await generateResourceImageForGame(gameId, imageDescription)
+
+      expect(result).toEqual({
+        resourceImage: 'https://cyoa-assets.dbowland.com/images/test-game/resource.png',
+      })
+    })
+  })
+
+  describe('resource image generation failure', () => {
+    beforeAll(() => {
+      jest.mocked(dynamodb.getPromptById).mockResolvedValue(mockPrompt)
+    })
+
+    it('should return empty object when image generation fails', async () => {
+      jest.mocked(bedrock.generateImage).mockRejectedValueOnce(new Error('Generation error'))
+
+      const gameId = 'test-game'
+      const imageDescription = 'A magical energy source'
+
+      const result = await generateResourceImageForGame(gameId, imageDescription)
+
+      expect(result).toEqual({})
+    })
+
+    it('should return empty object when generateResourceImage returns undefined', async () => {
+      jest.mocked(bedrock.generateImage).mockResolvedValue({ imageData: mockImageData })
+      jest.mocked(s3.putS3Object).mockRejectedValueOnce(new Error('S3 upload failed'))
+
+      const gameId = 'test-game'
+      const imageDescription = 'A magical energy source'
+
+      const result = await generateResourceImageForGame(gameId, imageDescription)
+
+      expect(result).toEqual({})
+    })
+
+    it('should handle unexpected errors in generateResourceImageForGame', async () => {
+      jest.mocked(dynamodb.getPromptById).mockRejectedValueOnce(new Error('Database error'))
+
+      const gameId = 'test-game'
+      const imageDescription = 'A magical energy source'
+
+      const result = await generateResourceImageForGame(gameId, imageDescription)
 
       expect(result).toEqual({})
     })

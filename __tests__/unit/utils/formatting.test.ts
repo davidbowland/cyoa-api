@@ -44,6 +44,7 @@ describe('formatting', () => {
         ],
       })
       expect(result.imageDescription).toBe('A mystical forest scene')
+      expect(result.resourceImageDescription).toBe('A glowing magical energy crystal')
     })
 
     it('should throw error for invalid game prompt output', () => {

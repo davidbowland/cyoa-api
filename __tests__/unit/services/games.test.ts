@@ -35,6 +35,7 @@ describe('games', () => {
     keyInformation: ['Important clue 1', 'Important clue 2'],
     redHerrings: ['False clue 1', 'False clue 2'],
     resourceName: 'Health',
+    resourceImageDescription: 'A glowing health orb',
     startingResourceValue: 100,
     lossResourceThreshold: 0,
     choicePoints: Array(8).fill(mockChoice),
@@ -55,6 +56,9 @@ describe('games', () => {
     jest
       .mocked(imageGeneration)
       .generateGameCoverImageForGame.mockResolvedValue({ image: 'test-adventure/cover.png' })
+    jest.mocked(imageGeneration).generateResourceImageForGame.mockResolvedValue({
+      resourceImage: 'test-adventure/resource.png',
+    })
   })
 
   describe('createGame', () => {
@@ -85,6 +89,7 @@ describe('games', () => {
         expect.objectContaining({
           title: 'Test Adventure',
           image: 'test-adventure/cover.png',
+          resourceImage: 'test-adventure/resource.png',
           inventory: [{ name: 'Sword', image: 'test-adventure/inventory/sword' }],
           choicePoints: expect.arrayContaining([expect.any(Object)]),
           initialNarrativeId: 'start',
@@ -98,6 +103,10 @@ describe('games', () => {
         'test-adventure',
         [{ name: 'Sword', imageDescription: 'A sharp sword' }],
       )
+      expect(imageGeneration.generateResourceImageForGame).toHaveBeenCalledWith(
+        'test-adventure',
+        'A glowing health orb',
+      )
       expect(narrativeGenerationOrchestrator.startInitialNarrativeGeneration).toHaveBeenCalledWith(
         'test-adventure',
         expect.objectContaining({
@@ -110,6 +119,7 @@ describe('games', () => {
         game: expect.objectContaining({
           title: 'Test Adventure',
           image: 'test-adventure/cover.png',
+          resourceImage: 'test-adventure/resource.png',
           inventory: [{ name: 'Sword', image: 'test-adventure/inventory/sword' }],
           choicePoints: expect.arrayContaining([expect.any(Object)]),
           initialNarrativeId: 'start',
@@ -184,6 +194,9 @@ describe('games', () => {
       jest.mocked(imageGeneration).generateGameCoverImageForGame.mockResolvedValueOnce({
         image: 'a-special-adventure/cover.png',
       })
+      jest.mocked(imageGeneration).generateResourceImageForGame.mockResolvedValueOnce({
+        resourceImage: 'a-special-adventure/resource.png',
+      })
 
       const result = await createGame()
 
@@ -193,6 +206,7 @@ describe('games', () => {
         expect.objectContaining({
           title: 'A Special Adventure!',
           image: 'a-special-adventure/cover.png',
+          resourceImage: 'a-special-adventure/resource.png',
           inventory: [{ name: 'Sword', image: 'a-special-adventure/inventory/sword' }],
           initialNarrativeId: 'start',
         }),
@@ -201,6 +215,7 @@ describe('games', () => {
         game: expect.objectContaining({
           title: 'A Special Adventure!',
           image: 'a-special-adventure/cover.png',
+          resourceImage: 'a-special-adventure/resource.png',
           inventory: [{ name: 'Sword', image: 'a-special-adventure/inventory/sword' }],
           initialNarrativeId: 'start',
         }),
@@ -219,6 +234,7 @@ describe('games', () => {
         game: expect.objectContaining({
           title: 'Test Adventure',
           image: 'test-adventure/cover.png',
+          resourceImage: 'test-adventure/resource.png',
           inventory: [{ name: 'Sword', image: 'test-adventure/inventory/sword' }],
           initialNarrativeId: 'start',
         }),
@@ -237,7 +253,7 @@ describe('games', () => {
         'test-adventure',
         expect.objectContaining({
           title: 'Test Adventure',
-          image: 'test-adventure/cover.png',
+          resourceImage: 'test-adventure/resource.png',
           inventory: [{ name: 'Sword', imageDescription: 'A sharp sword' }],
           initialNarrativeId: 'start',
         }),
@@ -245,7 +261,7 @@ describe('games', () => {
       expect(result).toEqual({
         game: expect.objectContaining({
           title: 'Test Adventure',
-          image: 'test-adventure/cover.png',
+          resourceImage: 'test-adventure/resource.png',
           inventory: [{ name: 'Sword', imageDescription: 'A sharp sword' }],
           initialNarrativeId: 'start',
         }),
@@ -262,11 +278,29 @@ describe('games', () => {
         'test-adventure',
         expect.objectContaining({
           title: 'Test Adventure',
+          resourceImage: 'test-adventure/resource.png',
           inventory: [{ name: 'Sword', image: 'test-adventure/inventory/sword' }],
           initialNarrativeId: 'start',
         }),
       )
       expect(result.game.image).toBeUndefined()
+    })
+
+    it('should continue when resource image generation fails', async () => {
+      jest.mocked(imageGeneration).generateResourceImageForGame.mockResolvedValueOnce({})
+
+      const result = await createGame()
+
+      expect(dynamodb.setGameById).toHaveBeenCalledWith(
+        'test-adventure',
+        expect.objectContaining({
+          title: 'Test Adventure',
+          image: 'test-adventure/cover.png',
+          inventory: [{ name: 'Sword', image: 'test-adventure/inventory/sword' }],
+          initialNarrativeId: 'start',
+        }),
+      )
+      expect(result.game.resourceImage).toBeUndefined()
     })
 
     it('should filter out red herrings that are also in key information', async () => {

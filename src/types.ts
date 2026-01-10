@@ -47,6 +47,7 @@ export interface CyoaGame {
   keyInformation: string[]
   redHerrings: string[]
   resourceName: string
+  resourceImage?: string
   startingResourceValue: number
   lossResourceThreshold: number
   choicePoints: CyoaChoicePoint[]
@@ -77,6 +78,7 @@ export interface CyoaGameSerialized {
   description: string
   image?: string
   resourceName: string
+  resourceImage?: string
   startingResourceValue: number
   lossResourceThreshold: number
   initialNarrativeId: string
@@ -213,6 +215,7 @@ export interface CreateGamePromptOutput {
   keyInformation?: string[]
   redHerrings?: string[]
   resourceName?: string
+  resourceImageDescription: string
   startingResourceValue?: number
   lossResourceThreshold?: number
   choicePoints?: CreateGamePromptChoicePoint[]

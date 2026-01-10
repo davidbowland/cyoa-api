@@ -29,6 +29,7 @@ export const cyoaGame: CyoaGame = {
   keyInformation: ['Important clue 1', 'Important clue 2'],
   redHerrings: ['False clue 1', 'False clue 2'],
   resourceName: 'Health',
+  resourceImage: 'https://cyoa-assets.dbowland.com/images/a-friendly-adventure/resource.png',
   startingResourceValue: 100,
   lossResourceThreshold: 0,
   initialNarrativeId: 'start',
@@ -90,6 +91,7 @@ export const cyoaGamePromptOutput = {
   keyInformation: ['The dragon guards the treasure', 'The wizard knows ancient spells'],
   redHerrings: ['There might be goblins nearby', 'The forest has hidden traps'],
   resourceName: 'Magic Energy',
+  resourceImageDescription: 'A glowing magical energy crystal',
   startingResourceValue: 50,
   lossResourceThreshold: 5,
   choicePoints: [

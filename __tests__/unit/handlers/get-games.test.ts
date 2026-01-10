@@ -31,6 +31,8 @@ describe('get-games', () => {
           initialNarrativeId: 'start',
           lossResourceThreshold: 0,
           resourceName: 'Health',
+          resourceImage:
+            'https://cyoa-assets.dbowland.com/images/a-friendly-adventure/resource.png',
           startingResourceValue: 100,
           title: 'Test Adventure',
         },
@@ -41,6 +43,8 @@ describe('get-games', () => {
           initialNarrativeId: 'start',
           lossResourceThreshold: 0,
           resourceName: 'Health',
+          resourceImage:
+            'https://cyoa-assets.dbowland.com/images/a-friendly-adventure/resource.png',
           startingResourceValue: 100,
           title: 'Another Adventure',
         },

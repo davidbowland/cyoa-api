@@ -2,6 +2,7 @@ import {
   promptIdInventoryImage,
   promptIdCoverImage,
   promptIdNarrativeImage,
+  promptIdResourceImage,
   s3AssetsDomain,
 } from '../config'
 import { CyoaInventory, GameId, ImageGenerationOptions, ImagePrompt, NarrativeId } from '../types'
@@ -235,6 +236,75 @@ export const generateNarrativeImageForNarrative = async (
     logError('Error generating narrative image', {
       gameId,
       narrativeId,
+      error,
+    })
+    return {}
+  }
+}
+export const generateResourceImage = async (
+  gameId: GameId,
+  imageDescription: string,
+): Promise<string | undefined> => {
+  const negativePrompt = await getPromptById<ImagePrompt>(promptIdResourceImage)
+  const negativePromptConfig = negativePrompt.config
+  const negativeText = negativePrompt.contents
+
+  const imageGenerationOptions: ImageGenerationOptions = {
+    quality: negativePromptConfig.quality,
+    cfgScale: negativePromptConfig.cfgScale,
+    height: negativePromptConfig.height,
+    width: negativePromptConfig.width,
+    seed: negativePromptConfig.seed,
+    negativeText,
+  }
+
+  try {
+    log('Generating resource image', { gameId, imageDescription })
+
+    const { imageData } = await generateImage(
+      imageDescription,
+      negativePromptConfig.model,
+      imageGenerationOptions,
+    )
+    const imageKey = `images/${gameId}/resource.png`
+
+    await putS3Object(imageKey, Buffer.from(imageData), {
+      'Content-Type': 'image/png',
+      'game-id': gameId,
+      'image-type': 'resource',
+    })
+
+    log('Resource image generated and saved', {
+      gameId,
+      imageKey,
+      imageSizeBytes: imageData.length,
+    })
+
+    return `https://${s3AssetsDomain}/images/${gameId}/resource.png`
+  } catch (error: unknown) {
+    log('Failed to generate resource image', {
+      gameId,
+      imageDescription,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    })
+    return undefined
+  }
+}
+
+export const generateResourceImageForGame = async (
+  gameId: GameId,
+  imageDescription: string,
+): Promise<{ resourceImage?: string }> => {
+  try {
+    const resourceImagePath = await generateResourceImage(gameId, imageDescription)
+    if (resourceImagePath) {
+      log('Generated resource image', { gameId, resourceImagePath })
+      return { resourceImage: resourceImagePath }
+    }
+    return {}
+  } catch (error: unknown) {
+    logError('Error generating resource image', {
+      gameId,
       error,
     })
     return {}

@@ -17,7 +17,7 @@ const ajv = new Ajv({ allErrors: true })
 
 export const formatCyoaGame = (
   input: CreateGamePromptOutput,
-): { game: CyoaGame; imageDescription: string } => {
+): { game: CyoaGame; imageDescription: string; resourceImageDescription: string } => {
   const jsonTypeDefinition = {
     type: 'object',
     required: [
@@ -30,6 +30,7 @@ export const formatCyoaGame = (
       'keyInformation',
       'redHerrings',
       'resourceName',
+      'resourceImageDescription',
       'startingResourceValue',
       'lossResourceThreshold',
       'choicePoints',
@@ -56,6 +57,7 @@ export const formatCyoaGame = (
         items: { type: 'string' },
       },
       resourceName: { type: 'string', minLength: 1 },
+      resourceImageDescription: { type: 'string', minLength: 1 },
       startingResourceValue: { type: 'number' },
       lossResourceThreshold: { type: 'number' },
       choicePoints: {
@@ -82,7 +84,11 @@ export const formatCyoaGame = (
     choicePoints: input.choicePoints as CyoaChoicePoint[],
     initialNarrativeId,
   }
-  return { game, imageDescription: input.titleImageDescription as string }
+  return {
+    game,
+    imageDescription: input.titleImageDescription as string,
+    resourceImageDescription: input.resourceImageDescription as string,
+  }
 }
 
 export const formatNarrative = (

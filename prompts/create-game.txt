@@ -15,6 +15,8 @@ Come up with the plan for a choose-your-own-adventure story based on the theme a
   - Name, themed with the content
     - NEVER put anything but a name -- this value is displayed to the player
   - Image description to be passed to an LLM to generate an image
+    - Focus on the setting, atmosphere, and key visual elements
+    - Keep it concise but vivid (1-2 sentences)
   - Voice actor
     - Female: "Danielle", "Joanna", "Ruth", or "Salli"
     - Male: "Matthew" or "Stephen"
@@ -29,6 +31,7 @@ Come up with the plan for a choose-your-own-adventure story based on the theme a
     - NEVER put anything but a name -- this value is displayed to the player
   - Image description to be passed to an LLM to generate an image
     - Focus on a physical representation of the item alone
+    - Keep it concise but vivid (1-2 sentences)
 - Create a list of possible key information
   - Key information might includes numbers, combinations, words, or phrases
   - Key numbers must be at least 4 digits
@@ -41,6 +44,8 @@ Come up with the plan for a choose-your-own-adventure story based on the theme a
     - NEVER put anything but a name -- this value is displayed to the player
   - The resource needs to be countable (hours, money, etc) or a percent (% lamp oil remaining, etc) NOT something general like time (instead do hours, days, etc)
   - Resource image description to be passed to an LLM to generate an image
+    - Focus on a physical representation of the item alone
+    - Keep it concise but vivid (1-2 sentences)
   - If the condition is `accumulate`, wrong answers add resources
   - If the condition is `reduce`, wrong answers reduce resources
   - Generate a starting amount
@@ -60,7 +65,8 @@ Come up with the plan for a choose-your-own-adventure story based on the theme a
   - Determine what choice the player will need to make
     - Every choice should be a puzzle
     - Later choices should be harder puzzles
-    - Consider what the player has learned previously (for example, say in choice 1 that the building was established in 1847 then in choice 5 ask for the PIN on a keypad and give 1847 as an option)
+    - NEVER include key information or red herrings in choices
+    - Consider what the player has learned previously (for example, if the narrative for choice 1 includes that the building was established in 1847 then in choice 5 ask for the PIN on a keypad and give 1847 as an option)
     - Choices should be generic (for example, how to open a box) rather than specific (NOT go to the church and open the donation box)
     - NEVER ASK ABOUT INFORMATION INTRODUCED IN THE SAME NARRATIVE AS THE CHOIC
     - NEVER ASK WHAT FEELS MORE SIGNIFICANT
@@ -102,6 +108,7 @@ Output your thinking in <thinking> tags followed by valid JSON with the keys wit
   "keyInformation": ["string"],
   "redHerrings": ["string"],
   "resourceName": "string",
+  "resourceImageDescription": "string",
   "startingResourceValue": number,
   "lossResourceThreshold": number,
   "choicePoints": [

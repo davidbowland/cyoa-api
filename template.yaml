@@ -253,6 +253,7 @@ Resources:
           PROMPT_ID_CREATE_GAME: create-game
           PROMPT_ID_INVENTORY_IMAGE: inventory-image
           PROMPT_ID_COVER_IMAGE: cover-image
+          PROMPT_ID_RESOURCE_IMAGE: resource-image
           S3_ASSETS_BUCKET: !Ref AssetsBucket
           S3_ASSETS_DOMAIN: !FindInMap [EnvironmentMap, !Ref Environment, domainAssets]
           SQS_MESSAGE_QUEUE_ID: narratives

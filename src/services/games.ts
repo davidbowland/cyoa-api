@@ -22,7 +22,11 @@ import { getRandomSample } from '../utils/random'
 import { slugify } from '../utils/slugify'
 import { invokeModel } from './bedrock'
 import { getGameById, getGames, getPromptById, setGameById } from './dynamodb'
-import { generateGameCoverImageForGame, generateInventoryImagesForGame } from './image-generation'
+import {
+  generateGameCoverImageForGame,
+  generateInventoryImagesForGame,
+  generateResourceImageForGame,
+} from './image-generation'
 import { startInitialNarrativeGeneration } from './narrative-generation-orchestrator'
 
 export const createGame = async (): Promise<{ game: CyoaGame; gameId: GameId }> => {
@@ -56,7 +60,7 @@ export const createGame = async (): Promise<{ game: CyoaGame; gameId: GameId }> 
   const generatedGame = await invokeModel<CreateGamePromptOutput>(prompt, modelContext)
   log('Game generated', { generatedGame: JSON.stringify(generatedGame, null, 2) })
 
-  const { game, imageDescription } = formatCyoaGame({
+  const { game, imageDescription, resourceImageDescription } = formatCyoaGame({
     ...generatedGame,
     redHerrings: generatedGame.redHerrings?.filter(
       (item) => !generatedGame.keyInformation?.includes(item),
@@ -79,8 +83,9 @@ export const createGame = async (): Promise<{ game: CyoaGame; gameId: GameId }> 
 
   const coverImageData = await generateGameCoverImageForGame(gameId, imageDescription)
   const inventoryImageData = await generateInventoryImagesForGame(gameId, game.inventory)
+  const resourceImageData = await generateResourceImageForGame(gameId, resourceImageDescription)
 
-  const gameWithImages = { ...game, ...coverImageData, ...inventoryImageData }
+  const gameWithImages = { ...game, ...coverImageData, ...inventoryImageData, ...resourceImageData }
 
   await setGameById(gameId, gameWithImages)
 
