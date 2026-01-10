@@ -57,6 +57,7 @@ export interface CyoaNarrative {
   narrative: string
   recap: string
   chapterTitle: string
+  image?: string
   choice: string
   options: CyoaOption[]
   inventory: CyoaInventory[]
@@ -88,6 +89,7 @@ export interface CyoaOptionSerialized {
 export interface CyoaNarrativeSerialized {
   narrative: string
   chapterTitle: string
+  image?: string
   choice: string
   options: CyoaOptionSerialized[]
   inventory: CyoaInventory[]
@@ -225,6 +227,7 @@ export interface CreateNarrativePromptOutput {
   narrative?: string
   recap?: string
   chapterTitle?: string
+  imageDescription?: string
   choice?: string
   options?: CreateNarrativePromptOption[]
   inventory?: string[]

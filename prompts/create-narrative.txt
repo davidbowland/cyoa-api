@@ -16,6 +16,10 @@ Given the outline, a narrative recap, the choice the player just made, and the c
   - If the player DIDN'T make the best choice, give them some indication that they
   - It should be long enough to take the reader about 45-60 seconds to finish
 - Generate a short title for the chapter for this narrative.
+- Generate an image description for this narrative scene
+  - Describe the visual scene that represents this part of the story
+  - Focus on the setting, atmosphere, and key visual elements
+  - Keep it concise but vivid (1-2 sentences)
 - Generate a recap of the story including your narrative
   - Include information important for the next LLM prompt to continue the narrative
 - Generate the choice that will be presented to the user
@@ -42,6 +46,7 @@ Output your thinking in <thinking> tags followed by valid JSON with the keys wit
   "chapterTitle": "string"
   "narrative": "string",
   "recap": "string",
+  "imageDescription": "string",
   "choice": "string",
   "options": [{ "name": "string", "resourcesToAdd": number }],
   "inventory": ["string"]

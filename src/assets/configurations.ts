@@ -36,11 +36,9 @@ export const gameThemes: GameTheme[] = [
   },
 ]
 
-export const choiceCounts: number[] = [
-  10, 10, 11, 12, 12, 12, 12, 13, 13, 14, 15, 15, 15, 16, 16, 17, 18,
-]
+export const choiceCounts: number[] = [8, 8, 10, 10, 10, 10, 11, 12, 12, 12, 15]
 
-export const inventoryCounts: number[] = [0, 0, 0, 0, 0, 3, 6, 8, 12]
+export const inventoryCounts: number[] = [0, 0, 0, 0, 3, 6, 8, 12]
 
 export const keyInformationCounts: number[] = [3, 3, 4, 4, 4, 5, 5, 6, 6, 6, 8]
 

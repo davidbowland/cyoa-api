@@ -89,14 +89,23 @@ export const formatNarrative = (
   input: CreateNarrativePromptOutput,
   generationData: NarrativeGenerationData,
   game: CyoaGame,
-): CyoaNarrative => {
+): { narrative: CyoaNarrative; imageDescription: string } => {
   const jsonTypeDefinition = {
     type: 'object',
-    required: ['narrative', 'recap', 'chapterTitle', 'choice', 'options', 'inventory'],
+    required: [
+      'narrative',
+      'recap',
+      'chapterTitle',
+      'imageDescription',
+      'choice',
+      'options',
+      'inventory',
+    ],
     properties: {
       narrative: { type: 'string', minLength: 1 },
       recap: { type: 'string', minLength: 1 },
       chapterTitle: { type: 'string', minLength: 1 },
+      imageDescription: { type: 'string', minLength: 1 },
       choice: { type: 'string', minLength: 1 },
       options: {
         type: 'array',
@@ -132,5 +141,5 @@ export const formatNarrative = (
     inventory: inventoryItems,
     currentResourceValue: generationData.currentResourceValue,
   }
-  return narrative
+  return { narrative, imageDescription: input.imageDescription as string }
 }

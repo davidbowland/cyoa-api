@@ -40,6 +40,22 @@ describe('serialize', () => {
       expect(result).toEqual({
         narrative: 'You find yourself standing before a massive sleeping dragon...',
         chapterTitle: "The Dragon's Lair",
+        image: 'https://cyoa-assets.dbowland.com/images/a-friendly-adventure/test-narrative-id.png',
+        choice: 'You see a sleeping dragon. What do you do?',
+        options: [{ name: 'Sneak past quietly' }, { name: 'Wake the dragon' }],
+        inventory: [{ name: 'Sword', image: 'sword-image.jpg' }],
+        currentResourceValue: 75,
+      })
+    })
+
+    it('should handle narrative without optional image field', () => {
+      const narrativeWithoutImage = { ...cyoaNarrative, image: undefined }
+      const result = serializeCyoaNarrative(narrativeWithoutImage)
+
+      expect(result).toEqual({
+        narrative: 'You find yourself standing before a massive sleeping dragon...',
+        chapterTitle: "The Dragon's Lair",
+        image: undefined,
         choice: 'You see a sleeping dragon. What do you do?',
         options: [{ name: 'Sneak past quietly' }, { name: 'Wake the dragon' }],
         inventory: [{ name: 'Sword', image: 'sword-image.jpg' }],

@@ -30,6 +30,7 @@ import {
   setNarrativeById,
   setNarrativeGenerationData,
 } from './dynamodb'
+import { generateNarrativeImageForNarrative } from './image-generation'
 import {
   GenerationContextParams,
   getBestOption,
@@ -214,10 +215,17 @@ export const createNarrative = async (
     generatedNarrative: JSON.stringify(generatedNarrative, null, 2),
   })
 
-  const narrative = formatNarrative(generatedNarrative, generationData, game)
-  await setNarrativeById(gameId, narrativeId, narrative)
+  const { narrative, imageDescription } = formatNarrative(generatedNarrative, generationData, game)
+  const narrativeImageData = await generateNarrativeImageForNarrative(
+    gameId,
+    narrativeId,
+    imageDescription,
+  )
 
-  return narrative
+  const narrativeWithImage = { ...narrativeImageData, ...narrative }
+  await setNarrativeById(gameId, narrativeId, narrativeWithImage)
+
+  return narrativeWithImage
 }
 
 export const startInitialNarrativeGeneration = async (

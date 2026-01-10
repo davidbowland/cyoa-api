@@ -50,6 +50,7 @@ describe('get-narrative-by-id', () => {
       expect(JSON.parse(result.body)).toEqual({
         narrative: 'You find yourself standing before a massive sleeping dragon...',
         chapterTitle: "The Dragon's Lair",
+        image: 'https://cyoa-assets.dbowland.com/images/a-friendly-adventure/test-narrative-id.png',
         choice: 'You see a sleeping dragon. What do you do?',
         options: [{ name: 'Sneak past quietly' }, { name: 'Wake the dragon' }],
         inventory: [{ name: 'Sword', image: 'sword-image.jpg' }],

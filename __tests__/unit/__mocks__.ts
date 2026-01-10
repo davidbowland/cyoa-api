@@ -152,6 +152,7 @@ export const cyoaNarrative: CyoaNarrative = {
   recap:
     'After asking the wizard for help, you received a magic wand and learned about the dragon.',
   chapterTitle: "The Dragon's Lair",
+  image: 'https://cyoa-assets.dbowland.com/images/a-friendly-adventure/test-narrative-id.png',
   choice: 'You see a sleeping dragon. What do you do?',
   options: [
     { name: 'Sneak past quietly', resourcesToAdd: 0 },
@@ -166,6 +167,7 @@ export const createNarrativePromptOutput = {
   recap:
     'After asking the wizard for help, you received a magic wand and learned about the dragon.',
   chapterTitle: "The Dragon's Lair",
+  imageDescription: 'A dark cave with a massive sleeping dragon surrounded by treasure',
   choice: 'You see a sleeping dragon. What do you do?',
   options: [
     { name: 'Sneak past quietly', resourcesToAdd: 0 },

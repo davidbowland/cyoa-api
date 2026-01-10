@@ -15,6 +15,7 @@ process.env.PROMPT_ID_CREATE_NARRATIVE = 'create-narrative'
 process.env.PROMPT_ID_INVENTORY_IMAGE = 'inventory-image'
 process.env.PROMPT_ID_COVER_IMAGE = 'cover-image'
 process.env.PROMPT_ID_LOSE_GAME = 'lose-game'
+process.env.PROMPT_ID_NARRATIVE_IMAGE = 'narrative-image'
 process.env.PROMPT_ID_WIN_GAME = 'win-game'
 
 // Games

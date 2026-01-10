@@ -1,5 +1,10 @@
-import { promptIdInventoryImage, promptIdCoverImage, s3AssetsDomain } from '../config'
-import { CyoaInventory, GameId, ImageGenerationOptions, ImagePrompt } from '../types'
+import {
+  promptIdInventoryImage,
+  promptIdCoverImage,
+  promptIdNarrativeImage,
+  s3AssetsDomain,
+} from '../config'
+import { CyoaInventory, GameId, ImageGenerationOptions, ImagePrompt, NarrativeId } from '../types'
 import { log, logError } from '../utils/logging'
 import { slugify } from '../utils/slugify'
 import { generateImage } from './bedrock'
@@ -157,5 +162,81 @@ export const generateInventoryImagesForGame = async (
       error,
     })
     return { inventory }
+  }
+}
+
+export const generateNarrativeImage = async (
+  gameId: GameId,
+  narrativeId: NarrativeId,
+  imageDescription: string,
+): Promise<string | undefined> => {
+  const negativePrompt = await getPromptById<ImagePrompt>(promptIdNarrativeImage)
+  const negativePromptConfig = negativePrompt.config
+  const negativeText = negativePrompt.contents
+
+  const imageGenerationOptions: ImageGenerationOptions = {
+    quality: negativePromptConfig.quality,
+    cfgScale: negativePromptConfig.cfgScale,
+    height: negativePromptConfig.height,
+    width: negativePromptConfig.width,
+    seed: negativePromptConfig.seed,
+    negativeText,
+  }
+
+  try {
+    log('Generating narrative image', { gameId, narrativeId, imageDescription })
+
+    const { imageData } = await generateImage(
+      imageDescription,
+      negativePromptConfig.model,
+      imageGenerationOptions,
+    )
+    const imageKey = `images/${gameId}/${narrativeId}.png`
+
+    await putS3Object(imageKey, Buffer.from(imageData), {
+      'Content-Type': 'image/png',
+      'game-id': gameId,
+      'narrative-id': narrativeId,
+      'image-type': 'narrative',
+    })
+
+    log('Narrative image generated and saved', {
+      gameId,
+      narrativeId,
+      imageKey,
+      imageSizeBytes: imageData.length,
+    })
+
+    return `https://${s3AssetsDomain}/images/${gameId}/${narrativeId}.png`
+  } catch (error: unknown) {
+    log('Failed to generate narrative image', {
+      gameId,
+      narrativeId,
+      imageDescription,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    })
+    return undefined
+  }
+}
+
+export const generateNarrativeImageForNarrative = async (
+  gameId: GameId,
+  narrativeId: NarrativeId,
+  imageDescription: string,
+): Promise<{ image?: string }> => {
+  try {
+    const narrativeImagePath = await generateNarrativeImage(gameId, narrativeId, imageDescription)
+    if (narrativeImagePath) {
+      log('Generated narrative image', { gameId, narrativeId, narrativeImagePath })
+      return { image: narrativeImagePath }
+    }
+    return {}
+  } catch (error: unknown) {
+    logError('Error generating narrative image', {
+      gameId,
+      narrativeId,
+      error,
+    })
+    return {}
   }
 }

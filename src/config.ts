@@ -22,6 +22,7 @@ export const promptIdCreateNarrative = process.env.PROMPT_ID_CREATE_NARRATIVE as
 export const promptIdInventoryImage = process.env.PROMPT_ID_INVENTORY_IMAGE as string
 export const promptIdCoverImage = process.env.PROMPT_ID_COVER_IMAGE as string
 export const promptIdLoseGame = process.env.PROMPT_ID_LOSE_GAME as string
+export const promptIdNarrativeImage = process.env.PROMPT_ID_NARRATIVE_IMAGE as string
 export const promptIdWinGame = process.env.PROMPT_ID_WIN_GAME as string
 
 // Games

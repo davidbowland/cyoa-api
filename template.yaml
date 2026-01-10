@@ -422,6 +422,7 @@ Resources:
           PROMPT_ID_INVENTORY_IMAGE: inventory-image
           PROMPT_ID_COVER_IMAGE: cover-image
           PROMPT_ID_LOSE_GAME: lose-game
+          PROMPT_ID_NARRATIVE_IMAGE: narrative-image
           PROMPT_ID_WIN_GAME: win-game
           S3_ASSETS_BUCKET: !Ref AssetsBucket
           S3_ASSETS_DOMAIN: !FindInMap [EnvironmentMap, !Ref Environment, domainAssets]

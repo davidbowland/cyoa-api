@@ -37,7 +37,7 @@ describe('games', () => {
     resourceName: 'Health',
     startingResourceValue: 100,
     lossResourceThreshold: 0,
-    choicePoints: Array(10).fill(mockChoice),
+    choicePoints: Array(8).fill(mockChoice),
   }
 
   beforeAll(() => {
@@ -71,7 +71,7 @@ describe('games', () => {
             description: expect.any(String),
           }),
           existingGameTitles: [],
-          choiceCount: 10,
+          choiceCount: 8,
           lossCondition: 'accumulate',
           inventoryCount: 0,
           keyInformationCount: 3,

@@ -83,21 +83,24 @@ describe('formatting', () => {
       const result = formatNarrative(createNarrativePromptOutput, narrativeGenerationData, mockGame)
 
       expect(result).toEqual({
-        narrative: 'You find yourself standing before a massive sleeping dragon...',
-        recap:
-          'After asking the wizard for help, you received a magic wand and learned about the dragon.',
-        chapterTitle: "The Dragon's Lair",
-        choice: 'You see a sleeping dragon. What do you do?',
-        options: [
-          { name: 'Sneak past quietly', resourcesToAdd: 0 },
-          { name: 'Wake the dragon', resourcesToAdd: -20 },
-        ],
-        inventory: [
-          { name: 'Sword', image: 'sword-image.jpg' },
-          { name: 'Magic Wand' },
-          { name: 'Health Potion' },
-        ],
-        currentResourceValue: 75,
+        narrative: {
+          narrative: 'You find yourself standing before a massive sleeping dragon...',
+          recap:
+            'After asking the wizard for help, you received a magic wand and learned about the dragon.',
+          chapterTitle: "The Dragon's Lair",
+          choice: 'You see a sleeping dragon. What do you do?',
+          options: [
+            { name: 'Sneak past quietly', resourcesToAdd: 0 },
+            { name: 'Wake the dragon', resourcesToAdd: -20 },
+          ],
+          inventory: [
+            { name: 'Sword', image: 'sword-image.jpg' },
+            { name: 'Magic Wand' },
+            { name: 'Health Potion' },
+          ],
+          currentResourceValue: 75,
+        },
+        imageDescription: 'A dark cave with a massive sleeping dragon surrounded by treasure',
       })
     })
 

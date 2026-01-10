@@ -10,6 +10,7 @@ import {
 } from '../__mocks__'
 import * as bedrock from '@services/bedrock'
 import * as dynamodb from '@services/dynamodb'
+import * as imageGeneration from '@services/image-generation'
 import {
   ensureNarrativeExists,
   createNarrative,
@@ -22,6 +23,7 @@ import * as narrativeUtils from '@utils/narratives'
 
 jest.mock('@services/bedrock')
 jest.mock('@services/dynamodb')
+jest.mock('@services/image-generation')
 jest.mock('@services/narrative-strategies')
 jest.mock('@services/prompt-selection')
 jest.mock('@services/sqs')
@@ -225,6 +227,9 @@ describe('narrative-generation-orchestrator', () => {
       jest.mocked(dynamodb).getPromptById.mockResolvedValue(prompt)
       jest.mocked(dynamodb).setNarrativeById.mockResolvedValue(undefined)
       jest.mocked(bedrock).invokeModel.mockResolvedValue(createNarrativePromptOutput)
+      jest.mocked(imageGeneration).generateNarrativeImageForNarrative.mockResolvedValue({
+        image: 'https://cyoa-assets.dbowland.com/images/a-friendly-adventure/test-narrative-id.png',
+      })
     })
 
     it('creates narrative successfully', async () => {
@@ -242,8 +247,21 @@ describe('narrative-generation-orchestrator', () => {
           inspirationWords: expect.any(Array),
         }),
       )
-      expect(dynamodb.setNarrativeById).toHaveBeenCalledWith(gameId, narrativeId, result)
+      expect(dynamodb.setNarrativeById).toHaveBeenCalledWith(gameId, narrativeId, {
+        ...cyoaNarrative,
+        image: 'https://cyoa-assets.dbowland.com/images/a-friendly-adventure/test-narrative-id.png',
+      })
       expect(result).toEqual(cyoaNarrative)
+    })
+
+    it('generates narrative image when imageDescription is provided', async () => {
+      await createNarrative(gameId, narrativeId)
+
+      expect(imageGeneration.generateNarrativeImageForNarrative).toHaveBeenCalledWith(
+        gameId,
+        narrativeId,
+        'A dark cave with a massive sleeping dragon surrounded by treasure',
+      )
     })
 
     it('throws error when generation data not found', async () => {

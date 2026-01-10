@@ -5,6 +5,8 @@ import {
   generateGameCoverImageForGame,
   generateInventoryImages,
   generateInventoryImagesForGame,
+  generateNarrativeImage,
+  generateNarrativeImageForNarrative,
 } from '@services/image-generation'
 import * as s3 from '@services/s3'
 
@@ -440,6 +442,205 @@ describe('generateInventoryImagesForGame', () => {
       const result = await generateInventoryImagesForGame(gameId, inventory)
 
       expect(result).toEqual({ inventory: [{ name: 'Magic Sword' }] })
+    })
+  })
+})
+describe('generateNarrativeImage', () => {
+  const mockImageData = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10])
+  const mockPrompt = {
+    config: {
+      model: 'amazon.nova-canvas-v1:0',
+      quality: 'standard',
+      cfgScale: 8,
+      height: 1024,
+      width: 1024,
+      seed: 0,
+    },
+    contents: 'No text, not deformed, no surreal',
+  }
+
+  const setupMocks = () => {
+    jest.mocked(dynamodb.getPromptById).mockResolvedValue(mockPrompt)
+    jest.mocked(bedrock.generateImage).mockResolvedValue({ imageData: mockImageData })
+    jest.mocked(s3.putS3Object).mockResolvedValue({} as any)
+  }
+
+  describe('successful narrative image generation', () => {
+    beforeAll(() => {
+      setupMocks()
+    })
+
+    it('should generate narrative image', async () => {
+      const gameId = 'test-game'
+      const narrativeId = 'test-narrative'
+      const imageDescription = 'A dark forest with mysterious shadows'
+
+      const result = await generateNarrativeImage(gameId, narrativeId, imageDescription)
+
+      expect(result).toBe('https://cyoa-assets.dbowland.com/images/test-game/test-narrative.png')
+    })
+
+    it('should retrieve narrative image prompt configuration', async () => {
+      const gameId = 'test-game'
+      const narrativeId = 'test-narrative'
+      const imageDescription = 'Test description'
+
+      await generateNarrativeImage(gameId, narrativeId, imageDescription)
+
+      expect(dynamodb.getPromptById).toHaveBeenCalledWith('narrative-image')
+    })
+
+    it('should generate image with correct options', async () => {
+      const gameId = 'test-game'
+      const narrativeId = 'test-narrative'
+      const imageDescription = 'Test description'
+
+      await generateNarrativeImage(gameId, narrativeId, imageDescription)
+
+      expect(bedrock.generateImage).toHaveBeenCalledWith(
+        'Test description',
+        'amazon.nova-canvas-v1:0',
+        {
+          quality: 'standard',
+          cfgScale: 8,
+          height: 1024,
+          width: 1024,
+          seed: 0,
+          negativeText: 'No text, not deformed, no surreal',
+        },
+      )
+    })
+
+    it('should save image to S3 with correct key and metadata', async () => {
+      const gameId = 'test-game'
+      const narrativeId = 'test-narrative'
+      const imageDescription = 'Test description'
+
+      await generateNarrativeImage(gameId, narrativeId, imageDescription)
+
+      expect(s3.putS3Object).toHaveBeenCalledWith(
+        'images/test-game/test-narrative.png',
+        Buffer.from(mockImageData),
+        {
+          'Content-Type': 'image/png',
+          'game-id': 'test-game',
+          'narrative-id': 'test-narrative',
+          'image-type': 'narrative',
+        },
+      )
+    })
+  })
+
+  describe('narrative image generation failure', () => {
+    beforeAll(() => {
+      jest.mocked(dynamodb.getPromptById).mockResolvedValue(mockPrompt)
+    })
+
+    it('should return undefined when image generation fails', async () => {
+      jest.mocked(bedrock.generateImage).mockRejectedValueOnce(new Error('Bedrock error'))
+
+      const gameId = 'test-game'
+      const narrativeId = 'test-narrative'
+      const imageDescription = 'Test description'
+
+      const result = await generateNarrativeImage(gameId, narrativeId, imageDescription)
+
+      expect(result).toBeUndefined()
+    })
+
+    it('should return undefined when S3 upload fails', async () => {
+      jest.mocked(bedrock.generateImage).mockResolvedValue({ imageData: mockImageData })
+      jest.mocked(s3.putS3Object).mockRejectedValueOnce(new Error('S3 upload failed'))
+
+      const gameId = 'test-game'
+      const narrativeId = 'test-narrative'
+      const imageDescription = 'Test description'
+
+      const result = await generateNarrativeImage(gameId, narrativeId, imageDescription)
+
+      expect(result).toBeUndefined()
+    })
+  })
+})
+
+describe('generateNarrativeImageForNarrative', () => {
+  const mockImageData = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10])
+  const mockPrompt = {
+    config: {
+      model: 'amazon.nova-canvas-v1:0',
+      quality: 'standard',
+      cfgScale: 8,
+      height: 1024,
+      width: 1024,
+      seed: 0,
+    },
+    contents: 'No text, not deformed, no surreal',
+  }
+
+  const setupMocks = () => {
+    jest.mocked(dynamodb.getPromptById).mockResolvedValue(mockPrompt)
+    jest.mocked(bedrock.generateImage).mockResolvedValue({ imageData: mockImageData })
+    jest.mocked(s3.putS3Object).mockResolvedValue({} as any)
+  }
+
+  describe('successful narrative image generation', () => {
+    beforeAll(() => {
+      setupMocks()
+    })
+
+    it('should generate narrative image and return path', async () => {
+      const gameId = 'test-game'
+      const narrativeId = 'test-narrative'
+      const imageDescription = 'A mystical scene'
+
+      const result = await generateNarrativeImageForNarrative(gameId, narrativeId, imageDescription)
+
+      expect(result).toEqual({
+        image: 'https://cyoa-assets.dbowland.com/images/test-game/test-narrative.png',
+      })
+    })
+  })
+
+  describe('narrative image generation failure', () => {
+    beforeAll(() => {
+      jest.mocked(dynamodb.getPromptById).mockResolvedValue(mockPrompt)
+    })
+
+    it('should return empty object when image generation fails', async () => {
+      jest.mocked(bedrock.generateImage).mockRejectedValueOnce(new Error('Generation error'))
+
+      const gameId = 'test-game'
+      const narrativeId = 'test-narrative'
+      const imageDescription = 'A mystical scene'
+
+      const result = await generateNarrativeImageForNarrative(gameId, narrativeId, imageDescription)
+
+      expect(result).toEqual({})
+    })
+
+    it('should return empty object when generateNarrativeImage returns undefined', async () => {
+      jest.mocked(bedrock.generateImage).mockResolvedValue({ imageData: mockImageData })
+      jest.mocked(s3.putS3Object).mockRejectedValueOnce(new Error('S3 upload failed'))
+
+      const gameId = 'test-game'
+      const narrativeId = 'test-narrative'
+      const imageDescription = 'A mystical scene'
+
+      const result = await generateNarrativeImageForNarrative(gameId, narrativeId, imageDescription)
+
+      expect(result).toEqual({})
+    })
+
+    it('should handle unexpected errors in generateNarrativeImageForNarrative', async () => {
+      jest.mocked(dynamodb.getPromptById).mockRejectedValueOnce(new Error('Database error'))
+
+      const gameId = 'test-game'
+      const narrativeId = 'test-narrative'
+      const imageDescription = 'A mystical scene'
+
+      const result = await generateNarrativeImageForNarrative(gameId, narrativeId, imageDescription)
+
+      expect(result).toEqual({})
     })
   })
 })
