@@ -313,7 +313,17 @@ describe('narrative-generation-orchestrator', () => {
         }),
       )
       expect(dynamodb.setNarrativeById).toHaveBeenCalledWith(gameId, narrativeId, {
-        ...cyoaNarrative,
+        narrative: 'You find yourself standing before a massive sleeping dragon...',
+        recap:
+          'After asking the wizard for help, you received a magic wand and learned about the dragon.',
+        chapterTitle: "The Dragon's Lair",
+        choice: 'You see a sleeping dragon. What do you do?',
+        options: [
+          { name: 'Sneak past quietly', rank: 1, resourcesToAdd: -25019 },
+          { name: 'Wake the dragon', rank: 2, resourcesToAdd: -75057 },
+        ],
+        inventory: [{ name: 'Sword', image: 'sword-image.jpg' }],
+        currentResourceValue: 75,
         image: 'https://cyoa-assets.dbowland.com/images/a-friendly-adventure/test-narrative-id.png',
       })
       expect(result).toEqual(cyoaNarrative)

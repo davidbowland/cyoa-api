@@ -1,6 +1,6 @@
 import Ajv from 'ajv'
 
-import { initialNarrativeId, resourceToAddPercent } from '../config'
+import { initialNarrativeId } from '../config'
 import {
   CreateGamePromptOutput,
   CreateNarrativePromptOutput,
@@ -26,11 +26,12 @@ const transformRankValues = (
   choiceCount: number,
   startingResourceValue: number,
   lossResourceThreshold: number,
+  resourcePercent: number,
 ): CyoaNarrativeOption[] => {
   const range = Math.abs(lossResourceThreshold - startingResourceValue)
   const multiplier = Math.sign(lossResourceThreshold - startingResourceValue) || 1
   const choiceRange = Math.max(range / choiceCount, 1)
-  const percentRange = resourceToAddPercent / options.length
+  const percentRange = resourcePercent / options.length
 
   return options.map((o) => {
     const percent = percentRange * o.rank - Math.random() * percentRange
@@ -145,6 +146,7 @@ export const formatNarrative = (
   input: CreateNarrativePromptOutput,
   generationData: NarrativeGenerationData,
   game: CyoaGame,
+  resourcePercent: number,
 ): { narrative: CyoaNarrative; imageDescription: string } => {
   const jsonTypeDefinition = {
     type: 'object',
@@ -193,6 +195,7 @@ export const formatNarrative = (
     game.choicePoints.length,
     game.startingResourceValue,
     game.lossResourceThreshold,
+    resourcePercent,
   )
 
   const narrative: CyoaNarrative = {

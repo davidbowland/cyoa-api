@@ -24,7 +24,8 @@ process.env.PROMPT_ID_WIN_GAME = 'win-game'
 process.env.INSPIRATION_ADJECTIVES_COUNT = '2'
 process.env.INSPIRATION_NOUNS_COUNT = '2'
 process.env.INSPIRATION_VERBS_COUNT = '2'
-process.env.RESOURCE_TO_ADD_PERCENT = '165'
+process.env.RESOURCE_TO_ADD_PERCENT_MAX = '275'
+process.env.RESOURCE_TO_ADD_PERCENT_MIN = '175'
 
 // Logging
 

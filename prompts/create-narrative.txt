@@ -9,11 +9,12 @@ Given the outline, a narrative recap, the choice the player just made, and the c
 - Generate the next part of the narrative
   - Consider the outline and recap to know what has happened
   - Think about what inventory or information needs to be introduced
+    - ALWAYS describe how each inventory item was acquired
   - Think about what inventory or information needs to be consumed
   - Write as clearly as eloquently as possible (channel Christopher Hitchens, Earnest Hemmingway, and P.G. Wodehouse)
   - Red herrings need to provide some indication that they are incorrect, less reliable, not related, etc, but think about how not to make it obvious
   - If the payer made the best choice, give them some indication that they succeeded (example: "the safe opens easily", "you are pleased to find...")
-  - If the player DIDN'T make the best choice, give them some indication that they
+  - If the player DIDN'T make the best choice, give them some indication of that
   - It should be long enough to take the reader about 45-60 seconds to finish
 - Generate a short title for the chapter for this narrative
 - Generate an image description for this narrative scene

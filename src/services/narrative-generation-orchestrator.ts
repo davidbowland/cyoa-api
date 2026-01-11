@@ -9,6 +9,8 @@ import {
   promptIdCreateNarrative,
   promptIdLoseGame,
   promptIdWinGame,
+  resourceToAddPercentMin,
+  resourceToAddPercentMax,
 } from '../config'
 import {
   CreateNarrativePromptOutput,
@@ -48,6 +50,12 @@ import {
 import { addToQueue } from './sqs'
 
 const GENERATION_TIME = 300_000 // 5 minutes
+
+const calculateResourcesToAdd = (choiceNumber: number, choiceCount: number): number => {
+  const resourcesToAddRange = resourceToAddPercentMax - resourceToAddPercentMin
+  const increaseForChoiceNumber = (resourcesToAddRange * choiceNumber) / choiceCount
+  return increaseForChoiceNumber + resourceToAddPercentMin
+}
 
 interface GenerateNarrativeContentResult {
   narrative: CyoaNarrative
@@ -106,10 +114,12 @@ const generateNarrativeContent = async (
     const generatedNarrative = await invokeModel<CreateNarrativePromptOutput>(prompt, modelContext)
     log('Generated narrative', { generatedNarrative })
 
+    const resourcePercent = calculateResourcesToAdd(choicePointIndex, game.choicePoints.length)
     const { narrative, imageDescription } = formatNarrative(
       generatedNarrative,
       generationData,
       game,
+      resourcePercent,
     )
     return { narrative, imageDescription }
   }

@@ -157,8 +157,8 @@ export const cyoaNarrative: CyoaNarrative = {
   image: 'https://cyoa-assets.dbowland.com/images/a-friendly-adventure/test-narrative-id.png',
   choice: 'You see a sleeping dragon. What do you do?',
   options: [
-    { name: 'Sneak past quietly', rank: 1, resourcesToAdd: -42 },
-    { name: 'Wake the dragon', rank: 2, resourcesToAdd: -124 },
+    { name: 'Sneak past quietly', rank: 1, resourcesToAdd: -25019 },
+    { name: 'Wake the dragon', rank: 2, resourcesToAdd: -75057 },
   ],
   inventory: [{ name: 'Sword', image: 'sword-image.jpg' }],
   currentResourceValue: 75,

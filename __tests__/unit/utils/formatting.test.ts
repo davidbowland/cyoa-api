@@ -146,7 +146,14 @@ describe('formatting', () => {
     }
 
     it('should format valid narrative prompt output', () => {
-      const result = formatNarrative(createNarrativePromptOutput, narrativeGenerationData, mockGame)
+      const resourcePercent = 0.25
+
+      const result = formatNarrative(
+        createNarrativePromptOutput,
+        narrativeGenerationData,
+        mockGame,
+        resourcePercent,
+      )
 
       expect(result).toEqual({
         narrative: {
@@ -156,8 +163,8 @@ describe('formatting', () => {
           chapterTitle: "The Dragon's Lair",
           choice: 'You see a sleeping dragon. What do you do?',
           options: [
-            { name: 'Sneak past quietly', rank: 1, resourcesToAdd: -42 },
-            { name: 'Wake the dragon', rank: 2, resourcesToAdd: -124 },
+            { name: 'Sneak past quietly', rank: 1, resourcesToAdd: -7 },
+            { name: 'Wake the dragon', rank: 2, resourcesToAdd: -19 },
           ],
           inventory: [
             { name: 'Sword', image: 'sword-image.jpg' },
@@ -172,16 +179,20 @@ describe('formatting', () => {
 
     it('should throw error for invalid narrative prompt output', () => {
       const invalidInput = { ...createNarrativePromptOutput, narrative: '' }
+      const resourcePercent = 0.25
 
       expect(() =>
-        formatNarrative(invalidInput as any, narrativeGenerationData, mockGame),
+        formatNarrative(invalidInput as any, narrativeGenerationData, mockGame, resourcePercent),
       ).toThrow()
     })
 
     it('should throw error for missing required fields', () => {
       const { narrative: _, ...incompleteInput } = createNarrativePromptOutput
+      const resourcePercent = 0.25
 
-      expect(() => formatNarrative(incompleteInput, narrativeGenerationData, mockGame)).toThrow()
+      expect(() =>
+        formatNarrative(incompleteInput, narrativeGenerationData, mockGame, resourcePercent),
+      ).toThrow()
     })
 
     it('should throw error for invalid option structure', () => {
@@ -189,9 +200,15 @@ describe('formatting', () => {
         ...createNarrativePromptOutput,
         options: [{ name: 'Invalid option' }], // Missing rank
       }
+      const resourcePercent = 0.25
 
       expect(() =>
-        formatNarrative(invalidOptionsInput as any, narrativeGenerationData, mockGame),
+        formatNarrative(
+          invalidOptionsInput as any,
+          narrativeGenerationData,
+          mockGame,
+          resourcePercent,
+        ),
       ).toThrow()
     })
 
@@ -200,9 +217,10 @@ describe('formatting', () => {
         ...createNarrativePromptOutput,
         options: [{ name: '', rank: 1 }],
       }
+      const resourcePercent = 0.25
 
       expect(() =>
-        formatNarrative(emptyNameInput as any, narrativeGenerationData, mockGame),
+        formatNarrative(emptyNameInput as any, narrativeGenerationData, mockGame, resourcePercent),
       ).toThrow()
     })
 
@@ -211,9 +229,15 @@ describe('formatting', () => {
         ...createNarrativePromptOutput,
         choice: '',
       }
+      const resourcePercent = 0.25
 
       expect(() =>
-        formatNarrative(emptyStringInput as any, narrativeGenerationData, mockGame),
+        formatNarrative(
+          emptyStringInput as any,
+          narrativeGenerationData,
+          mockGame,
+          resourcePercent,
+        ),
       ).toThrow()
     })
   })
