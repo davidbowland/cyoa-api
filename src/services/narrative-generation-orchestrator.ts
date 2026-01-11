@@ -6,9 +6,13 @@ import {
   inspirationAdjectivesCount,
   inspirationNounsCount,
   inspirationVerbsCount,
+  promptIdCreateNarrative,
+  promptIdLoseGame,
+  promptIdWinGame,
 } from '../config'
 import {
   CreateNarrativePromptOutput,
+  EndingNarrativePromptOutput,
   CyoaChoicePoint,
   CyoaGame,
   CyoaNarrative,
@@ -17,9 +21,14 @@ import {
   NarrativeId,
   TextPrompt,
 } from '../types'
-import { formatNarrative } from '../utils/formatting'
+import { formatEndingNarrative, formatNarrative } from '../utils/formatting'
 import { log, logError } from '../utils/logging'
-import { determineRequiredNarratives, parseNarrativeId } from '../utils/narratives'
+import {
+  determineRequiredNarratives,
+  parseNarrativeId,
+  isGameLost,
+  isGameWon,
+} from '../utils/narratives'
 import { getRandomSample } from '../utils/random'
 import { invokeModel } from './bedrock'
 import {
@@ -36,10 +45,75 @@ import {
   getBestOption,
   selectGenerationStrategy,
 } from './narrative-strategies'
-import { selectPromptId } from './prompt-selection'
 import { addToQueue } from './sqs'
 
 const GENERATION_TIME = 300_000 // 5 minutes
+
+interface GenerateNarrativeContentResult {
+  narrative: CyoaNarrative
+  imageDescription: string
+}
+
+const generateNarrativeContent = async (
+  game: CyoaGame,
+  narrativeId: NarrativeId,
+  currentResourceValue: number,
+  generationData: NarrativeGenerationData,
+): Promise<GenerateNarrativeContentResult> => {
+  const inspirationNouns = getRandomSample<string>([...nouns], inspirationNounsCount)
+  const inspirationVerbs = getRandomSample<string>([...verbs], inspirationVerbsCount)
+  const inspirationAdjectives = getRandomSample<string>([...adjectives], inspirationAdjectivesCount)
+
+  const modelContext = {
+    ...generationData,
+    outline: game.outline,
+    resourceName: game.resourceName,
+    lossResourceThreshold: game.lossResourceThreshold,
+    inspirationWords: inspirationNouns.concat(inspirationVerbs).concat(inspirationAdjectives),
+  }
+
+  const isLost = isGameLost(game, currentResourceValue)
+  const { choicePointIndex } = parseNarrativeId(narrativeId)
+  const isWon = isGameWon(game, choicePointIndex)
+
+  if (isLost || isWon) {
+    const promptId = isWon ? promptIdWinGame : promptIdLoseGame
+    const prompt = await getPromptById<TextPrompt>(promptId)
+    log('Creating narrative with context', {
+      gameId: game.title,
+      narrativeId,
+      modelContext,
+      promptId,
+    })
+
+    const generatedNarrative = await invokeModel<EndingNarrativePromptOutput>(prompt, modelContext)
+    log('Generated narrative', { generatedNarrative })
+
+    const { narrative, imageDescription } = formatEndingNarrative(
+      generatedNarrative,
+      generationData,
+    )
+    return { narrative, imageDescription }
+  } else {
+    const prompt = await getPromptById<TextPrompt>(promptIdCreateNarrative)
+    log('Creating narrative with context', {
+      gameId: game.title,
+      narrativeId,
+      modelContext,
+      promptId: promptIdCreateNarrative,
+    })
+
+    const generatedNarrative = await invokeModel<CreateNarrativePromptOutput>(prompt, modelContext)
+    log('Generated narrative', { generatedNarrative })
+
+    const { narrative, imageDescription } = formatNarrative(
+      generatedNarrative,
+      generationData,
+      game,
+    )
+    return { narrative, imageDescription }
+  }
+}
 
 type NarrativeStatus = 'ready' | 'generating' | 'not_found'
 
@@ -70,16 +144,16 @@ const startNarrativeGeneration = async (
     | 'bestOption'
     | 'currentInventory'
   >,
-  currentChoice: CyoaChoicePoint,
+  currentChoice?: CyoaChoicePoint,
 ): Promise<void> => {
   const fullGenerationData: NarrativeGenerationData = {
     ...generationData,
-    inventoryToIntroduce: currentChoice.inventoryToIntroduce,
-    keyInformationToIntroduce: currentChoice.keyInformationToIntroduce,
-    redHerringsToIntroduce: currentChoice.redHerringsToIntroduce,
-    inventoryOrInformationConsumed: currentChoice.inventoryOrInformationConsumed,
-    nextChoice: currentChoice.choice,
-    options: currentChoice.options,
+    inventoryToIntroduce: currentChoice?.inventoryToIntroduce ?? [],
+    keyInformationToIntroduce: currentChoice?.keyInformationToIntroduce ?? [],
+    redHerringsToIntroduce: currentChoice?.redHerringsToIntroduce ?? [],
+    inventoryOrInformationConsumed: currentChoice?.inventoryOrInformationConsumed ?? [],
+    nextChoice: currentChoice?.choice ?? '',
+    options: currentChoice?.options ?? [],
     generationStartTime: Date.now(),
   }
 
@@ -119,13 +193,15 @@ const ensureUpcomingNarratives = async (
       currentResourceValue: selectedOption
         ? narrative.currentResourceValue + selectedOption.resourcesToAdd
         : narrative.currentResourceValue,
-      lastChoiceMade: narrative.choice,
+      lastChoiceMade: narrative.choice ?? '',
       lastOptionSelected: selectedOption?.name ?? '',
       bestOption: bestOption?.name ?? '',
       currentInventory: narrative?.inventory.map((item) => item.name) ?? [],
     }
     const currentChoice = game.choicePoints[choicePointIndex]
-    await startNarrativeGeneration(gameId, nextNarrativeId, nextNarrativeContext, currentChoice)
+    if (narrative.choice) {
+      await startNarrativeGeneration(gameId, nextNarrativeId, nextNarrativeContext, currentChoice)
+    }
   }
 }
 
@@ -193,29 +269,13 @@ export const createNarrative = async (
     throw new Error('Generation data not found')
   }
 
-  const inspirationNouns = getRandomSample<string>([...nouns], inspirationNounsCount)
-  const inspirationVerbs = getRandomSample<string>([...verbs], inspirationVerbsCount)
-  const inspirationAdjectives = getRandomSample<string>([...adjectives], inspirationAdjectivesCount)
-
-  const modelContext = {
-    ...generationData,
-    outline: game.outline,
-    resourceName: game.resourceName,
-    lossResourceThreshold: game.lossResourceThreshold,
-    inspirationWords: inspirationNouns.concat(inspirationVerbs).concat(inspirationAdjectives),
-  }
-  log('Creating narrative with context', { gameId, narrativeId, modelContext })
-
-  const promptId = selectPromptId(game, narrativeId, generationData.currentResourceValue)
-  const prompt = await getPromptById<TextPrompt>(promptId)
-  const generatedNarrative = await invokeModel<CreateNarrativePromptOutput>(prompt, modelContext)
-  log('Narrative generated', {
-    gameId,
+  const { narrative, imageDescription } = await generateNarrativeContent(
+    game,
     narrativeId,
-    generatedNarrative: JSON.stringify(generatedNarrative, null, 2),
-  })
+    generationData.currentResourceValue,
+    generationData,
+  )
 
-  const { narrative, imageDescription } = formatNarrative(generatedNarrative, generationData, game)
   const narrativeImageData = await generateNarrativeImageForNarrative(
     gameId,
     narrativeId,

@@ -38,7 +38,7 @@ describe('games', () => {
     resourceImageDescription: 'A glowing health orb',
     startingResourceValue: 100,
     lossResourceThreshold: 0,
-    choicePoints: Array(8).fill(mockChoice),
+    choicePoints: Array(7).fill(mockChoice),
   }
 
   beforeAll(() => {
@@ -75,7 +75,7 @@ describe('games', () => {
             description: expect.any(String),
           }),
           existingGameTitles: [],
-          choiceCount: 8,
+          choiceCount: 7,
           lossCondition: 'accumulate',
           inventoryCount: 0,
           keyInformationCount: 3,

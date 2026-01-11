@@ -10,16 +10,24 @@ Given the outline, a narrative recap, and the choice the player just made, gener
   - Consider the outline and recap to know what has happened
   - The player has completed the game
     - Think about how the story should end based on the player winning
-    - Explictly tell the player they have completed the story, but don't directly
+    - Tell the player they have completed the story, but don't directly
   - Write as clearly as eloquently as possible (channel Christopher Hitchens, Earnest Hemmingway, and P.G. Wodehouse)
+- Generate a short title for the chapter for this narrative
+- Generate an image description for this narrative scene
+  - Describe the visual scene that represents this part of the story
+  - Focus on the setting, atmosphere, and key visual elements
+  - Keep it concise but vivid (1-2 sentences)
+  - NEVER include text or numbers in the image
 
-Make sure the narrative is inoffensive and not emmotionally charged.
+Make sure the narrative is inoffensive and not emmotionally charged
 </instructions>
 <output>
 Output your thinking in <thinking> tags followed by valid JSON with the keys with NOTTHING ELSE (double-check that your JSON is valid with \n instead of newlines and " escaped):
 
 {
-  "narrative": "string"
+  "chapterTitle": "string"
+  "narrative": "string",
+  "imageDescription": "string"
 }
 </output>
 

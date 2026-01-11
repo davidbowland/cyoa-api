@@ -9,7 +9,7 @@ export const gameThemes: GameTheme[] = [
   {
     name: 'Survival',
     description:
-      'The main character is placed in a dangerous environment (like a strange land or a post-apocalyptic world), and the choices determine if they survive.',
+      'The main character is placed in a dangerous environment (like a strange land or a post-apocalyptic world), and the choices determine whether they survive.',
   },
   {
     name: 'Mystery/Thriller',
@@ -36,12 +36,12 @@ export const gameThemes: GameTheme[] = [
   },
 ]
 
-export const choiceCounts: number[] = [8, 8, 10, 10, 10, 10, 11, 12, 12, 12, 15]
+export const choiceCounts: number[] = [7, 8, 8, 10, 10, 10, 10, 12, 12, 12, 15]
 
 export const inventoryCounts: number[] = [0, 0, 0, 0, 3, 6, 8, 12]
 
-export const keyInformationCounts: number[] = [3, 3, 4, 4, 4, 5, 5, 6, 6, 6, 8]
+export const keyInformationCounts: number[] = [3, 3, 4, 4, 4, 5, 5, 6, 6]
 
-export const redHerringCounts: number[] = [3, 3, 5, 5, 5, 7, 8, 9]
+export const redHerringCounts: number[] = [3, 3, 5, 5, 5, 7]
 
 export const lossConditions: string[] = ['accumulate', 'reduce']

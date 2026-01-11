@@ -4,6 +4,7 @@ import { initialNarrativeId, resourceToAddPercent } from '../config'
 import {
   CreateGamePromptOutput,
   CreateNarrativePromptOutput,
+  EndingNarrativePromptOutput,
   CyoaCharacter,
   CyoaChoicePoint,
   CyoaGame,
@@ -201,6 +202,35 @@ export const formatNarrative = (
     choice: input.choice as string,
     options: transformedOptions,
     inventory: inventoryItems,
+    currentResourceValue: generationData.currentResourceValue,
+  }
+  return { narrative, imageDescription: input.imageDescription as string }
+}
+
+export const formatEndingNarrative = (
+  input: EndingNarrativePromptOutput,
+  generationData: NarrativeGenerationData,
+): { narrative: CyoaNarrative; imageDescription: string } => {
+  const jsonTypeDefinition = {
+    type: 'object',
+    required: ['narrative', 'chapterTitle', 'imageDescription'],
+    properties: {
+      narrative: { type: 'string', minLength: 1 },
+      chapterTitle: { type: 'string', minLength: 1 },
+      imageDescription: { type: 'string', minLength: 1 },
+    },
+  }
+  if (ajv.validate(jsonTypeDefinition, input) === false) {
+    throw new Error(JSON.stringify(ajv.errors))
+  }
+
+  const narrative: CyoaNarrative = {
+    narrative: input.narrative as string,
+    recap: generationData.recap,
+    chapterTitle: input.chapterTitle as string,
+    choice: undefined,
+    options: [],
+    inventory: [],
     currentResourceValue: generationData.currentResourceValue,
   }
   return { narrative, imageDescription: input.imageDescription as string }

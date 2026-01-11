@@ -41,8 +41,8 @@ export const cyoaGame: CyoaGame = {
       inventoryOrInformationConsumed: [],
       choice: 'What do you do?',
       options: [
-        { name: 'Fight', resourcesToAdd: -10 },
-        { name: 'Run', resourcesToAdd: 0 },
+        { name: 'Fight', rank: 1 },
+        { name: 'Run', rank: 2 },
       ],
     },
   ],
@@ -143,8 +143,8 @@ export const narrativeGenerationData: NarrativeGenerationData = {
   inventoryOrInformationConsumed: ['Old Map'],
   nextChoice: 'You see a sleeping dragon. What do you do?',
   options: [
-    { name: 'Sneak past quietly', rank: 1, resourcesToAdd: 0 },
-    { name: 'Wake the dragon', rank: 2, resourcesToAdd: -20 },
+    { name: 'Sneak past quietly', rank: 1 },
+    { name: 'Wake the dragon', rank: 2 },
   ],
   generationStartTime: 1640995200000,
 }
@@ -184,6 +184,24 @@ export const invokeModelNarrativeResponse = {
       content: [
         {
           text: JSON.stringify(createNarrativePromptOutput),
+        },
+      ],
+    }),
+  ),
+}
+
+export const endingNarrativePromptOutput = {
+  narrative: 'You have successfully completed your quest and saved the kingdom!',
+  chapterTitle: 'Victory',
+  imageDescription: 'A triumphant hero standing in golden sunlight',
+}
+
+export const invokeModelEndingNarrativeResponse = {
+  body: new TextEncoder().encode(
+    JSON.stringify({
+      content: [
+        {
+          text: JSON.stringify(endingNarrativePromptOutput),
         },
       ],
     }),

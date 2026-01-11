@@ -17,6 +17,7 @@ Come up with the plan for a choose-your-own-adventure story based on the theme a
   - Image description to be passed to an LLM to generate an image
     - Focus on the setting, atmosphere, and key visual elements
     - Keep it concise but vivid (1-2 sentences)
+    - NEVER include text or numbers in the image
   - Voice actor
     - Female: "Danielle", "Joanna", "Ruth", or "Salli"
     - Male: "Matthew" or "Stephen"
@@ -30,8 +31,9 @@ Come up with the plan for a choose-your-own-adventure story based on the theme a
   - Name of each item, themed with content
     - NEVER put anything but a name -- this value is displayed to the player
   - Image description to be passed to an LLM to generate an image
-    - Focus on a physical representation of the item alone
+    - Focus on a physical representation of the item alone (size, important features, specific type, etc)
     - Keep it concise but vivid (1-2 sentences)
+    - NEVER include text or numbers in the image
 - Create a list of possible key information
   - Key information might includes numbers, combinations, words, or phrases
   - Key numbers must be at least 4 digits
@@ -46,6 +48,7 @@ Come up with the plan for a choose-your-own-adventure story based on the theme a
   - Resource image description to be passed to an LLM to generate an image
     - Focus on a physical representation of the item alone
     - Keep it concise but vivid (1-2 sentences)
+    - NEVER include text or numbers in the image
   - If the condition is `accumulate`, wrong answers add resources
   - If the condition is `reduce`, wrong answers reduce resources
   - Generate a starting amount
@@ -79,11 +82,12 @@ Come up with the plan for a choose-your-own-adventure story based on the theme a
     - Make the correct option require EXTREME thought to figure out
     - Rank each option, with 1 being the best choice
     - NEVER add commentary to an option (BAD: "1887 (when building built)" GOOD: "1887")
+    - NEVER make an option match key information or red herrings FROM THE SAME CHOICE POINT
 - Create an outline of the story
   - Describe how the various pieces come together, the consequences of some choices, etc.
   - Describe the overall plot
 - NOT ALL inspiration words will be used. THINK ABOUT which are best and should be incorporated into the story. You can use inspiration words directly, use related words, or use random words with similar letters, sounds, or meanings to inspiration words.
-- ALL generated content MUST be inoffensive and not emmotionally charged.
+- ALL generated content MUST be inoffensive and not emmotionally charged
 
 Think deeply about the most engaging and challenging story. Who is it important to meet and who should voice them? What information is or is not important? What makes the most sense as a resource? What options should the player encounter? What should the choice consequences be?
 </instructions>
@@ -113,6 +117,7 @@ Output your thinking in <thinking> tags followed by valid JSON with the keys wit
       "keyInformationToIntroduce": ["string"],
       "redHerringsToIntroduce": ["string"]
       "inventoryOrInformationConsumed": ["string"],
+      "keyInformationOrRedHerringsFromPreviousChoicePoints": ["string"]
       "choice": "string",
       "options": [
         { "name": "string", "rank": number }

@@ -63,7 +63,7 @@ export interface CyoaNarrative {
   recap: string
   chapterTitle: string
   image?: string
-  choice: string
+  choice?: string
   options: CyoaNarrativeOption[]
   inventory: CyoaInventory[]
   currentResourceValue: number
@@ -96,7 +96,7 @@ export interface CyoaNarrativeSerialized {
   narrative: string
   chapterTitle: string
   image?: string
-  choice: string
+  choice?: string
   options: CyoaOptionSerialized[]
   inventory: CyoaInventory[]
   currentResourceValue: number
@@ -238,6 +238,12 @@ export interface CreateNarrativePromptOutput {
   choice?: string
   options?: CreateNarrativePromptOption[]
   inventory?: string[]
+}
+
+export interface EndingNarrativePromptOutput {
+  narrative?: string
+  chapterTitle?: string
+  imageDescription?: string
 }
 
 // Image Generation Types

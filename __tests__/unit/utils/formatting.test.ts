@@ -1,10 +1,11 @@
 import {
   cyoaGamePromptOutput,
   createNarrativePromptOutput,
+  endingNarrativePromptOutput,
   narrativeGenerationData,
 } from '../__mocks__'
 import { CyoaGame } from '@types'
-import { formatCyoaGame, formatNarrative } from '@utils/formatting'
+import { formatCyoaGame, formatEndingNarrative, formatNarrative } from '@utils/formatting'
 
 describe('formatting', () => {
   const mockMathRandom = jest.fn()
@@ -214,6 +215,55 @@ describe('formatting', () => {
       expect(() =>
         formatNarrative(emptyStringInput as any, narrativeGenerationData, mockGame),
       ).toThrow()
+    })
+  })
+
+  describe('formatEndingNarrative', () => {
+    it('should format valid ending narrative prompt output', () => {
+      const result = formatEndingNarrative(endingNarrativePromptOutput, narrativeGenerationData)
+
+      expect(result).toEqual({
+        narrative: {
+          narrative: 'You have successfully completed your quest and saved the kingdom!',
+          recap: 'Previous events recap',
+          chapterTitle: 'Victory',
+          choice: undefined,
+          options: [],
+          inventory: [],
+          currentResourceValue: 75,
+        },
+        imageDescription: 'A triumphant hero standing in golden sunlight',
+      })
+    })
+
+    it('should throw error for invalid ending narrative prompt output', () => {
+      const invalidInput = { ...endingNarrativePromptOutput, narrative: '' }
+
+      expect(() => formatEndingNarrative(invalidInput as any, narrativeGenerationData)).toThrow()
+    })
+
+    it('should throw error for missing required fields', () => {
+      const { narrative: _, ...incompleteInput } = endingNarrativePromptOutput
+
+      expect(() => formatEndingNarrative(incompleteInput, narrativeGenerationData)).toThrow()
+    })
+
+    it('should throw error for empty chapter title', () => {
+      const emptyTitleInput = {
+        ...endingNarrativePromptOutput,
+        chapterTitle: '',
+      }
+
+      expect(() => formatEndingNarrative(emptyTitleInput as any, narrativeGenerationData)).toThrow()
+    })
+
+    it('should throw error for empty image description', () => {
+      const emptyImageInput = {
+        ...endingNarrativePromptOutput,
+        imageDescription: '',
+      }
+
+      expect(() => formatEndingNarrative(emptyImageInput as any, narrativeGenerationData)).toThrow()
     })
   })
 })
