@@ -13,6 +13,7 @@ import {
   CyoaNarrativeOption,
   NarrativeGenerationData,
 } from '../types'
+import { getRandomSample } from './random'
 
 const ajv = new Ajv({ allErrors: true })
 
@@ -203,7 +204,7 @@ export const formatNarrative = (
     recap: input.recap as string,
     chapterTitle: input.chapterTitle as string,
     choice: input.choice as string,
-    options: transformedOptions,
+    options: getRandomSample(transformedOptions, transformedOptions.length),
     inventory: inventoryItems,
     currentResourceValue: generationData.currentResourceValue,
   }

@@ -6,11 +6,16 @@ import {
 } from '../__mocks__'
 import { CyoaGame } from '@types'
 import { formatCyoaGame, formatEndingNarrative, formatNarrative } from '@utils/formatting'
+import * as randomUtils from '@utils/random'
+
+jest.mock('@utils/random')
 
 describe('formatting', () => {
   const mockMathRandom = jest.fn()
 
   beforeAll(() => {
+    jest.mocked(randomUtils).getRandomSample.mockImplementation((array) => [...array])
+
     Math.random = mockMathRandom
     mockMathRandom.mockReturnValue(0.5)
   })
@@ -239,6 +244,31 @@ describe('formatting', () => {
           resourcePercent,
         ),
       ).toThrow()
+    })
+
+    it('should use randomized options in narrative output', () => {
+      const shuffledOptions = [
+        { name: 'Wake the dragon', rank: 2, resourcesToAdd: -19 },
+        { name: 'Sneak past quietly', rank: 1, resourcesToAdd: -7 },
+      ]
+      jest.mocked(randomUtils).getRandomSample.mockReturnValueOnce(shuffledOptions)
+      const resourcePercent = 0.25
+
+      const result = formatNarrative(
+        createNarrativePromptOutput,
+        narrativeGenerationData,
+        mockGame,
+        resourcePercent,
+      )
+
+      expect(result.narrative.options).toEqual(shuffledOptions)
+      expect(randomUtils.getRandomSample).toHaveBeenCalledWith(
+        [
+          { name: 'Sneak past quietly', rank: 1, resourcesToAdd: -7 },
+          { name: 'Wake the dragon', rank: 2, resourcesToAdd: -19 },
+        ],
+        2,
+      )
     })
   })
 

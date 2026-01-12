@@ -35,16 +35,16 @@ Come up with the plan for a choose-your-own-adventure story based on the theme a
     - Keep it concise but vivid (1-2 sentences)
     - NEVER include text or numbers in the image
 - Create a list of possible key information
-  - Key information might includes numbers, combinations, words, or phrases
+  - Key information might includes numbers, combinations, names, words, or phrases
   - Key numbers must be at least 4 digits
   - Key information, especially combinations, can be hidden (for example, as a date or time)
 - Create a list of red herring informtion
-  - Red herrings might include numbers, combinations, words, or phrases
+  - Red herrings might include numbers, combinations, names, words, or phrases
   - NEVER use key information values as a red herring, red herrings MUST BE UNIQUE
 - Create a loss condition
   - Create a resource name, themed with the content
     - NEVER put anything but a name -- this value is displayed to the player
-  - The resource needs to be countable (hours, money, etc) or a percent (% lamp oil remaining, etc) NOT something general like time (instead do hours, days, etc)
+  - The resource needs to be countable (minutes, coins, etc) or a percent (% lamp oil remaining, etc) NOT something general like time (instead do hours, days, etc)
   - Resource image description to be passed to an LLM to generate an image
     - Focus on a physical representation of the item alone
     - Keep it concise but vivid (1-2 sentences)
@@ -54,6 +54,7 @@ Come up with the plan for a choose-your-own-adventure story based on the theme a
   - Generate a starting amount
   - Determine a loss threshold
     - Reaching the threshold makes the player lose the game
+    - For gameplay reasons, EITHER starting amount OR threshold MUST be AT LEAST 5 times the number of questions
 - Create a plan for choices
   - Suggest a number of choice points based on the count provided
   - Choices should be 1-2 SHORT sentences that focus ONLY on the decision
@@ -68,7 +69,7 @@ Come up with the plan for a choose-your-own-adventure story based on the theme a
   - Determine what the player will use or lose in the narrative
   - Determine what choice the player will need to make
     - Every choice should be a puzzle
-      - ALWAYS prompt the player for action (GOOD: How do you response? GOOD: How do you gain access to the computer?)
+      - ALWAYS prompt the player for action (GOOD: How do you respond? GOOD: How do you gain access to the computer?)
       - NEVER ask the player's opinion (BAD: Which is most significant? BAD: Which approach will work?)
       - NEVER ask what is a clue or puzzle answer
       - NEVER ASK WHAT IS MORE SIGNIFICANT
@@ -80,6 +81,7 @@ Come up with the plan for a choose-your-own-adventure story based on the theme a
   - Generate possible options
     - Think about how many options there should be -- 3, 4, 5, or 6 -- with each choice different
     - Make the correct option require EXTREME thought to figure out
+    - The correct option should be based on something
     - Rank each option, with 1 being the best choice
     - NEVER add commentary to an option (BAD: "1887 (when building built)" GOOD: "1887")
     - NEVER make an option match key information or red herrings FROM THE SAME CHOICE POINT

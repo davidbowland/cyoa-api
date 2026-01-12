@@ -41,19 +41,19 @@ describe('narratives', () => {
   })
 
   describe('determineRequiredNarratives', () => {
-    it('generates upcoming narrative IDs based on options', () => {
-      const narrativeWithOptions = {
+    it('sorts options by rank when determining narrative IDs', () => {
+      const narrativeWithUnsortedOptions = {
         ...cyoaNarrative,
         options: [
-          { name: 'Option 1', resourcesToAdd: 5 },
-          { name: 'Option 2', resourcesToAdd: -10 },
-          { name: 'Option 3', resourcesToAdd: 0 },
+          { name: 'Worst option', rank: 3, resourcesToAdd: -20 },
+          { name: 'Best option', rank: 1, resourcesToAdd: 10 },
+          { name: 'Middle option', rank: 2, resourcesToAdd: 0 },
         ],
       }
 
-      const result = determineRequiredNarratives(narrativeWithOptions, 'start')
+      const result = determineRequiredNarratives(narrativeWithUnsortedOptions, 'start')
 
-      expect(result).toEqual(['start-0', 'start-1', 'start-2'])
+      expect(result).toEqual(['start-1', 'start-2', 'start-0'])
     })
 
     it('handles narrative with no options', () => {
@@ -71,14 +71,14 @@ describe('narratives', () => {
       const narrativeWithOptions = {
         ...cyoaNarrative,
         options: [
-          { name: 'Option 1', resourcesToAdd: 5 },
-          { name: 'Option 2', resourcesToAdd: -10 },
+          { name: 'Option 1', rank: 2, resourcesToAdd: 5 },
+          { name: 'Option 2', rank: 1, resourcesToAdd: -10 },
         ],
       }
 
       const result = determineRequiredNarratives(narrativeWithOptions, 'start-0-1')
 
-      expect(result).toEqual(['start-0-1-0', 'start-0-1-1'])
+      expect(result).toEqual(['start-0-1-1', 'start-0-1-0'])
     })
   })
 

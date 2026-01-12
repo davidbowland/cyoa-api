@@ -19,7 +19,11 @@ export const parseNarrativeId = (narrativeId: NarrativeId): NarrativeIdParts => 
 export const determineRequiredNarratives = (
   narrative: CyoaNarrative,
   narrativeId: NarrativeId,
-): NarrativeId[] => narrative.options.map((_, index) => `${narrativeId}-${index}`)
+): NarrativeId[] =>
+  narrative.options
+    .map((n, index) => ({ id: `${narrativeId}-${index}`, rank: n.rank }))
+    .toSorted((a, b) => a.rank - b.rank)
+    .map((n) => n.id)
 
 export const isGameLost = (game: CyoaGame, currentResourceValue: number): boolean => {
   const isAscending = game.startingResourceValue < game.lossResourceThreshold
