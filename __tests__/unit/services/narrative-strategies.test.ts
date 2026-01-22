@@ -26,7 +26,6 @@ describe('narrative-strategies', () => {
 
         expect(result).toEqual({
           recap: 'The game is starting.',
-          currentResourceValue: cyoaGame.startingResourceValue,
           lastChoiceMade: '',
           lastOptionSelected: '',
           bestOption: '',
@@ -76,8 +75,6 @@ describe('narrative-strategies', () => {
 
         expect(result).toEqual({
           recap: cyoaNarrative.recap,
-          currentResourceValue:
-            cyoaNarrative.currentResourceValue + cyoaNarrative.options[0].resourcesToAdd,
           lastChoiceMade: cyoaNarrative.choice,
           lastOptionSelected: cyoaNarrative.options[0].name,
           bestOption: 'Sneak past quietly',
@@ -95,7 +92,6 @@ describe('narrative-strategies', () => {
         const result = ContinuationNarrativeStrategy.buildContext(params)
 
         expect(result.recap).toBe('The game is starting.')
-        expect(result.currentResourceValue).toBe(cyoaGame.startingResourceValue)
         expect(result.lastChoiceMade).toBe('')
         expect(result.lastOptionSelected).toBe('')
         expect(result.bestOption).toBe('')

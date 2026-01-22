@@ -33,16 +33,21 @@ export const cyoaGame: CyoaGame = {
   startingResourceValue: 100,
   lossResourceThreshold: 0,
   initialNarrativeId: 'start',
+  inspirationAuthor: {
+    name: 'Agatha Christie',
+    style:
+      'Clever plotting with careful clue placement. Measured pacing that builds tension while maintaining clarity and logical deduction.',
+  },
   choicePoints: [
     {
-      inventoryToIntroduce: ['Sword'],
       keyInformationToIntroduce: ['Important clue 1'],
       redHerringsToIntroduce: ['False clue 1'],
-      inventoryOrInformationConsumed: [],
-      choice: 'What do you do?',
+      inventoryAvailable: ['Sword'],
+      choiceNarrative: 'You encounter a challenge',
+      choice: 'You see a sleeping dragon. What do you do?',
       options: [
-        { name: 'Fight', rank: 1 },
-        { name: 'Run', rank: 2 },
+        { name: 'Fight', rank: 1, consequence: 'You fight bravely', resourcesToAdd: -10 },
+        { name: 'Run', rank: 2, consequence: 'You flee the scene', resourcesToAdd: -20 },
       ],
     },
   ],
@@ -88,22 +93,25 @@ export const cyoaGamePromptOutput = {
     { name: 'Magic Wand', imageDescription: 'A glowing wooden wand' },
     { name: 'Health Potion', imageDescription: 'A red healing potion' },
   ],
-  keyInformation: ['The dragon guards the treasure', 'The wizard knows ancient spells'],
-  redHerrings: ['There might be goblins nearby', 'The forest has hidden traps'],
   resourceName: 'Magic Energy',
   resourceImageDescription: 'A glowing magical energy crystal',
   startingResourceValue: 50,
   lossResourceThreshold: 5,
+}
+
+export const cyoaChoicesPromptOutput = {
+  keyInformation: ['The dragon guards the treasure', 'The wizard knows ancient spells'],
+  redHerrings: ['There might be goblins nearby', 'The forest has hidden traps'],
   choicePoints: [
     {
-      inventoryToIntroduce: ['Magic Wand'],
       keyInformationToIntroduce: ['The wizard knows ancient spells'],
       redHerringsToIntroduce: ['There might be goblins nearby'],
-      inventoryOrInformationConsumed: [],
+      inventoryAvailable: ['Magic Wand'],
+      choiceNarrative: 'You meet a wise wizard in the forest',
       choice: 'You encounter the wizard. What do you do?',
       options: [
-        { name: 'Ask for help', rank: 1 },
-        { name: 'Challenge the wizard', rank: 2 },
+        { name: 'Ask for help', rank: 1, consequence: 'The wizard aids you' },
+        { name: 'Challenge the wizard', rank: 2, consequence: 'The wizard is offended' },
       ],
     },
   ],
@@ -123,7 +131,7 @@ export const invokeModelCyoaGameResponse = {
 
 // Narratives
 
-export const narrativeId: NarrativeId = 'test-narrative-id'
+export const narrativeId: NarrativeId = 'start'
 
 export const createNarrativeEvent: CreateNarrativeEvent = {
   gameId,
@@ -132,50 +140,52 @@ export const createNarrativeEvent: CreateNarrativeEvent = {
 
 export const narrativeGenerationData: NarrativeGenerationData = {
   recap: 'Previous events recap',
-  currentResourceValue: 75,
   lastChoiceMade: 'Asked for help',
   lastOptionSelected: 'Ask for help',
   bestOption: 'Ask for help',
   currentInventory: ['Sword', 'Magic Wand'],
-  inventoryToIntroduce: ['Health Potion'],
-  keyInformationToIntroduce: ['The dragon is sleeping'],
-  redHerringsToIntroduce: ['Strange noises in the distance'],
-  inventoryOrInformationConsumed: ['Old Map'],
-  nextChoice: 'You see a sleeping dragon. What do you do?',
-  options: [
-    { name: 'Sneak past quietly', rank: 1 },
-    { name: 'Wake the dragon', rank: 2 },
+  inventoryAvailable: ['Health Potion'],
+  existingNarrative: 'You approach the dragon carefully',
+  previousChoice: 'What do you investigate first?',
+  previousOptions: [
+    { name: 'Sneak past quietly', rank: 1, consequence: 'You move silently' },
+    { name: 'Wake the dragon', rank: 2, consequence: 'The dragon awakens' },
   ],
+  nextChoice: 'You see a sleeping dragon. What do you do?',
+  nextOptions: [
+    { name: 'Sneak past quietly', rank: 1, consequence: 'You move silently' },
+    { name: 'Wake the dragon', rank: 2, consequence: 'The dragon awakens' },
+  ],
+  outline: 'Test outline',
+  inspirationAuthor: {
+    name: 'Agatha Christie',
+    style:
+      'Clever plotting with careful clue placement. Measured pacing that builds tension while maintaining clarity and logical deduction.',
+  },
   generationStartTime: 1640995200000,
 }
 
 export const cyoaNarrative: CyoaNarrative = {
   narrative: 'You find yourself standing before a massive sleeping dragon...',
-  recap:
-    'After asking the wizard for help, you received a magic wand and learned about the dragon.',
+  recap: 'Previous events recap',
   chapterTitle: "The Dragon's Lair",
   image: 'https://cyoa-assets.dbowland.com/images/a-friendly-adventure/test-narrative-id.png',
   choice: 'You see a sleeping dragon. What do you do?',
   options: [
-    { name: 'Sneak past quietly', rank: 1, resourcesToAdd: -25019 },
-    { name: 'Wake the dragon', rank: 2, resourcesToAdd: -75057 },
+    { name: 'Sneak past quietly', rank: 1, consequence: 'You move silently', resourcesToAdd: -7 },
+    { name: 'Wake the dragon', rank: 2, consequence: 'The dragon awakens', resourcesToAdd: -19 },
   ],
   inventory: [{ name: 'Sword', image: 'sword-image.jpg' }],
-  currentResourceValue: 75,
 }
 
 export const createNarrativePromptOutput = {
-  narrative: 'You find yourself standing before a massive sleeping dragon...',
-  recap:
-    'After asking the wizard for help, you received a magic wand and learned about the dragon.',
   chapterTitle: "The Dragon's Lair",
+  narrative: 'You find yourself standing before a massive sleeping dragon...',
   imageDescription: 'A dark cave with a massive sleeping dragon surrounded by treasure',
-  choice: 'You see a sleeping dragon. What do you do?',
   options: [
-    { name: 'Sneak past quietly', rank: 1 },
-    { name: 'Wake the dragon', rank: 2 },
+    { narrative: 'You carefully tiptoe past the sleeping beast...' },
+    { narrative: 'You loudly call out to wake the dragon...' },
   ],
-  inventory: ['Sword', 'Magic Wand', 'Health Potion'],
 }
 
 export const invokeModelNarrativeResponse = {

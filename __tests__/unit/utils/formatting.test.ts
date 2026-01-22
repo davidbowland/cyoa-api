@@ -1,5 +1,6 @@
 import {
   cyoaGamePromptOutput,
+  cyoaChoicesPromptOutput,
   createNarrativePromptOutput,
   endingNarrativePromptOutput,
   narrativeGenerationData,
@@ -13,6 +14,11 @@ jest.mock('@utils/random')
 describe('formatting', () => {
   const mockMathRandom = jest.fn()
 
+  const testAuthor = {
+    name: 'Test Author',
+    style: 'Test style',
+  }
+
   beforeAll(() => {
     jest.mocked(randomUtils).getRandomSample.mockImplementation((array) => [...array])
 
@@ -21,7 +27,7 @@ describe('formatting', () => {
   })
   describe('formatCyoaGame', () => {
     it('should format valid game prompt output', () => {
-      const result = formatCyoaGame(cyoaGamePromptOutput)
+      const result = formatCyoaGame(cyoaGamePromptOutput, cyoaChoicesPromptOutput, testAuthor)
 
       expect(result.game).toEqual({
         title: 'Generated Adventure',
@@ -41,16 +47,27 @@ describe('formatting', () => {
         startingResourceValue: 50,
         lossResourceThreshold: 5,
         initialNarrativeId: 'start',
+        inspirationAuthor: testAuthor,
         choicePoints: [
           {
-            inventoryToIntroduce: ['Magic Wand'],
             keyInformationToIntroduce: ['The wizard knows ancient spells'],
             redHerringsToIntroduce: ['There might be goblins nearby'],
-            inventoryOrInformationConsumed: [],
+            inventoryAvailable: ['Magic Wand'],
+            choiceNarrative: 'You meet a wise wizard in the forest',
             choice: 'You encounter the wizard. What do you do?',
             options: [
-              { name: 'Ask for help', rank: 1 },
-              { name: 'Challenge the wizard', rank: 2 },
+              {
+                name: 'Ask for help',
+                rank: 1,
+                consequence: 'The wizard aids you',
+                resourcesToAdd: expect.any(Number),
+              },
+              {
+                name: 'Challenge the wizard',
+                rank: 2,
+                consequence: 'The wizard is offended',
+                resourcesToAdd: expect.any(Number),
+              },
             ],
           },
         ],
@@ -64,14 +81,17 @@ describe('formatting', () => {
         ...cyoaGamePromptOutput,
         startingResourceValue: 10,
         lossResourceThreshold: 8,
+      }
+      const choicesWithMultiplePoints = {
+        ...cyoaChoicesPromptOutput,
         choicePoints: [
-          cyoaGamePromptOutput.choicePoints[0],
-          cyoaGamePromptOutput.choicePoints[0],
-          cyoaGamePromptOutput.choicePoints[0],
+          cyoaChoicesPromptOutput.choicePoints[0],
+          cyoaChoicesPromptOutput.choicePoints[0],
+          cyoaChoicesPromptOutput.choicePoints[0],
         ], // 3 choice points, minRange = 15
       }
 
-      const result = formatCyoaGame(inputWithSmallRange)
+      const result = formatCyoaGame(inputWithSmallRange, choicesWithMultiplePoints, testAuthor)
 
       expect(result.game.startingResourceValue).toBe(0)
       expect(result.game.lossResourceThreshold).toBe(15)
@@ -82,10 +102,16 @@ describe('formatting', () => {
         ...cyoaGamePromptOutput,
         startingResourceValue: 2,
         lossResourceThreshold: 0,
-        choicePoints: [cyoaGamePromptOutput.choicePoints[0], cyoaGamePromptOutput.choicePoints[0]], // 2 choice points, minRange = 10
+      }
+      const choicesWithTwoPoints = {
+        ...cyoaChoicesPromptOutput,
+        choicePoints: [
+          cyoaChoicesPromptOutput.choicePoints[0],
+          cyoaChoicesPromptOutput.choicePoints[0],
+        ], // 2 choice points, minRange = 10
       }
 
-      const result = formatCyoaGame(inputWithZeroEnding)
+      const result = formatCyoaGame(inputWithZeroEnding, choicesWithTwoPoints, testAuthor)
 
       expect(result.game.startingResourceValue).toBe(10)
       expect(result.game.lossResourceThreshold).toBe(0)
@@ -96,10 +122,13 @@ describe('formatting', () => {
         ...cyoaGamePromptOutput,
         startingResourceValue: 100,
         lossResourceThreshold: 0,
-        choicePoints: [cyoaGamePromptOutput.choicePoints[0]], // 1 choice point, minRange = 5
+      }
+      const choicesWithOnePoint = {
+        ...cyoaChoicesPromptOutput,
+        choicePoints: [cyoaChoicesPromptOutput.choicePoints[0]], // 1 choice point, minRange = 5
       }
 
-      const result = formatCyoaGame(inputWithSufficientRange)
+      const result = formatCyoaGame(inputWithSufficientRange, choicesWithOnePoint, testAuthor)
 
       expect(result.game.startingResourceValue).toBe(100)
       expect(result.game.lossResourceThreshold).toBe(0)
@@ -108,13 +137,13 @@ describe('formatting', () => {
     it('should throw error for invalid game prompt output', () => {
       const invalidInput = { ...cyoaGamePromptOutput, title: '' }
 
-      expect(() => formatCyoaGame(invalidInput as any)).toThrow()
+      expect(() => formatCyoaGame(invalidInput as any, cyoaChoicesPromptOutput, testAuthor)).toThrow()
     })
 
     it('should throw error for missing required fields', () => {
       const { title: _, ...incompleteInput } = cyoaGamePromptOutput
 
-      expect(() => formatCyoaGame(incompleteInput)).toThrow()
+      expect(() => formatCyoaGame(incompleteInput, cyoaChoicesPromptOutput, testAuthor)).toThrow()
     })
   })
 
@@ -136,47 +165,65 @@ describe('formatting', () => {
       lossResourceThreshold: 0,
       choicePoints: [
         {
-          inventoryToIntroduce: [],
           keyInformationToIntroduce: [],
           redHerringsToIntroduce: [],
-          inventoryOrInformationConsumed: [],
-          choice: 'Test choice',
+          inventoryAvailable: [],
+          choiceNarrative: 'Test narrative',
+          choice: 'You see a sleeping dragon. What do you do?',
           options: [
-            { name: 'Test option 1', rank: 1, resourcesToAdd: 0 },
-            { name: 'Test option 2', rank: 2, resourcesToAdd: 0 },
+            {
+              name: 'Sneak past quietly',
+              rank: 1,
+              consequence: 'You move silently',
+              resourcesToAdd: -7,
+            },
+            {
+              name: 'Wake the dragon',
+              rank: 2,
+              consequence: 'The dragon awakens',
+              resourcesToAdd: -19,
+            },
           ],
         },
       ],
       initialNarrativeId: 'start',
+      inspirationAuthor: {
+        name: 'Test Author',
+        style: 'Test style',
+      },
     }
 
     it('should format valid narrative prompt output', () => {
-      const resourcePercent = 0.25
-
       const result = formatNarrative(
         createNarrativePromptOutput,
         narrativeGenerationData,
         mockGame,
-        resourcePercent,
       )
 
       expect(result).toEqual({
         narrative: {
           narrative: 'You find yourself standing before a massive sleeping dragon...',
-          recap:
-            'After asking the wizard for help, you received a magic wand and learned about the dragon.',
+          recap: 'Previous events recap',
           chapterTitle: "The Dragon's Lair",
           choice: 'You see a sleeping dragon. What do you do?',
           options: [
-            { name: 'Sneak past quietly', rank: 1, resourcesToAdd: -7 },
-            { name: 'Wake the dragon', rank: 2, resourcesToAdd: -19 },
+            {
+              name: 'Sneak past quietly',
+              rank: 1,
+              consequence: 'You move silently',
+              resourcesToAdd: -7,
+            },
+            {
+              name: 'Wake the dragon',
+              rank: 2,
+              consequence: 'The dragon awakens',
+              resourcesToAdd: -19,
+            },
           ],
           inventory: [
             { name: 'Sword', image: 'sword-image.jpg' },
             { name: 'Magic Wand' },
-            { name: 'Health Potion' },
           ],
-          currentResourceValue: 75,
         },
         imageDescription: 'A dark cave with a massive sleeping dragon surrounded by treasure',
       })
@@ -184,35 +231,31 @@ describe('formatting', () => {
 
     it('should throw error for invalid narrative prompt output', () => {
       const invalidInput = { ...createNarrativePromptOutput, narrative: '' }
-      const resourcePercent = 0.25
 
       expect(() =>
-        formatNarrative(invalidInput as any, narrativeGenerationData, mockGame, resourcePercent),
+        formatNarrative(invalidInput as any, narrativeGenerationData, mockGame),
       ).toThrow()
     })
 
     it('should throw error for missing required fields', () => {
       const { narrative: _, ...incompleteInput } = createNarrativePromptOutput
-      const resourcePercent = 0.25
 
       expect(() =>
-        formatNarrative(incompleteInput, narrativeGenerationData, mockGame, resourcePercent),
+        formatNarrative(incompleteInput, narrativeGenerationData, mockGame),
       ).toThrow()
     })
 
     it('should throw error for invalid option structure', () => {
       const invalidOptionsInput = {
         ...createNarrativePromptOutput,
-        options: [{ name: 'Invalid option' }], // Missing rank
+        options: [{ name: 'Invalid option' }], // Missing narrative
       }
-      const resourcePercent = 0.25
 
       expect(() =>
         formatNarrative(
           invalidOptionsInput as any,
           narrativeGenerationData,
           mockGame,
-          resourcePercent,
         ),
       ).toThrow()
     })
@@ -220,52 +263,57 @@ describe('formatting', () => {
     it('should throw error for empty option name', () => {
       const emptyNameInput = {
         ...createNarrativePromptOutput,
-        options: [{ name: '', rank: 1 }],
+        options: [{ narrative: '' }],
       }
-      const resourcePercent = 0.25
 
       expect(() =>
-        formatNarrative(emptyNameInput as any, narrativeGenerationData, mockGame, resourcePercent),
+        formatNarrative(emptyNameInput as any, narrativeGenerationData, mockGame),
       ).toThrow()
     })
 
     it('should throw error for empty required strings', () => {
       const emptyStringInput = {
         ...createNarrativePromptOutput,
-        choice: '',
+        narrative: '',
       }
-      const resourcePercent = 0.25
 
       expect(() =>
         formatNarrative(
           emptyStringInput as any,
           narrativeGenerationData,
           mockGame,
-          resourcePercent,
         ),
       ).toThrow()
     })
 
     it('should use randomized options in narrative output', () => {
       const shuffledOptions = [
-        { name: 'Wake the dragon', rank: 2, resourcesToAdd: -19 },
-        { name: 'Sneak past quietly', rank: 1, resourcesToAdd: -7 },
+        { name: 'Wake the dragon', rank: 2, consequence: 'The dragon awakens', resourcesToAdd: -19 },
+        { name: 'Sneak past quietly', rank: 1, consequence: 'You move silently', resourcesToAdd: -7 },
       ]
       jest.mocked(randomUtils).getRandomSample.mockReturnValueOnce(shuffledOptions)
-      const resourcePercent = 0.25
 
       const result = formatNarrative(
         createNarrativePromptOutput,
         narrativeGenerationData,
         mockGame,
-        resourcePercent,
       )
 
       expect(result.narrative.options).toEqual(shuffledOptions)
       expect(randomUtils.getRandomSample).toHaveBeenCalledWith(
         [
-          { name: 'Sneak past quietly', rank: 1, resourcesToAdd: -7 },
-          { name: 'Wake the dragon', rank: 2, resourcesToAdd: -19 },
+          {
+            name: 'Sneak past quietly',
+            rank: 1,
+            consequence: 'You move silently',
+            resourcesToAdd: -7,
+          },
+          {
+            name: 'Wake the dragon',
+            rank: 2,
+            consequence: 'The dragon awakens',
+            resourcesToAdd: -19,
+          },
         ],
         2,
       )
@@ -284,7 +332,6 @@ describe('formatting', () => {
           choice: undefined,
           options: [],
           inventory: [],
-          currentResourceValue: 75,
         },
         imageDescription: 'A triumphant hero standing in golden sunlight',
       })

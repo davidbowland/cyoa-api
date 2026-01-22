@@ -24,6 +24,7 @@ import {
   PromptId,
 } from '../types'
 import { xrayCapture } from '../utils/logging'
+import { parseNarrativeId } from '../utils/narratives'
 
 const dynamodb = xrayCapture(new DynamoDB({ apiVersion: '2012-08-10' }))
 
@@ -105,13 +106,14 @@ export const getNarrativeById = async (
   gameId: GameId,
   narrativeId: NarrativeId,
 ): Promise<GetNarrativeResult> => {
+  const { storageKey } = parseNarrativeId(narrativeId)
   const command = new GetItemCommand({
     Key: {
       GameId: {
         S: `${gameId}`,
       },
       NarrativeId: {
-        S: `${narrativeId}`,
+        S: storageKey,
       },
     },
     TableName: dynamodbNarrativesTableName,
@@ -138,21 +140,30 @@ export const getNarrativesByIds = async (
   const command = new BatchGetItemCommand({
     RequestItems: {
       [dynamodbNarrativesTableName]: {
-        Keys: narrativeIds.map((narrativeId) => ({
+        Keys: narrativeIds.map((id) => ({
           GameId: { S: gameId },
-          NarrativeId: { S: narrativeId },
+          NarrativeId: { S: parseNarrativeId(id).storageKey },
         })),
       },
     },
   })
   const response: BatchGetItemCommandOutput = await dynamodb.send(command)
 
-  const items = response.Responses![dynamodbNarrativesTableName]
-  return items.map((item) => ({
-    generationData: item.GenerationData?.S && JSON.parse(item.GenerationData.S),
-    narrative: item.Data?.S && JSON.parse(item.Data.S),
-    narrativeId: item.NarrativeId?.S as string,
-  }))
+  const items = response.Responses?.[dynamodbNarrativesTableName] || []
+
+  const storageKeyToNarrativeId = new Map(
+    narrativeIds.map((id) => [parseNarrativeId(id).storageKey, id])
+  )
+
+  return items.map((item) => {
+    const storageKey = item.NarrativeId?.S as string
+    const narrativeId = storageKeyToNarrativeId.get(storageKey)!
+    return {
+      narrativeId,
+      generationData: item.GenerationData?.S ? JSON.parse(item.GenerationData.S) : undefined,
+      narrative: item.Data?.S ? JSON.parse(item.Data.S) : undefined,
+    }
+  })
 }
 
 export const setNarrativeById = async (
@@ -160,6 +171,7 @@ export const setNarrativeById = async (
   narrativeId: NarrativeId,
   data: CyoaNarrative,
 ): Promise<PutItemOutput> => {
+  const { storageKey } = parseNarrativeId(narrativeId)
   const command = new PutItemCommand({
     Item: {
       Data: {
@@ -169,7 +181,7 @@ export const setNarrativeById = async (
         S: `${gameId}`,
       },
       NarrativeId: {
-        S: `${narrativeId}`,
+        S: storageKey,
       },
     },
     TableName: dynamodbNarrativesTableName,
@@ -182,6 +194,7 @@ export const setNarrativeGenerationData = async (
   narrativeId: NarrativeId,
   generationData: NarrativeGenerationData,
 ): Promise<PutItemOutput> => {
+  const { storageKey } = parseNarrativeId(narrativeId)
   const command = new PutItemCommand({
     Item: {
       GenerationData: {
@@ -191,7 +204,7 @@ export const setNarrativeGenerationData = async (
         S: `${gameId}`,
       },
       NarrativeId: {
-        S: `${narrativeId}`,
+        S: storageKey,
       },
     },
     TableName: dynamodbNarrativesTableName,

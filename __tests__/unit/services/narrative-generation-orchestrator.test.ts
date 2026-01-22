@@ -18,40 +18,37 @@ import {
 } from '@services/narrative-generation-orchestrator'
 import * as narrativeStrategies from '@services/narrative-strategies'
 import * as sqs from '@services/sqs'
-import * as narrativeUtils from '@utils/narratives'
+import { determineRequiredNarratives, isGameLost, isGameWon } from '@utils/narratives'
+import * as randomUtils from '@utils/random'
 
 jest.mock('@services/bedrock')
 jest.mock('@services/dynamodb')
 jest.mock('@services/image-generation')
 jest.mock('@services/narrative-strategies')
 jest.mock('@services/sqs')
-jest.mock('@utils/narratives')
 jest.mock('@utils/logging')
+jest.mock('@utils/random')
 
 describe('narrative-generation-orchestrator', () => {
   const mockNow = 1640995200000
-  const testNarrativeId = 'start-0'
+  const testNarrativeId = 'start'
   const mockMathRandom = jest.fn()
 
   beforeAll(() => {
     Math.random = mockMathRandom
     mockMathRandom.mockReturnValue(0.5)
     Date.now = jest.fn().mockReturnValue(mockNow)
+    jest.mocked(randomUtils).getRandomSample.mockImplementation((array) => [...array])
     jest.mocked(narrativeStrategies).selectGenerationStrategy.mockReturnValue({
       buildContext: jest.fn().mockReturnValue({
         recap: 'The game is starting.',
-        currentResourceValue: 100,
         lastChoiceMade: '',
+        lastOptionSelected: '',
+        bestOption: '',
         currentInventory: [],
       }),
       shouldGenerate: jest.fn().mockReturnValue(true),
     })
-    jest.mocked(narrativeUtils).parseNarrativeId.mockReturnValue({
-      lastNarrativeId: 'start',
-      optionId: 0,
-      choicePointIndex: 0,
-    })
-    jest.mocked(narrativeUtils).determineRequiredNarratives.mockReturnValue([])
   })
 
   describe('ensureNarrativeExists', () => {
@@ -81,20 +78,11 @@ describe('narrative-generation-orchestrator', () => {
     })
 
     it('returns existing narrative and ensures upcoming narratives', async () => {
-      const upcomingNarrativeIds = ['start-0-1', 'start-0-2']
-      jest
-        .mocked(narrativeUtils)
-        .determineRequiredNarratives.mockReturnValueOnce(upcomingNarrativeIds)
       jest.mocked(dynamodb).getNarrativeById.mockResolvedValueOnce({
         narrative: cyoaNarrative,
         generationData: narrativeGenerationData,
       })
       jest.mocked(dynamodb).getNarrativesByIds.mockResolvedValueOnce([])
-      jest.mocked(narrativeUtils).parseNarrativeId.mockReturnValue({
-        lastNarrativeId: 'start',
-        optionId: 0,
-        choicePointIndex: 0, // Use index 0 since that's what exists in the mock
-      })
 
       const result = await ensureNarrativeExists(gameId, testNarrativeId, cyoaGame)
 
@@ -102,26 +90,18 @@ describe('narrative-generation-orchestrator', () => {
         status: 'ready',
         narrative: cyoaNarrative,
       })
-      expect(dynamodb.getNarrativesByIds).toHaveBeenCalledWith(gameId, upcomingNarrativeIds)
-      expect(dynamodb.setNarrativeGenerationData).toHaveBeenCalledTimes(2) // Once for each upcoming narrative
+      expect(dynamodb.getNarrativesByIds).toHaveBeenCalledWith(gameId, ['start-0', 'start-1'])
+      expect(dynamodb.setNarrativeGenerationData).toHaveBeenCalledTimes(2)
     })
 
     it('handles undefined choice when ensuring upcoming narratives', async () => {
       const narrativeWithoutChoice = { ...cyoaNarrative, choice: undefined }
       const upcomingNarrativeIds = ['start-0-1']
-      jest
-        .mocked(narrativeUtils)
-        .determineRequiredNarratives.mockReturnValueOnce(upcomingNarrativeIds)
       jest.mocked(dynamodb).getNarrativeById.mockResolvedValueOnce({
         narrative: narrativeWithoutChoice,
         generationData: narrativeGenerationData,
       })
       jest.mocked(dynamodb).getNarrativesByIds.mockResolvedValueOnce([])
-      jest.mocked(narrativeUtils).parseNarrativeId.mockReturnValue({
-        lastNarrativeId: 'start',
-        optionId: 0,
-        choicePointIndex: 0,
-      })
 
       const result = await ensureNarrativeExists(gameId, testNarrativeId, cyoaGame)
 
@@ -133,17 +113,17 @@ describe('narrative-generation-orchestrator', () => {
     })
 
     it('skips upcoming narratives that are already generating', async () => {
-      const upcomingNarrativeIds = ['start-0-1']
-      jest
-        .mocked(narrativeUtils)
-        .determineRequiredNarratives.mockReturnValueOnce(upcomingNarrativeIds)
       jest.mocked(dynamodb).getNarrativeById.mockResolvedValueOnce({
         narrative: cyoaNarrative,
         generationData: narrativeGenerationData,
       })
       jest.mocked(dynamodb).getNarrativesByIds.mockResolvedValueOnce([
         {
-          narrativeId: 'start-0-1',
+          narrativeId: 'start-0',
+          generationData: { ...narrativeGenerationData, generationStartTime: mockNow - 60000 },
+        },
+        {
+          narrativeId: 'start-1',
           generationData: { ...narrativeGenerationData, generationStartTime: mockNow - 60000 },
         },
       ])
@@ -154,22 +134,21 @@ describe('narrative-generation-orchestrator', () => {
         status: 'ready',
         narrative: cyoaNarrative,
       })
-      // Should not call setNarrativeGenerationData for the generating narrative
       expect(dynamodb.setNarrativeGenerationData).not.toHaveBeenCalled()
     })
 
     it('skips upcoming narratives that already exist', async () => {
-      const upcomingNarrativeIds = ['start-0-1']
-      jest
-        .mocked(narrativeUtils)
-        .determineRequiredNarratives.mockReturnValueOnce(upcomingNarrativeIds)
       jest.mocked(dynamodb).getNarrativeById.mockResolvedValueOnce({
         narrative: cyoaNarrative,
         generationData: narrativeGenerationData,
       })
       jest.mocked(dynamodb).getNarrativesByIds.mockResolvedValueOnce([
         {
-          narrativeId: 'start-0-1',
+          narrativeId: 'start-0',
+          narrative: cyoaNarrative,
+        },
+        {
+          narrativeId: 'start-1',
           narrative: cyoaNarrative,
         },
       ])
@@ -180,7 +159,6 @@ describe('narrative-generation-orchestrator', () => {
         status: 'ready',
         narrative: cyoaNarrative,
       })
-      // Should not call setNarrativeGenerationData for the existing narrative
       expect(dynamodb.setNarrativeGenerationData).not.toHaveBeenCalled()
     })
 
@@ -211,7 +189,13 @@ describe('narrative-generation-orchestrator', () => {
         expect.objectContaining({
           generationStartTime: mockNow,
           nextChoice: cyoaGame.choicePoints[0].choice,
-          options: cyoaGame.choicePoints[0].options,
+          nextOptions: [
+            { name: 'Fight', rank: 1, consequence: 'You fight bravely' },
+            { name: 'Run', rank: 2, consequence: 'You flee the scene' },
+          ],
+          existingNarrative: cyoaGame.choicePoints[0].choiceNarrative,
+          outline: cyoaGame.outline,
+          inspirationAuthor: cyoaGame.inspirationAuthor,
         }),
       )
       expect(sqs.addToQueue).toHaveBeenCalledWith({
@@ -243,13 +227,9 @@ describe('narrative-generation-orchestrator', () => {
     })
 
     it('generates narrative even when currentChoice is undefined', async () => {
-      jest.mocked(narrativeUtils).parseNarrativeId.mockReturnValueOnce({
-        lastNarrativeId: 'start',
-        optionId: 0,
-        choicePointIndex: 999,
-      })
+      const gameWithNoChoices = { ...cyoaGame, choicePoints: [] }
 
-      const result = await ensureNarrativeExists(gameId, testNarrativeId, cyoaGame)
+      const result = await ensureNarrativeExists(gameId, testNarrativeId, gameWithNoChoices)
 
       expect(result).toEqual({
         status: 'generating',
@@ -258,22 +238,14 @@ describe('narrative-generation-orchestrator', () => {
     })
 
     it('skips upcoming narrative generation when currentChoice is undefined', async () => {
-      const upcomingNarrativeIds = ['start-999-1'] // Choice point 999 doesn't exist
-      jest
-        .mocked(narrativeUtils)
-        .determineRequiredNarratives.mockReturnValueOnce(upcomingNarrativeIds)
+      const gameWithOneChoice = { ...cyoaGame, choicePoints: [cyoaGame.choicePoints[0]] }
       jest.mocked(dynamodb).getNarrativeById.mockResolvedValueOnce({
         narrative: cyoaNarrative,
         generationData: narrativeGenerationData,
       })
       jest.mocked(dynamodb).getNarrativesByIds.mockResolvedValueOnce([])
-      jest.mocked(narrativeUtils).parseNarrativeId.mockReturnValue({
-        lastNarrativeId: 'start',
-        optionId: 0,
-        choicePointIndex: 999, // Non-existent choice point index
-      })
 
-      const result = await ensureNarrativeExists(gameId, testNarrativeId, cyoaGame)
+      const result = await ensureNarrativeExists(gameId, testNarrativeId, gameWithOneChoice)
 
       expect(result).toEqual({
         status: 'ready',
@@ -305,28 +277,34 @@ describe('narrative-generation-orchestrator', () => {
       expect(bedrock.invokeModel).toHaveBeenCalledWith(
         prompt,
         expect.objectContaining({
-          ...narrativeGenerationData,
-          outline: cyoaGame.outline,
-          resourceName: cyoaGame.resourceName,
-          lossResourceThreshold: cyoaGame.lossResourceThreshold,
-          inspirationWords: expect.any(Array),
+          inventoryAvailable: narrativeGenerationData.inventoryAvailable,
+          existingNarrative: narrativeGenerationData.existingNarrative,
+          previousChoice: narrativeGenerationData.previousChoice,
+          previousOptions: narrativeGenerationData.previousOptions,
+          nextChoice: narrativeGenerationData.nextChoice,
+          nextOptions: narrativeGenerationData.nextOptions,
+          outline: narrativeGenerationData.outline,
+          inspirationAuthor: narrativeGenerationData.inspirationAuthor,
         }),
       )
       expect(dynamodb.setNarrativeById).toHaveBeenCalledWith(gameId, narrativeId, {
         narrative: 'You find yourself standing before a massive sleeping dragon...',
-        recap:
-          'After asking the wizard for help, you received a magic wand and learned about the dragon.',
+        recap: 'Previous events recap',
         chapterTitle: "The Dragon's Lair",
         choice: 'You see a sleeping dragon. What do you do?',
-        options: [
-          { name: 'Sneak past quietly', rank: 1, resourcesToAdd: -25019 },
-          { name: 'Wake the dragon', rank: 2, resourcesToAdd: -75057 },
-        ],
+        options: cyoaGame.choicePoints[0].options,
         inventory: [{ name: 'Sword', image: 'sword-image.jpg' }],
-        currentResourceValue: 75,
         image: 'https://cyoa-assets.dbowland.com/images/a-friendly-adventure/test-narrative-id.png',
       })
-      expect(result).toEqual(cyoaNarrative)
+      expect(result).toEqual({
+        narrative: 'You find yourself standing before a massive sleeping dragon...',
+        recap: 'Previous events recap',
+        chapterTitle: "The Dragon's Lair",
+        choice: 'You see a sleeping dragon. What do you do?',
+        options: cyoaGame.choicePoints[0].options,
+        inventory: [{ name: 'Sword', image: 'sword-image.jpg' }],
+        image: 'https://cyoa-assets.dbowland.com/images/a-friendly-adventure/test-narrative-id.png',
+      })
     })
 
     it('generates narrative image when imageDescription is provided', async () => {
@@ -352,7 +330,7 @@ describe('narrative-generation-orchestrator', () => {
     })
 
     it('creates win narrative when game is won', async () => {
-      const winGame = { ...cyoaGame, choicePoints: [] } // Empty choicePoints means game is won
+      const winGame = { ...cyoaGame, choicePoints: [] }
       const expectedNarrative = {
         narrative: 'You have successfully completed your quest and saved the kingdom!',
         recap: 'Previous events recap',
@@ -360,7 +338,6 @@ describe('narrative-generation-orchestrator', () => {
         choice: undefined,
         options: [],
         inventory: [],
-        currentResourceValue: 75,
         image: 'https://cyoa-assets.dbowland.com/images/a-friendly-adventure/test-narrative-id.png',
       }
 
@@ -369,13 +346,6 @@ describe('narrative-generation-orchestrator', () => {
         narrative: undefined,
         generationData: narrativeGenerationData,
       })
-      jest.mocked(narrativeUtils).parseNarrativeId.mockReturnValueOnce({
-        lastNarrativeId: 'start',
-        optionId: 0,
-        choicePointIndex: 1, // Greater than winGame.choicePoints.length (0)
-      })
-      jest.mocked(narrativeUtils).isGameWon.mockReturnValueOnce(true)
-      jest.mocked(narrativeUtils).isGameLost.mockReturnValueOnce(false)
       jest.mocked(bedrock).invokeModel.mockResolvedValueOnce(endingNarrativePromptOutput)
 
       const result = await createNarrative(gameId, narrativeId)
@@ -384,7 +354,12 @@ describe('narrative-generation-orchestrator', () => {
     })
 
     it('creates loss narrative when game is lost', async () => {
-      const lossGenerationData = { ...narrativeGenerationData, currentResourceValue: 0 }
+      const lossGame = {
+        ...cyoaGame,
+        startingResourceValue: 100,
+        lossResourceThreshold: 100,
+      }
+      const lossGenerationData = { ...narrativeGenerationData }
       const expectedNarrative = {
         narrative: 'You have successfully completed your quest and saved the kingdom!',
         recap: 'Previous events recap',
@@ -392,22 +367,14 @@ describe('narrative-generation-orchestrator', () => {
         choice: undefined,
         options: [],
         inventory: [],
-        currentResourceValue: 0,
         image: 'https://cyoa-assets.dbowland.com/images/a-friendly-adventure/test-narrative-id.png',
       }
 
-      jest.mocked(dynamodb).getGameById.mockResolvedValueOnce(cyoaGame)
+      jest.mocked(dynamodb).getGameById.mockResolvedValueOnce(lossGame)
       jest.mocked(dynamodb).getNarrativeById.mockResolvedValueOnce({
         narrative: undefined,
         generationData: lossGenerationData,
       })
-      jest.mocked(narrativeUtils).parseNarrativeId.mockReturnValueOnce({
-        lastNarrativeId: 'start',
-        optionId: 0,
-        choicePointIndex: 0, // Less than cyoaGame.choicePoints.length (1)
-      })
-      jest.mocked(narrativeUtils).isGameWon.mockReturnValueOnce(false)
-      jest.mocked(narrativeUtils).isGameLost.mockReturnValueOnce(true)
       jest.mocked(bedrock).invokeModel.mockResolvedValueOnce(endingNarrativePromptOutput)
 
       const result = await createNarrative(gameId, narrativeId)
@@ -431,7 +398,13 @@ describe('narrative-generation-orchestrator', () => {
         expect.objectContaining({
           generationStartTime: mockNow,
           nextChoice: cyoaGame.choicePoints[0].choice,
-          options: cyoaGame.choicePoints[0].options,
+          nextOptions: [
+            { name: 'Fight', rank: 1, consequence: 'You fight bravely' },
+            { name: 'Run', rank: 2, consequence: 'You flee the scene' },
+          ],
+          existingNarrative: cyoaGame.choicePoints[0].choiceNarrative,
+          outline: cyoaGame.outline,
+          inspirationAuthor: cyoaGame.inspirationAuthor,
         }),
       )
       expect(sqs.addToQueue).toHaveBeenCalledWith({

@@ -13,10 +13,19 @@ import {
   inspirationAdjectivesCount,
   inspirationNounsCount,
   inspirationVerbsCount,
+  promptIdCreateChoices,
   promptIdCreateGame,
 } from '../config'
-import { CreateGamePromptOutput, CyoaGame, GameId, TextPrompt } from '../types'
-import { formatCyoaGame } from '../utils/formatting'
+import {
+  Author,
+  CreateChoicesPromptOutput,
+  CreateGamePromptOutput,
+  CyoaGame,
+  GameId,
+  GameTheme,
+  TextPrompt,
+} from '../types'
+import { formatCreateChoicesOutput, formatCreateGameOutput } from '../utils/formatting'
 import { log, logError } from '../utils/logging'
 import { getRandomSample } from '../utils/random'
 import { slugify } from '../utils/slugify'
@@ -29,52 +38,89 @@ import {
 } from './image-generation'
 import { startInitialNarrativeGeneration } from './narrative-generation-orchestrator'
 
-export const createGame = async (): Promise<{ game: CyoaGame; gameId: GameId }> => {
-  const existingGames = await getGames()
-  const existingGameTitles = existingGames.map((existingGame) => existingGame.game.title)
-
-  const storyType = getRandomSample([...gameThemes], 1)[0]
-  const choiceCount = getRandomSample([...choiceCounts], 1)[0]
-  const lossCondition = getRandomSample([...lossConditions], 1)[0]
-  const inventoryCount = getRandomSample([...inventoryCounts], 1)[0]
-  const keyInformationCount = getRandomSample([...keyInformationCounts], 1)[0]
-  const redHerringCount = getRandomSample([...redHerringCounts], 1)[0]
-
+const generateInspirationWords = (): string[] => {
   const inspirationNouns = getRandomSample([...nouns], inspirationNounsCount)
   const inspirationVerbs = getRandomSample([...verbs], inspirationVerbsCount)
   const inspirationAdjectives = getRandomSample([...adjectives], inspirationAdjectivesCount)
+  return inspirationNouns.concat(inspirationVerbs).concat(inspirationAdjectives)
+}
 
-  const modelContext = {
+const generateGameOutline = async (
+  existingGameTitles: string[],
+  choiceCount: number,
+): Promise<{
+  gameOutput: CreateGamePromptOutput
+  storyType: GameTheme
+  inspirationAuthor: Author
+}> => {
+  const storyType = getRandomSample([...gameThemes], 1)[0]
+  const lossCondition = getRandomSample([...lossConditions], 1)[0]
+  const inventoryCount = getRandomSample([...inventoryCounts], 1)[0]
+  const minimumResourceRange = choiceCount * 5
+  const inspirationAuthor = getRandomSample(storyType.inspirationAuthors, 1)[0]
+
+  const gameModelContext = {
     storyType,
     existingGameTitles,
-    choiceCount,
     lossCondition,
+    minimumResourceRange,
     inventoryCount,
-    keyInformationCount,
-    redHerringCount,
-    inspirationWords: inspirationNouns.concat(inspirationVerbs).concat(inspirationAdjectives),
+    inspirationWords: generateInspirationWords(),
   }
-  log('Creating game with context', { modelContext })
+  log('Creating game with context', { gameModelContext })
 
-  const prompt = await getPromptById<TextPrompt>(promptIdCreateGame)
-  const generatedGame = await invokeModel<CreateGamePromptOutput>(prompt, modelContext)
-  Object.entries(generatedGame).map(([key, value]) =>
+  const gamePrompt = await getPromptById<TextPrompt>(promptIdCreateGame)
+  const gameOutput = await invokeModel<CreateGamePromptOutput>(gamePrompt, gameModelContext)
+  Object.entries(gameOutput).map(([key, value]) =>
     log('Game generated', { [key]: JSON.stringify(value, null, 2) }),
   )
 
-  const { game, imageDescription, resourceImageDescription } = formatCyoaGame({
-    ...generatedGame,
-    redHerrings: generatedGame.redHerrings?.filter(
-      (item) => !generatedGame.keyInformation?.includes(item),
-    ),
-  })
+  return { gameOutput, storyType, inspirationAuthor }
+}
 
-  if (game.choicePoints.length !== choiceCount) {
-    log('Wrong number of choice points', { choiceCount, choicePoints: game.choicePoints })
-    throw new Error('Wrong number of choice points')
+const generateGameChoices = async (
+  gameData: Partial<CyoaGame>,
+  storyType: GameTheme,
+  inspirationAuthor: Author,
+  choiceCount: number,
+): Promise<CreateChoicesPromptOutput> => {
+  const lossCondition = getRandomSample([...lossConditions], 1)[0]
+  const keyInformationCount = getRandomSample([...keyInformationCounts], 1)[0]
+  const redHerringCount = getRandomSample([...redHerringCounts], 1)[0]
+
+  const choicesModelContext = {
+    resourceName: gameData.resourceName,
+    startingResourceValue: gameData.startingResourceValue,
+    lossResourceThreshold: gameData.lossResourceThreshold,
+    lossCondition,
+    choiceCount,
+    keyInformationCount,
+    redHerringCount,
+    outline: gameData.outline,
+    characters: gameData.characters?.map((c) => c.name),
+    inventory: gameData.inventory?.map((i) => i.name),
+    style: {
+      name: storyType.name,
+      description: storyType.description,
+      inspirationAuthor: inspirationAuthor.name,
+    },
+    inspirationWords: generateInspirationWords(),
   }
+  log('Creating choices with context', { choicesModelContext })
 
-  const gameId: GameId = slugify(game.title)
+  const choicesPrompt = await getPromptById<TextPrompt>(promptIdCreateChoices)
+  const choicesOutput = await invokeModel<CreateChoicesPromptOutput>(
+    choicesPrompt,
+    choicesModelContext,
+  )
+  Object.entries(choicesOutput).map(([key, value]) =>
+    log('Choices generated', { [key]: JSON.stringify(value, null, 2) }),
+  )
+
+  return choicesOutput
+}
+
+const validateGameId = async (gameId: GameId): Promise<void> => {
   const gameIdExists = await getGameById(gameId)
     .then(() => true)
     .catch(() => false)
@@ -82,12 +128,71 @@ export const createGame = async (): Promise<{ game: CyoaGame; gameId: GameId }> 
     log('Game ID already exists', { gameId })
     throw new Error('Game ID already exists')
   }
+}
 
+const generateGameImages = async (
+  gameId: GameId,
+  game: CyoaGame,
+  imageDescription: string,
+  resourceImageDescription: string,
+): Promise<CyoaGame> => {
   const coverImageData = await generateGameCoverImageForGame(gameId, imageDescription)
   const inventoryImageData = await generateInventoryImagesForGame(gameId, game.inventory)
   const resourceImageData = await generateResourceImageForGame(gameId, resourceImageDescription)
 
-  const gameWithImages = { ...game, ...coverImageData, ...inventoryImageData, ...resourceImageData }
+  return {
+    ...game,
+    ...coverImageData,
+    ...inventoryImageData,
+    ...resourceImageData,
+  }
+}
+
+export const createGame = async (): Promise<{ game: CyoaGame; gameId: GameId }> => {
+  const existingGames = await getGames()
+  const existingGameTitles = existingGames.map((existingGame) => existingGame.game.title)
+
+  const choiceCount = getRandomSample([...choiceCounts], 1)[0]
+
+  const { gameOutput, storyType, inspirationAuthor } = await generateGameOutline(
+    existingGameTitles,
+    choiceCount,
+  )
+  const { game: partialGame, imageDescription, resourceImageDescription } =
+    formatCreateGameOutput(gameOutput)
+
+  const choicesOutput = await generateGameChoices(
+    partialGame,
+    storyType,
+    inspirationAuthor,
+    choiceCount,
+  )
+  const filteredChoicesOutput = {
+    ...choicesOutput,
+    redHerrings: choicesOutput.redHerrings?.filter(
+      (item) => !choicesOutput.keyInformation?.includes(item),
+    ),
+  }
+
+  const game = formatCreateChoicesOutput(filteredChoicesOutput, partialGame, inspirationAuthor)
+
+  if (game.choicePoints.length !== choiceCount) {
+    log('Wrong number of choice points', {
+      expected: choiceCount,
+      actual: game.choicePoints.length,
+    })
+    throw new Error('Wrong number of choice points')
+  }
+
+  const gameId: GameId = slugify(game.title)
+  await validateGameId(gameId)
+
+  const gameWithImages = await generateGameImages(
+    gameId,
+    game,
+    imageDescription,
+    resourceImageDescription,
+  )
 
   await setGameById(gameId, gameWithImages)
 

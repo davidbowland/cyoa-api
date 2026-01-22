@@ -1,16 +1,8 @@
-import { adjectives } from '../assets/adjectives'
-import { nouns } from '../assets/nouns'
-import { verbs } from '../assets/verbs'
 import {
   initialNarrativeId,
-  inspirationAdjectivesCount,
-  inspirationNounsCount,
-  inspirationVerbsCount,
   promptIdCreateNarrative,
   promptIdLoseGame,
   promptIdWinGame,
-  resourceToAddPercentMin,
-  resourceToAddPercentMax,
 } from '../config'
 import {
   CreateNarrativePromptOutput,
@@ -26,12 +18,12 @@ import {
 import { formatEndingNarrative, formatNarrative } from '../utils/formatting'
 import { log, logError } from '../utils/logging'
 import {
+  calculateCurrentResourceValue,
   determineRequiredNarratives,
   parseNarrativeId,
   isGameLost,
   isGameWon,
 } from '../utils/narratives'
-import { getRandomSample } from '../utils/random'
 import { invokeModel } from './bedrock'
 import {
   getGameById,
@@ -51,12 +43,6 @@ import { addToQueue } from './sqs'
 
 const GENERATION_TIME = 300_000 // 5 minutes
 
-const calculateResourcesToAdd = (choiceNumber: number, choiceCount: number): number => {
-  const resourcesToAddRange = resourceToAddPercentMax - resourceToAddPercentMin
-  const increaseForChoiceNumber = (resourcesToAddRange * choiceNumber) / choiceCount
-  return increaseForChoiceNumber + resourceToAddPercentMin
-}
-
 interface GenerateNarrativeContentResult {
   narrative: CyoaNarrative
   imageDescription: string
@@ -65,19 +51,19 @@ interface GenerateNarrativeContentResult {
 const generateNarrativeContent = async (
   game: CyoaGame,
   narrativeId: NarrativeId,
-  currentResourceValue: number,
   generationData: NarrativeGenerationData,
 ): Promise<GenerateNarrativeContentResult> => {
-  const inspirationNouns = getRandomSample<string>([...nouns], inspirationNounsCount)
-  const inspirationVerbs = getRandomSample<string>([...verbs], inspirationVerbsCount)
-  const inspirationAdjectives = getRandomSample<string>([...adjectives], inspirationAdjectivesCount)
+  const currentResourceValue = calculateCurrentResourceValue(game, narrativeId)
 
   const modelContext = {
-    ...generationData,
-    outline: game.outline,
-    resourceName: game.resourceName,
-    lossResourceThreshold: game.lossResourceThreshold,
-    inspirationWords: inspirationNouns.concat(inspirationVerbs).concat(inspirationAdjectives),
+    inventoryAvailable: generationData.inventoryAvailable,
+    existingNarrative: generationData.existingNarrative,
+    previousChoice: generationData.previousChoice,
+    previousOptions: generationData.previousOptions,
+    nextChoice: generationData.nextChoice,
+    nextOptions: generationData.nextOptions,
+    outline: generationData.outline,
+    inspirationAuthor: generationData.inspirationAuthor,
   }
 
   const isLost = isGameLost(game, currentResourceValue)
@@ -114,13 +100,7 @@ const generateNarrativeContent = async (
     const generatedNarrative = await invokeModel<CreateNarrativePromptOutput>(prompt, modelContext)
     log('Generated narrative', { generatedNarrative })
 
-    const resourcePercent = calculateResourcesToAdd(choicePointIndex, game.choicePoints.length)
-    const { narrative, imageDescription } = formatNarrative(
-      generatedNarrative,
-      generationData,
-      game,
-      resourcePercent,
-    )
+    const { narrative, imageDescription } = formatNarrative(generatedNarrative, generationData, game)
     return { narrative, imageDescription }
   }
 }
@@ -145,25 +125,34 @@ const isGenerating = (
 const startNarrativeGeneration = async (
   gameId: GameId,
   narrativeId: NarrativeId,
+  game: CyoaGame,
   generationData: Pick<
     NarrativeGenerationData,
-    | 'recap'
-    | 'currentResourceValue'
-    | 'lastChoiceMade'
-    | 'lastOptionSelected'
-    | 'bestOption'
-    | 'currentInventory'
+    'recap' | 'lastChoiceMade' | 'lastOptionSelected' | 'bestOption' | 'currentInventory'
   >,
   currentChoice?: CyoaChoicePoint,
+  lastChoice?: CyoaChoicePoint,
 ): Promise<void> => {
   const fullGenerationData: NarrativeGenerationData = {
     ...generationData,
-    inventoryToIntroduce: currentChoice?.inventoryToIntroduce ?? [],
-    keyInformationToIntroduce: currentChoice?.keyInformationToIntroduce ?? [],
-    redHerringsToIntroduce: currentChoice?.redHerringsToIntroduce ?? [],
-    inventoryOrInformationConsumed: currentChoice?.inventoryOrInformationConsumed ?? [],
+    inventoryAvailable: currentChoice?.inventoryAvailable ?? [],
+    existingNarrative: currentChoice?.choiceNarrative ?? '',
+    previousChoice: lastChoice?.choice ?? '',
+    previousOptions:
+      lastChoice?.options.map((opt) => ({
+        name: opt.name,
+        rank: opt.rank,
+        consequence: opt.consequence,
+      })) ?? [],
     nextChoice: currentChoice?.choice ?? '',
-    options: currentChoice?.options ?? [],
+    nextOptions:
+      currentChoice?.options.map((opt) => ({
+        name: opt.name,
+        rank: opt.rank,
+        consequence: opt.consequence,
+      })) ?? [],
+    outline: game.outline,
+    inspirationAuthor: game.inspirationAuthor,
     generationStartTime: Date.now(),
   }
 
@@ -196,21 +185,30 @@ const ensureUpcomingNarratives = async (
     }
 
     const bestOption = getBestOption(narrative.options)
-    const { optionId, choicePointIndex } = parseNarrativeId(nextNarrativeId)
-    const selectedOption = narrative.options[optionId]
+    const { selectedOptionIndices, choicePointIndex } = parseNarrativeId(nextNarrativeId)
+    const lastOptionIndex = selectedOptionIndices.length > 0
+      ? selectedOptionIndices[selectedOptionIndices.length - 1]
+      : undefined
+    const selectedOption = lastOptionIndex !== undefined ? narrative.options[lastOptionIndex] : undefined
     const nextNarrativeContext = {
       recap: narrative?.recap ?? 'The game is starting.',
-      currentResourceValue: selectedOption
-        ? narrative.currentResourceValue + selectedOption.resourcesToAdd
-        : narrative.currentResourceValue,
       lastChoiceMade: narrative.choice ?? '',
       lastOptionSelected: selectedOption?.name ?? '',
       bestOption: bestOption?.name ?? '',
       currentInventory: narrative?.inventory.map((item) => item.name) ?? [],
     }
     const currentChoice = game.choicePoints[choicePointIndex]
+    const { choicePointIndex: currentChoiceIndex } = parseNarrativeId(narrativeId)
+    const lastChoice = game.choicePoints[currentChoiceIndex]
     if (narrative.choice) {
-      await startNarrativeGeneration(gameId, nextNarrativeId, nextNarrativeContext, currentChoice)
+      await startNarrativeGeneration(
+        gameId,
+        nextNarrativeId,
+        game,
+        nextNarrativeContext,
+        currentChoice,
+        lastChoice,
+      )
     }
   }
 }
@@ -257,8 +255,11 @@ export const ensureNarrativeExists = async (
     const narrativeContext = strategy.buildContext(contextParams)
     const { choicePointIndex } = parseNarrativeId(narrativeId)
     const currentChoice = game.choicePoints[choicePointIndex]
+    const { lastNarrativeId } = parseNarrativeId(narrativeId)
+    const lastChoiceIndex = lastNarrativeId ? parseNarrativeId(lastNarrativeId).choicePointIndex : -1
+    const lastChoice = lastChoiceIndex >= 0 ? game.choicePoints[lastChoiceIndex] : undefined
 
-    await startNarrativeGeneration(gameId, narrativeId, narrativeContext, currentChoice)
+    await startNarrativeGeneration(gameId, narrativeId, game, narrativeContext, currentChoice, lastChoice)
 
     log('Started narrative generation', { gameId, narrativeId })
     return { status: 'generating', message: 'Narrative is being generated' }
@@ -282,7 +283,6 @@ export const createNarrative = async (
   const { narrative, imageDescription } = await generateNarrativeContent(
     game,
     narrativeId,
-    generationData.currentResourceValue,
     generationData,
   )
 
@@ -314,8 +314,10 @@ export const startInitialNarrativeGeneration = async (
     await startNarrativeGeneration(
       gameId,
       initialNarrativeId,
+      game,
       narrativeContext,
       game.choicePoints[0],
+      undefined,
     )
   } catch (error: unknown) {
     logError('Error creating initial narrative', {

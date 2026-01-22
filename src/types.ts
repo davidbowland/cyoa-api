@@ -15,9 +15,14 @@ export type PromptId = string
 export interface CyoaOption {
   name: string
   rank: number
+  consequence: string
+  resourcesToAdd: number
 }
 
-export interface CyoaNarrativeOption extends CyoaOption {
+export interface CyoaNarrativeOption {
+  name: string
+  rank: number
+  consequence: string
   resourcesToAdd: number
 }
 
@@ -33,10 +38,10 @@ export interface CyoaCharacter {
 }
 
 export interface CyoaChoicePoint {
-  inventoryToIntroduce: string[]
   keyInformationToIntroduce: string[]
   redHerringsToIntroduce: string[]
-  inventoryOrInformationConsumed: string[]
+  inventoryAvailable: string[]
+  choiceNarrative: string
   choice: string
   options: CyoaOption[]
 }
@@ -56,6 +61,7 @@ export interface CyoaGame {
   lossResourceThreshold: number
   choicePoints: CyoaChoicePoint[]
   initialNarrativeId: string
+  inspirationAuthor: Author
 }
 
 export interface CyoaNarrative {
@@ -66,7 +72,6 @@ export interface CyoaNarrative {
   choice?: string
   options: CyoaNarrativeOption[]
   inventory: CyoaInventory[]
-  currentResourceValue: number
 }
 
 export interface GameWithTimestamp {
@@ -106,23 +111,30 @@ export interface CyoaNarrativeSerialized {
 
 export interface NarrativeGenerationData {
   recap: string
-  currentResourceValue: number
   lastChoiceMade: string
   lastOptionSelected: string
   bestOption: string
   currentInventory: string[]
-  inventoryToIntroduce: string[]
-  keyInformationToIntroduce: string[]
-  redHerringsToIntroduce: string[]
-  inventoryOrInformationConsumed: string[]
+  inventoryAvailable: string[]
+  existingNarrative: string
+  previousChoice: string
+  previousOptions: Array<{ name: string; rank: number; consequence: string }>
   nextChoice: string
-  options: CyoaOption[]
+  nextOptions: Array<{ name: string; rank: number; consequence: string }>
+  outline: string
+  inspirationAuthor: Author
   generationStartTime: number
+}
+
+export interface Author {
+  name: string
+  style: string
 }
 
 export interface GameTheme {
   name: string
   description: string
+  inspirationAuthors: Author[]
 }
 
 // Event Types
@@ -195,20 +207,6 @@ export interface CreateGamePromptInventory {
   imageDescription?: string
 }
 
-export interface CreateGamePromptOption {
-  name?: string
-  rank?: number
-}
-
-export interface CreateGamePromptChoicePoint {
-  inventoryToIntroduce?: string[]
-  keyInformationToIntroduce?: string[]
-  redHerringsToIntroduce?: string[]
-  inventoryOrInformationConsumed?: string[]
-  choice?: string
-  options?: CreateGamePromptOption[]
-}
-
 export interface CreateGamePromptOutput {
   title?: string
   description?: string
@@ -216,28 +214,44 @@ export interface CreateGamePromptOutput {
   outline?: string
   characters?: CreateGamePromptCharacter[]
   inventory?: CreateGamePromptInventory[]
-  keyInformation?: string[]
-  redHerrings?: string[]
   resourceName?: string
-  resourceImageDescription: string
+  resourceImageDescription?: string
   startingResourceValue?: number
   lossResourceThreshold?: number
-  choicePoints?: CreateGamePromptChoicePoint[]
+}
+
+export interface CreateChoicesPromptOption {
+  name?: string
+  rank?: number
+  consequence?: string
+}
+
+export interface CreateChoicesPromptChoicePoint {
+  keyInformationToIntroduce?: string[]
+  redHerringsToIntroduce?: string[]
+  inventoryAvailable?: string[]
+  choiceNarrative?: string
+  choice?: string
+  options?: CreateChoicesPromptOption[]
+}
+
+export interface CreateChoicesPromptOutput {
+  keyInformation?: string[]
+  redHerrings?: string[]
+  choicePoints?: CreateChoicesPromptChoicePoint[]
+  winNarrative?: string
+  lossNarrative?: string
 }
 
 export interface CreateNarrativePromptOption {
-  name?: string
-  rank?: number
+  narrative?: string
 }
 
 export interface CreateNarrativePromptOutput {
-  narrative?: string
-  recap?: string
   chapterTitle?: string
+  narrative?: string
   imageDescription?: string
-  choice?: string
   options?: CreateNarrativePromptOption[]
-  inventory?: string[]
 }
 
 export interface EndingNarrativePromptOutput {

@@ -2,9 +2,9 @@ import { cyoaGame, cyoaNarrative } from '../__mocks__'
 import {
   parseNarrativeId,
   determineRequiredNarratives,
-  isInitialNarrative,
   isGameLost,
   isGameWon,
+  calculateCurrentResourceValue,
 } from '@utils/narratives'
 
 describe('narratives', () => {
@@ -13,9 +13,10 @@ describe('narratives', () => {
       const result = parseNarrativeId('start')
 
       expect(result).toEqual({
-        lastNarrativeId: '',
-        optionId: NaN,
         choicePointIndex: 0,
+        selectedOptionIndices: [],
+        storageKey: 'choice-0',
+        lastNarrativeId: undefined,
       })
     })
 
@@ -23,9 +24,10 @@ describe('narratives', () => {
       const result = parseNarrativeId('start-0')
 
       expect(result).toEqual({
-        lastNarrativeId: 'start',
-        optionId: 0,
         choicePointIndex: 1,
+        selectedOptionIndices: [0],
+        storageKey: 'choice-1',
+        lastNarrativeId: 'start',
       })
     })
 
@@ -33,9 +35,10 @@ describe('narratives', () => {
       const result = parseNarrativeId('start-0-1-2')
 
       expect(result).toEqual({
-        lastNarrativeId: 'start-0-1',
-        optionId: 2,
         choicePointIndex: 3,
+        selectedOptionIndices: [0, 1, 2],
+        storageKey: 'choice-3',
+        lastNarrativeId: 'start-0-1',
       })
     })
   })
@@ -82,25 +85,40 @@ describe('narratives', () => {
     })
   })
 
-  describe('isInitialNarrative', () => {
-    it('returns true for initial narrative ID', () => {
-      const result = isInitialNarrative('start')
-      expect(result).toBe(true)
+  describe('calculateCurrentResourceValue', () => {
+    it('calculates resource value for initial narrative', () => {
+      const result = calculateCurrentResourceValue(cyoaGame, 'start')
+      expect(result).toBe(100)
     })
 
-    it('returns false for continuation narrative ID', () => {
-      const result = isInitialNarrative('start-0')
-      expect(result).toBe(false)
+    it('calculates resource value after one choice', () => {
+      const result = calculateCurrentResourceValue(cyoaGame, 'start-0')
+      expect(result).toBe(90) // 100 + (-10)
     })
 
-    it('returns false for deep continuation narrative ID', () => {
-      const result = isInitialNarrative('start-0-1-2')
-      expect(result).toBe(false)
-    })
+    it('calculates resource value after multiple choices', () => {
+      const gameWithMultipleChoices = {
+        ...cyoaGame,
+        choicePoints: [
+          {
+            ...cyoaGame.choicePoints[0],
+            options: [
+              { name: 'Option 1', rank: 1, consequence: 'Result 1', resourcesToAdd: -10 },
+              { name: 'Option 2', rank: 2, consequence: 'Result 2', resourcesToAdd: -20 },
+            ],
+          },
+          {
+            ...cyoaGame.choicePoints[0],
+            options: [
+              { name: 'Option 3', rank: 1, consequence: 'Result 3', resourcesToAdd: 5 },
+              { name: 'Option 4', rank: 2, consequence: 'Result 4', resourcesToAdd: -15 },
+            ],
+          },
+        ],
+      }
 
-    it('returns true for complex initial narrative ID without dashes', () => {
-      const result = isInitialNarrative('complexgametitle')
-      expect(result).toBe(true)
+      const result = calculateCurrentResourceValue(gameWithMultipleChoices, 'start-0-1')
+      expect(result).toBe(75) // 100 + (-10) + (-15)
     })
   })
 

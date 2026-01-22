@@ -54,7 +54,7 @@ describe('get-narrative-by-id', () => {
         choice: 'You see a sleeping dragon. What do you do?',
         options: [{ name: 'Sneak past quietly' }, { name: 'Wake the dragon' }],
         inventory: [{ name: 'Sword', image: 'sword-image.jpg' }],
-        currentResourceValue: 75,
+        currentResourceValue: 100,
       })
       expect(orchestrator.ensureNarrativeExists).toHaveBeenCalledWith(gameId, narrativeId, cyoaGame)
     })

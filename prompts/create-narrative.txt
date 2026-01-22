@@ -1,45 +1,37 @@
 # {"anthropicVersion":"bedrock-2023-05-31","maxTokens":75000,"model":"us.anthropic.claude-sonnet-4-5-20250929-v1:0","temperature":0.8,"topK":500}
 
 <context>
-You are creating a choose-your-own-adventure game. The best choices should lead to the best outcome. Some choices can be puzzles the user needs to figure out or remember. You are writing the narrative and choices based on an outline generated earlier.
+You are creating a choose-your-own-adventure game. The best choices should lead to the best outcome. Some choices can be puzzles the user needs to figure out or remember. You are writing the narrative and choices based on a story generated earlier.
 </context>
 <instructions>
-Given the outline, a narrative recap, the choice the player just made, and the choice the player should be faced with, generate the next part of the narrative. If there are consequences to the player's last choice, be sure to include that in the narrative.
+An outline and the important parts of the narrative have already been generated. Given those, the choice the player, and then options with their consequences, generate the narrative for each option plus the narrative for the current choice.
 
-- Generate the next part of the narrative
-  - Consider the outline and recap to know what has happened
-  - Think about what inventory or information needs to be introduced
-    - ALWAYS describe how each inventory item was acquired
-  - Think about what inventory or information needs to be consumed
-  - Write as clearly as eloquently as possible (channel Christopher Hitchens, Earnest Hemmingway, and P.G. Wodehouse)
-  - Red herrings need to provide some indication that they are incorrect, less reliable, not related, etc, but think about how not to make it obvious
-  - If the payer made the best choice, give them some indication that they succeeded (example: "the safe opens easily", "you are pleased to find...")
-  - If the player DIDN'T make the best choice, give them some indication of that
-  - It should be long enough to take the reader about 45-60 seconds to finish
+- Generate the narrative for the current choice
+  - Elaborate on the existing narrative
+  - ALWAYS include important details from the existing narrative
+  - Use the overall story outline to help consistency
+  - Generate the story necessary to set up the choice
+    - DO NOT directly mention the next choice text
+  - Narratives should be long and short enough take about 30 seconds to read
+  - ALWAYS use the style of the author mentioned
+  - NEVER mention the previous choice NOR the previous options
+- Generate a narrative for each previous option and its consequences
+  - Create a narrative to connect the last narrative to this narrative while acknowledging the player's choice (the option they picked)
+  - ALWAYS generate narratives in the same order as options
+  - Inform the player of the consequences of their decision
+  - If the option is not rank 1, allude to but DO NOT directly mention the rank 1 option
+  - Option narratives should be long and short enough to take 5-10 seconds to read
+  - Option narratives MUST flow seamlessly into the choice narrative
+    - THINK DEEPLY about how to connect the narratives so that even the worst choices progress the game in the same way
+  - ALWAYS use the style of the author mentioned
 - Generate a short title for the chapter for this narrative
 - Generate an image description for this narrative scene
   - Describe the visual scene that represents this part of the story
   - Focus on the setting, atmosphere, and key visual elements
   - Keep it concise but vivid (1-2 sentences)
   - NEVER include text or numbers in the image
-- Generate a recap of the story including your narrative
-  - Include information important for the next LLM prompt to continue the narrative
-- Generate the choice that will be presented to the user
-  - Think about whether the provided next choice makes sense with the narrative and outline
-  - Choices should be EXTREMELY difficult to make, but should have hints in previous narratives
-  - NEVER ask something that can be answered by the generated narrative
-  - NEVER ask about key information or red herrings you introduced in this narrative
-  - Adjust as required
-- Generate the options the user can choose between
-  - Think about whether the provided options make sense with the choice you selected and the narrative you generated
-  - Adjust as required
-  - Rank each option, with 1 being the best choice
-  - NEVER skip a number when ranking
-- Generate the inventory the user has at the end of the narrative
-  - Consider currentInventory, inventoryToIntroduce, and inventoryOrInformationConsumed
-  - Double-check the inventory to make sure it's correct
 
-Make sure the narrative, recap, choice, and options are inoffensive and not emmotionally charged
+Make sure the narratives, title, and image are inoffensive and not emmotionally charged
 </instructions>
 <output>
 Output your thinking in <thinking> tags followed by valid JSON with the keys with NOTTHING ELSE (double-check that your JSON is valid with \n instead of newlines and " escaped):
@@ -47,14 +39,33 @@ Output your thinking in <thinking> tags followed by valid JSON with the keys wit
 {
   "chapterTitle": "string"
   "narrative": "string",
-  "recap": "string",
   "imageDescription": "string",
-  "choice": "string",
-  "options": [{ "name": "string", "rank": number }],
-  "inventory": ["string"]
+  "options": [{ "narrative": "string" }],
 }
 </output>
 
 <input>
-${context}
+{
+  "inventoryAvailable": [],
+  "existingNarrative": "Dr. Yuki Sato approaches you in the corridor, glancing around nervously. She quietly mentions she was Marcus's friend and has something to tell you, but not here where cameras and staff can observe.",
+  "previousChoice": "What do you investigate first?",
+  "previousOptions": [
+    { "name": "Carefully retrieve papers from the recycling bin while appearing to settle in", "rank": 1, "consequence": "You find fragments of Marcus's notes about satellite anomalies. The papers mention restricted server access, giving you your first real lead." },
+    { "name": "Immediately try to force open the locked drawer", "rank": 4, "consequence": "The drawer won't budge and you make noise attracting attention. A technician asks if you need help, making note of your suspicious behavior." },
+    { "name": "Boot up the computer and try to access Marcus's old files", "rank": 2, "consequence": "The system requires credentials you don't have and logs your failed attempt. IT security receives an alert about unauthorized access." },
+    { "name": "Leave to explore the facility immediately without examining anything", "rank": 3, "consequence": "Your disinterest in your actual workstation seems odd. You miss the recovered notes, though you can return later with more suspicion on you." }
+  ],
+  "nextChoice": "Where do you suggest meeting Yuki?",
+  "nextOptions": [
+    { "name": "The exterior maintenance area during the evening shift change", "rank": 1, "consequence": "Yuki meets you discreetly during the busy shift change. She reveals Marcus hid his diary in the ventilation system near Lab 7 and was investigating unauthorized satellite tasking." },
+    { "name": "Your private quarters immediately", "rank": 3, "consequence": "Yuki reluctantly follows but security cameras track her unusual visit to residential areas. Agent Kim later questions why she visited you so soon after arrival." },
+    { "name": "The cafeteria during lunch", "rank": 4, "consequence": "The public setting makes Yuki uncomfortable. She shares nothing useful and appears nervous, drawing attention from other staff to your suspicious meeting." },
+    { "name": "Dr. Cross's office to make it official", "rank": 5, "consequence": "Yuki makes an excuse and walks away. Your suggestion proves you don't understand the danger, and Yuki now questions if she can trust you." }
+  ],
+  "outline": "You arrive at Centre Point, an isolated satellite monitoring facility in the mountains, investigating the mysterious disappearance of your colleague Marcus Webb three weeks ago. The official story claims he simply quit and left, but his cryptic final messages to you suggest something darker. As you explore the facility, you must carefully navigate conversations with the stern facility director Dr. Helena Cross, the suspicious security agent Kim, and your ally Dr. Yuki Sato, while searching for Marcus's hidden diary and the satellite data he was analyzing before he vanished.\n\nThe facility harbors secrets about unauthorized satellite surveillance and data manipulation that Marcus discovered. You must decode clues from his diary entries, gain access to restricted areas using keycards, and piece together what really happened. Every wrong move increases security's suspicion of your true purpose, and making too many mistakes will result in your immediate removal from the facility before you can expose the truth. The deeper you dig, the more you realize that Marcus may have been silenced for discovering a conspiracy that reaches beyond Centre Point itself.\n\nIf you succeed, you expose the illegal surveillance operation, clear Marcus's name, and ensure those responsible face justice, while finally learning the fate of your missing colleague. If you fail and accumulate too much suspicion, security detains you and escorts you from the facility, the truth buried forever and Marcus's disappearance remaining an unsolved mystery.",
+  "inspirationAuthor": {
+    name: 'Agatha Christie',
+    style: 'Clever plotting with careful clue placement. Measured pacing that builds tension while maintaining clarity and logical deduction.',
+  }
+}
 </input>

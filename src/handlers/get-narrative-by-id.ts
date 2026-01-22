@@ -27,7 +27,10 @@ export const getNarrativeByIdHandler = async (
 
     switch (result.status) {
     case 'ready':
-      return { ...status.OK, body: JSON.stringify(serializeCyoaNarrative(result.narrative!)) }
+      return {
+        ...status.OK,
+        body: JSON.stringify(serializeCyoaNarrative(result.narrative!, game, narrativeId)),
+      }
     case 'generating':
       return { ...status.ACCEPTED, body: JSON.stringify({ message: result.message }) }
     case 'not_found':

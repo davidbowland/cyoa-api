@@ -22,7 +22,6 @@ interface NarrativeData {
 
 interface NarrativeContext {
   recap: string
-  currentResourceValue: number
   lastChoiceMade: string
   lastOptionSelected: string
   bestOption: string
@@ -46,7 +45,6 @@ const isGenerating = (
 export const InitialNarrativeStrategy: GenerationStrategy = {
   buildContext: ({ game }: GenerationContextParams): NarrativeContext => ({
     recap: 'The game is starting.',
-    currentResourceValue: game.startingResourceValue,
     lastChoiceMade: '',
     lastOptionSelected: '',
     bestOption: '',
@@ -70,22 +68,18 @@ export const ContinuationNarrativeStrategy: GenerationStrategy = {
     game,
     lastNarrative,
   }: GenerationContextParams): NarrativeContext => {
-    const { optionId } = parseNarrativeId(narrativeId)
-    const lastOptionSelected = lastNarrative?.options?.[optionId]
+    const { selectedOptionIndices, choicePointIndex } = parseNarrativeId(narrativeId)
+    const lastOptionIndex = selectedOptionIndices[selectedOptionIndices.length - 1]
+    const lastOptionSelected = lastNarrative?.options?.[lastOptionIndex]
 
-    if (lastNarrative && !lastOptionSelected) {
+    if (lastNarrative && lastOptionSelected === undefined) {
       throw new Error('Selected option not found')
     }
 
     const bestOption = getBestOption(lastNarrative?.options)
-    const currentResourceValue =
-      lastNarrative && lastOptionSelected
-        ? lastNarrative.currentResourceValue + lastOptionSelected.resourcesToAdd
-        : game.startingResourceValue
 
     return {
       recap: lastNarrative?.recap ?? 'The game is starting.',
-      currentResourceValue,
       lastChoiceMade: lastNarrative?.choice ?? '',
       lastOptionSelected: lastOptionSelected?.name ?? '',
       bestOption: bestOption?.name ?? '',
@@ -97,5 +91,7 @@ export const ContinuationNarrativeStrategy: GenerationStrategy = {
     !existing?.narrative && !isGenerating(existing?.generationData),
 }
 
-export const selectGenerationStrategy = (narrativeId: NarrativeId): GenerationStrategy =>
-  narrativeId.includes('-') ? ContinuationNarrativeStrategy : InitialNarrativeStrategy
+export const selectGenerationStrategy = (narrativeId: NarrativeId): GenerationStrategy => {
+  const { choicePointIndex } = parseNarrativeId(narrativeId)
+  return choicePointIndex === 0 ? InitialNarrativeStrategy : ContinuationNarrativeStrategy
+}

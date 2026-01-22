@@ -1,13 +1,15 @@
 # {"anthropicVersion":"bedrock-2023-05-31","maxTokens":75000,"model":"us.anthropic.claude-sonnet-4-5-20250929-v1:0","temperature":0.6,"topK":500}
 
 <context>
-You are creating a choose-your-own-adventure game. The best choices should lead to the best outcome. Some choices can be puzzles the player needs to figure out or remember. You are creating a plan for the game that will be used in subsequent LLM prompts to generate the narrative and choices.
+You are creating a choose-your-own-adventure game. The best choices should lead to the best outcome. Some choices can be puzzles the player needs to figure out or remember. You are creating the outline for the game that will be used in subsequent LLM prompts to generate the narrative and choices.
 </context>
 <instructions>
-Come up with the plan for a choose-your-own-adventure story based on the theme and sample of the inspiration words provided.
+Come up with the outline for a choose-your-own-adventure story based on the theme and sample of the inspiration words provided.
 
 - Create a story title
   - Image description to be passed to an LLM to generate an image
+  - Keep it concise but vivid (1-2 sentences)
+  - NEVER include text or numbers in the image
 - Create a story description
   - 2-3 sentences
   - Written in the imperative ("Explore the world of..." or "Locate the hidden treasure of...")
@@ -23,24 +25,16 @@ Come up with the plan for a choose-your-own-adventure story based on the theme a
     - Male: "Matthew" or "Stephen"
     - ONLY THOSE VOICE ACTORS ARE AVAILABLE
     - EACH VOICE ACTER CAN ONLY BE USED ONCE
-  - Not all will be encountered in all paths
   - One character should be the narrator named "Narrator" (no image required)
     - The narrator needs a voice actor
 - Create a list of possible inventory items
-  - Create the number of items requested
+  - Create the number of items requested (examples: keys, keycards, tools, identification / credentials, the item being sought like a painting if the player is stealing a painting, etc)
   - Name of each item, themed with content
     - NEVER put anything but a name -- this value is displayed to the player
   - Image description to be passed to an LLM to generate an image
     - Focus on a physical representation of the item alone (size, important features, specific type, etc)
     - Keep it concise but vivid (1-2 sentences)
     - NEVER include text or numbers in the image
-- Create a list of possible key information
-  - Key information might includes numbers, combinations, names, words, or phrases
-  - Key numbers must be at least 4 digits
-  - Key information, especially combinations, can be hidden (for example, as a date or time)
-- Create a list of red herring informtion
-  - Red herrings might include numbers, combinations, names, words, or phrases
-  - NEVER use key information values as a red herring, red herrings MUST BE UNIQUE
 - Create a loss condition
   - Create a resource name, themed with the content
     - NEVER put anything but a name -- this value is displayed to the player
@@ -52,46 +46,18 @@ Come up with the plan for a choose-your-own-adventure story based on the theme a
   - If the condition is `accumulate`, wrong answers add resources
   - If the condition is `reduce`, wrong answers reduce resources
   - Generate a starting amount
+    - There must be AT LEAST minimumResourceRange between the starting amount and loss threshold
   - Determine a loss threshold
     - Reaching the threshold makes the player lose the game
-    - For gameplay reasons, EITHER starting amount OR threshold MUST be AT LEAST 5 times the number of questions
-- Create a plan for choices
-  - Suggest a number of choice points based on the count provided
-  - Choices should be 1-2 SHORT sentences that focus ONLY on the decision
-    - BAD: Dr Mark introduces the dates 1857 and 1942. Which door do you open?
-    - GOOD: Which door do you open?
-  - Determine what the player will discover in the narrative
-    - Characters, if any
-    - Inventory items, if any
-    - Key information, if any
-    - Red herrings, if any
-    - DO NOT DUPLICATE DISCOVERIES. If a player discovers some key information in one choice point, they CANNOT discover it in a future choice point.
-  - Determine what the player will use or lose in the narrative
-  - Determine what choice the player will need to make
-    - Every choice should be a puzzle
-      - ALWAYS prompt the player for action (GOOD: How do you respond? GOOD: How do you gain access to the computer?)
-      - NEVER ask the player's opinion (BAD: Which is most significant? BAD: Which approach will work?)
-      - NEVER ask what is a clue or puzzle answer
-      - NEVER ASK WHAT IS MORE SIGNIFICANT
-    - Later choices should be harder puzzles
-    - NEVER include key information or red herrings in choices
-    - Consider what the player has learned previously
-      - Example: If the narrative for choice 1 includes that the building was established in 1847, then in choice 5 ask for the PIN on a keypad and give 1847 as an option
-    - NEVER ASK ABOUT INFORMATION INTRODUCED IN THE SAME NARRATIVE AS THE CHOICE
-  - Generate possible options
-    - Think about how many options there should be -- 3, 4, 5, or 6 -- with each choice different
-    - Make the correct option require EXTREME thought to figure out
-    - The correct option should be based on something
-    - Rank each option, with 1 being the best choice
-    - NEVER add commentary to an option (BAD: "1887 (when building built)" GOOD: "1887")
-    - NEVER make an option match key information or red herrings FROM THE SAME CHOICE POINT
 - Create an outline of the story
-  - Describe how the various pieces come together, the consequences of some choices, etc.
-  - Describe the overall plot
+  - Generate the overall narrative for the cyoa story, 2-3 paragraphs
+  - Do NOT generate choices, those will be generated later from your narrative
+  - Describe in 1-2 sentences what happens if the player wins / succeeds
+  - Describe in 1-2 sentences what happens if the player loses
 - NOT ALL inspiration words will be used. THINK ABOUT which are best and should be incorporated into the story. You can use inspiration words directly, use related words, or use random words with similar letters, sounds, or meanings to inspiration words.
 - ALL generated content MUST be inoffensive and not emmotionally charged
 
-Think deeply about the most engaging and challenging story. Who is it important to meet and who should voice them? What information is or is not important? What makes the most sense as a resource? What options should the player encounter? What should the choice consequences be?
+Think deeply about the most engaging story that is suitable for cyoa. What is the overall idea? What makes the most sense as a loss condition? Who is it important to meet and who should voice them?
 </instructions>
 <output>
 Output your thinking in <thinking> tags followed by valid JSON with the keys with NOTHING ELSE (double-check that your JSON is valid with \n instead of newlines and " escaped):
@@ -100,35 +66,52 @@ Output your thinking in <thinking> tags followed by valid JSON with the keys wit
   "title": "string",
   "description": "string",
   "titleImageDescription": "string",
+  "resourceName": "string",
+  "resourceImageDescription": "string",
+  "startingResourceValue": number,
+  "lossResourceThreshold": number,
   "outline": "string",
   "characters": [
     { "name": "string", "imageDescription": "string", "voice": "string" }
   ],
   "inventory": [
     { "name": "string", "imageDescription": "string" }
-  ],
-  "keyInformation": ["string"],
-  "redHerrings": ["string"],
-  "resourceName": "string",
-  "resourceImageDescription": "string",
-  "startingResourceValue": number,
-  "lossResourceThreshold": number,
-  "choicePoints": [
-    {
-      "inventoryToIntroduce": ["string"],
-      "keyInformationToIntroduce": ["string"],
-      "redHerringsToIntroduce": ["string"]
-      "inventoryOrInformationConsumed": ["string"],
-      "keyInformationOrRedHerringsFromPreviousChoicePoints": ["string"]
-      "choice": "string",
-      "options": [
-        { "name": "string", "rank": number }
-      ]
-    }
   ]
 }
 </output>
 
 <input>
-${context}
+{
+  storyType: {
+    name: 'Mystery/Thriller',
+    description: 'Involves solving a puzzle or crime, where choices lead to discovering clues and finding the truth.',
+  },
+  existingGameTitles: [
+    'The Dusky Observatory',
+    'The Gaunt Musician',
+    'The Murky Covenant',
+    'Spectrum Protocol',
+    'The Reversed Current'
+  ],
+  lossCondition: 'accumulate',
+  minimumResourceRange: 60,
+  inventoryCount: 3,
+  inspirationWords: [
+    'sandwich',  'defence',    'purpose',    'tone',
+    'balance',   'membership', 'seminar',    'fish',
+    'diary',     'centre',     'truth',      'travel',
+    'satellite', 'hundred',    'structure',  'shoe',
+    'criticism', 'testing',    'philosophy', 'food',
+    'depth',     'limitation', 'decision',   'gear',
+    'road',      'mount',      'describe',   'die',
+    'cease',     'complete',   'discharge',  'depict',
+    'overcome',  'cost',       'beg',        'impose',
+    'indicate',  'cool',       'smoke',      'delay',
+    'marry',     'let',        'sum',        'refer',
+    'instruct',  'sad',        'sane',       'modest',
+    'kind',      'wan',        'empty',      'cunning',
+    'prickly',   'young',      'fruity',     'darling',
+    'numb',      'messy',      'fierce',     'heady'
+  ]
+}
 </input>

@@ -1,19 +1,38 @@
 import { CyoaGame, CyoaNarrative, NarrativeId } from '../types'
 
 interface NarrativeIdParts {
-  lastNarrativeId: NarrativeId
-  optionId: number
   choicePointIndex: number
+  selectedOptionIndices: number[]
+  storageKey: string
+  lastNarrativeId?: NarrativeId
 }
 
 export const parseNarrativeId = (narrativeId: NarrativeId): NarrativeIdParts => {
   const parts = narrativeId.split('-')
   const choicePointIndex = parts.length - 1
+  const selectedOptionIndices = parts.slice(1).map((part) => parseInt(part, 10))
+  const storageKey = `choice-${choicePointIndex}`
+  const lastNarrativeId = choicePointIndex > 0 ? parts.slice(0, -1).join('-') : undefined
+
   return {
-    lastNarrativeId: parts.slice(0, -1).join('-'),
-    optionId: parseInt(parts.slice(-1)[0], 10),
     choicePointIndex,
+    selectedOptionIndices,
+    storageKey,
+    lastNarrativeId,
   }
+}
+
+export const calculateCurrentResourceValue = (
+  game: CyoaGame,
+  narrativeId: NarrativeId,
+): number => {
+  const { selectedOptionIndices } = parseNarrativeId(narrativeId)
+
+  return selectedOptionIndices.reduce((currentValue, optionIndex, choiceIndex) => {
+    const choicePoint = game.choicePoints[choiceIndex]
+    const option = choicePoint?.options[optionIndex]
+    return option ? currentValue + option.resourcesToAdd : currentValue
+  }, game.startingResourceValue)
 }
 
 export const determineRequiredNarratives = (
@@ -36,4 +55,5 @@ export const isGameLost = (game: CyoaGame, currentResourceValue: number): boolea
 export const isGameWon = (game: CyoaGame, choicePointIndex: number): boolean =>
   choicePointIndex >= game.choicePoints.length
 
-export const isInitialNarrative = (narrativeId: NarrativeId): boolean => !narrativeId.includes('-')
+export const buildNextNarrativeId = (narrativeId: NarrativeId, optionIndex: number): NarrativeId =>
+  `${narrativeId}-${optionIndex}`
