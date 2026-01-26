@@ -45,27 +45,5 @@ Output your thinking in <thinking> tags followed by valid JSON with the keys wit
 </output>
 
 <input>
-{
-  "inventoryAvailable": [],
-  "existingNarrative": "Dr. Yuki Sato approaches you in the corridor, glancing around nervously. She quietly mentions she was Marcus's friend and has something to tell you, but not here where cameras and staff can observe.",
-  "previousChoice": "What do you investigate first?",
-  "previousOptions": [
-    { "name": "Carefully retrieve papers from the recycling bin while appearing to settle in", "rank": 1, "consequence": "You find fragments of Marcus's notes about satellite anomalies. The papers mention restricted server access, giving you your first real lead." },
-    { "name": "Immediately try to force open the locked drawer", "rank": 4, "consequence": "The drawer won't budge and you make noise attracting attention. A technician asks if you need help, making note of your suspicious behavior." },
-    { "name": "Boot up the computer and try to access Marcus's old files", "rank": 2, "consequence": "The system requires credentials you don't have and logs your failed attempt. IT security receives an alert about unauthorized access." },
-    { "name": "Leave to explore the facility immediately without examining anything", "rank": 3, "consequence": "Your disinterest in your actual workstation seems odd. You miss the recovered notes, though you can return later with more suspicion on you." }
-  ],
-  "nextChoice": "Where do you suggest meeting Yuki?",
-  "nextOptions": [
-    { "name": "The exterior maintenance area during the evening shift change", "rank": 1, "consequence": "Yuki meets you discreetly during the busy shift change. She reveals Marcus hid his diary in the ventilation system near Lab 7 and was investigating unauthorized satellite tasking." },
-    { "name": "Your private quarters immediately", "rank": 3, "consequence": "Yuki reluctantly follows but security cameras track her unusual visit to residential areas. Agent Kim later questions why she visited you so soon after arrival." },
-    { "name": "The cafeteria during lunch", "rank": 4, "consequence": "The public setting makes Yuki uncomfortable. She shares nothing useful and appears nervous, drawing attention from other staff to your suspicious meeting." },
-    { "name": "Dr. Cross's office to make it official", "rank": 5, "consequence": "Yuki makes an excuse and walks away. Your suggestion proves you don't understand the danger, and Yuki now questions if she can trust you." }
-  ],
-  "outline": "You arrive at Centre Point, an isolated satellite monitoring facility in the mountains, investigating the mysterious disappearance of your colleague Marcus Webb three weeks ago. The official story claims he simply quit and left, but his cryptic final messages to you suggest something darker. As you explore the facility, you must carefully navigate conversations with the stern facility director Dr. Helena Cross, the suspicious security agent Kim, and your ally Dr. Yuki Sato, while searching for Marcus's hidden diary and the satellite data he was analyzing before he vanished.\n\nThe facility harbors secrets about unauthorized satellite surveillance and data manipulation that Marcus discovered. You must decode clues from his diary entries, gain access to restricted areas using keycards, and piece together what really happened. Every wrong move increases security's suspicion of your true purpose, and making too many mistakes will result in your immediate removal from the facility before you can expose the truth. The deeper you dig, the more you realize that Marcus may have been silenced for discovering a conspiracy that reaches beyond Centre Point itself.\n\nIf you succeed, you expose the illegal surveillance operation, clear Marcus's name, and ensure those responsible face justice, while finally learning the fate of your missing colleague. If you fail and accumulate too much suspicion, security detains you and escorts you from the facility, the truth buried forever and Marcus's disappearance remaining an unsolved mystery.",
-  "inspirationAuthor": {
-    name: 'Agatha Christie',
-    style: 'Clever plotting with careful clue placement. Measured pacing that builds tension while maintaining clarity and logical deduction.',
-  }
-}
+${context}
 </input>

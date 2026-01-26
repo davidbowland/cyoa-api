@@ -76,37 +76,5 @@ Output your thinking in <thinking> tags followed by valid JSON with the keys wit
 </output>
 
 <input>
-{
-  "resourceName": "Suspicion Points",
-  "startingResourceValue": 0,
-  "lossResourceThreshold": 80,
-  choiceCount: 12,
-  keyInformationCount: 2,
-  redHerringCount: 3,
-  "outline": "You arrive at Centre Point, an isolated satellite monitoring facility in the mountains, investigating the mysterious disappearance of your colleague Marcus Webb three weeks ago. The official story claims he simply quit and left, but his cryptic final messages to you suggest something darker. As you explore the facility, you must carefully navigate conversations with the stern facility director Dr. Helena Cross, the suspicious security agent Kim, and your ally Dr. Yuki Sato, while searching for Marcus's hidden diary and the satellite data he was analyzing before he vanished.\n\nThe facility harbors secrets about unauthorized satellite surveillance and data manipulation that Marcus discovered. You must decode clues from his diary entries, gain access to restricted areas using keycards, and piece together what really happened. Every wrong move increases security's suspicion of your true purpose, and making too many mistakes will result in your immediate removal from the facility before you can expose the truth. The deeper youf dig, the more you realize that Marcus may have been silenced for discovering a conspiracy that reaches beyond Centre Point itself.\n\nIf you succeed, you expose the illegal surveillance operation, clear Marcus's name, and ensure those responsible face justice, while finally learning the fate of your missing colleague. If you fail and accumulate too much suspicion, security detains you and escorts you from the facility, the truth buried forever and Marcus's disappearance remaining an unsolved mystery.",
-  "characters": ["Dr. Helena Cross", "Marcus Webb", "Agent Kim", "Dr. Yuki Sato"],
-  "inventory": ["Marcus's Diary", "Level-3 Keycard", "Satellite Data Drive"],
-  "style": {
-    name: 'Mystery/Thriller',
-    description: 'Involves solving a puzzle or crime, where choices lead to discovering clues and finding the truth.',
-    inspirationAuthor: 'Agatha Christie'
-  },
-  inspirationWords: [
-    'interpretation', 'face',       'coalition', 'electricity',
-    'fibre',          'edge',       'direction', 'laugh',
-    'agency',         'grant',      'horse',     'contract',
-    'premise',        'feature',    'bench',     'jury',
-    'studio',         'classroom',  'river',     'number',
-    'magistrate',     'experiment', 'detective', 'reporter',
-    'cat',            'differ',     'reverse',   'manage',
-    'improve',        'fling',      'tip',       'reach',
-    'bow',            'colour',     'incur',     'close',
-    'supplement',     'prescribe',  'sink',      'create',
-    'touch',          'refer',      'update',    'undermine',
-    'stimulate',      'tame',       'lousy',     'chunky',
-    'bumpy',          'severe',     'damp',      'staunch',
-    'gross',          'swift',      'just',      'sexy',
-    'drab',           'dim',        'arty',      'negligent'
-  ]
-}
+${context}
 </input>

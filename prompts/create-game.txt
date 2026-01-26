@@ -81,37 +81,5 @@ Output your thinking in <thinking> tags followed by valid JSON with the keys wit
 </output>
 
 <input>
-{
-  storyType: {
-    name: 'Mystery/Thriller',
-    description: 'Involves solving a puzzle or crime, where choices lead to discovering clues and finding the truth.',
-  },
-  existingGameTitles: [
-    'The Dusky Observatory',
-    'The Gaunt Musician',
-    'The Murky Covenant',
-    'Spectrum Protocol',
-    'The Reversed Current'
-  ],
-  lossCondition: 'accumulate',
-  minimumResourceRange: 60,
-  inventoryCount: 3,
-  inspirationWords: [
-    'sandwich',  'defence',    'purpose',    'tone',
-    'balance',   'membership', 'seminar',    'fish',
-    'diary',     'centre',     'truth',      'travel',
-    'satellite', 'hundred',    'structure',  'shoe',
-    'criticism', 'testing',    'philosophy', 'food',
-    'depth',     'limitation', 'decision',   'gear',
-    'road',      'mount',      'describe',   'die',
-    'cease',     'complete',   'discharge',  'depict',
-    'overcome',  'cost',       'beg',        'impose',
-    'indicate',  'cool',       'smoke',      'delay',
-    'marry',     'let',        'sum',        'refer',
-    'instruct',  'sad',        'sane',       'modest',
-    'kind',      'wan',        'empty',      'cunning',
-    'prickly',   'young',      'fruity',     'darling',
-    'numb',      'messy',      'fierce',     'heady'
-  ]
-}
+${context}
 </input>
