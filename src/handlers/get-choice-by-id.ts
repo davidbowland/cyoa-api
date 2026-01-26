@@ -1,16 +1,9 @@
-import {
-  APIGatewayProxyEventV2,
-  APIGatewayProxyResultV2,
-} from 'aws-lambda'
+import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda'
 
-import {
-  ChoiceId,
-  CyoaChoiceSerialized,
-  GameId,
-} from '../types'
+import { retrieveChoiceById } from '../services/choices'
+import { ChoiceId, CyoaChoiceSerialized, GameId } from '../types'
 import { log, logError } from '../utils/logging'
 import status from '../utils/status'
-import { retrieveChoiceById } from '../services/choices'
 
 export const getChoiceByIdHandler = async (
   event: APIGatewayProxyEventV2,

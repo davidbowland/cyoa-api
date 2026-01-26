@@ -1,4 +1,4 @@
-import { ChoiceId, ChoiceIdParts, CyoaGame, NarrativeId } from '../types'
+import { ChoiceId, ChoiceIdParts, CyoaGame } from '../types'
 import { getNarrativeIdByIndex } from './narratives'
 
 export const parseChoiceId = (choiceId: ChoiceId): ChoiceIdParts => {

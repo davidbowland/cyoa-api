@@ -17,7 +17,7 @@ export const invokeModel = async <T>(
 }
 
 const removeThinkingTags = (input: string): string =>
-  input.replace(/(^\s*<thinking>.*?<\/thinking>\s*|^\s*|\s*`(json)?\s*|\s*$)/gs, '',)
+  input.replace(/(^\s*<thinking>.*?<\/thinking>\s*|^\s*|\s*`(json)?\s*|\s*$)/gs, '')
 
 const invokeModelMessage = async <T>(prompt: TextPrompt): Promise<T> => {
   logDebug('Invoking model', { prompt })
