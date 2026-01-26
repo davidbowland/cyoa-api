@@ -2,7 +2,7 @@ import Ajv from 'ajv'
 
 import { keyInformationCounts, redHerringCounts } from '../../assets/configurations'
 import {
-  initialNarrativeId,
+  initialChoiceId,
   promptIdCreateChoices,
   resourceToAddPercentMax,
   resourceToAddPercentMin,
@@ -150,7 +150,7 @@ const formatCreateChoicesOutput = (
     lossResourceThreshold: ending,
     choicePoints: choicePointsWithResources,
     inspirationAuthor,
-    initialNarrativeId,
+    initialChoiceId,
     winNarrative: input.winNarrative as string,
   } as CyoaGame
 }

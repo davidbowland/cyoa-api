@@ -27,7 +27,7 @@ export const inspirationAdjectivesCount = parseInt(
 )
 export const inspirationNounsCount = parseInt(process.env.INSPIRATION_NOUNS_COUNT as string, 10)
 export const inspirationVerbsCount = parseInt(process.env.INSPIRATION_VERBS_COUNT as string, 10)
-export const initialNarrativeId = 'start'
+export const initialChoiceId = 'start'
 export const narrativeGenerationTime = 300_000 // 5 minutes
 export const resourceToAddPercentMax =
   parseInt(process.env.RESOURCE_TO_ADD_PERCENT_MAX as string, 10) / 100

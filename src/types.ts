@@ -64,7 +64,7 @@ export interface CyoaGame {
   lossResourceThreshold: number
   lossCondition: 'accumulate' | 'reduce'
   choicePoints: CyoaChoicePoint[]
-  initialNarrativeId: string
+  initialChoiceId: string
   inspirationAuthor: Author
   winNarrative: string
 }
@@ -110,7 +110,7 @@ export type CyoaGameSerialized = Pick<
   | 'resourceImage'
   | 'startingResourceValue'
   | 'lossResourceThreshold'
-  | 'initialNarrativeId'
+  | 'initialChoiceId'
 >
 
 export interface CyoaChoiceSerialized {
@@ -229,7 +229,6 @@ export interface CreateChoicesPromptOutput {
   keyInformation?: string[]
   redHerrings?: string[]
   choicePoints?: CreateChoicesPromptChoicePoint[]
-  lossNarrative?: string
   winNarrative?: string
 }
 

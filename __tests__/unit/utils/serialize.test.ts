@@ -1,5 +1,5 @@
 import { cyoaGame, cyoaNarrative } from '../__mocks__'
-import { serializeCyoaGame, serializeCyoaNarrative } from '@utils/serialize'
+import { serializeCyoaChoice, serializeCyoaGame } from '@utils/serialize'
 
 describe('serialize', () => {
   describe('serializeCyoaGame', () => {
@@ -14,7 +14,7 @@ describe('serialize', () => {
         startingResourceValue: 100,
         lossResourceThreshold: 0,
         title: 'Test Adventure',
-        initialNarrativeId: 'start',
+        initialChoiceId: 'start',
       })
     })
 
@@ -30,77 +30,54 @@ describe('serialize', () => {
         startingResourceValue: 100,
         lossResourceThreshold: 0,
         title: 'Test Adventure',
-        initialNarrativeId: 'start',
+        initialChoiceId: 'start',
       })
     })
   })
 
-  describe('serializeCyoaNarrative', () => {
-    it('should return serialized narrative with required fields', () => {
-      const result = serializeCyoaNarrative(cyoaNarrative, cyoaGame, 'start')
+  describe('serializeCyoaChoice', () => {
+    it('should return serialized choice with combined narrative', () => {
+      const result = serializeCyoaChoice(cyoaNarrative, false, 100, 0)
 
       expect(result).toEqual({
-        narrative: 'You find yourself standing before a massive sleeping dragon...',
+        narrative:
+          'You carefully tiptoe past the sleeping beast...\n\nYou find yourself standing before a massive sleeping dragon...',
         chapterTitle: "The Dragon's Lair",
         image: 'https://cyoa-assets.dbowland.com/images/a-friendly-adventure/test-narrative-id.png',
         choice: 'You see a sleeping dragon. What do you do?',
-        options: [{ name: 'Sneak past quietly' }, { name: 'Wake the dragon' }],
+        options: [
+          {
+            name: 'Sneak past quietly',
+            narrative: 'You carefully tiptoe past the sleeping beast...',
+          },
+          { name: 'Wake the dragon', narrative: 'You loudly call out to wake the dragon...' },
+        ],
         inventory: [{ name: 'Sword', image: 'sword-image.jpg' }],
         currentResourceValue: 100,
       })
+    })
+
+    it('should use losing narrative when game is lost', () => {
+      const result = serializeCyoaChoice(cyoaNarrative, true, 0, 0)
+
+      expect(result.narrative).toBe(
+        'You carefully tiptoe past the sleeping beast...\n\nThe dragon awakens and you are defeated.',
+      )
+    })
+
+    it('should handle narrative without selected option', () => {
+      const result = serializeCyoaChoice(cyoaNarrative, false, 100, 5)
+
+      expect(result.narrative).toBe(
+        'You find yourself standing before a massive sleeping dragon...',
+      )
     })
 
     it('should handle narrative without optional image field', () => {
       const narrativeWithoutImage = { ...cyoaNarrative, image: undefined }
-      const result = serializeCyoaNarrative(narrativeWithoutImage, cyoaGame, 'start')
+      const result = serializeCyoaChoice(narrativeWithoutImage, false, 100, 0)
 
-      expect(result).toEqual({
-        narrative: 'You find yourself standing before a massive sleeping dragon...',
-        chapterTitle: "The Dragon's Lair",
-        image: undefined,
-        choice: 'You see a sleeping dragon. What do you do?',
-        options: [{ name: 'Sneak past quietly' }, { name: 'Wake the dragon' }],
-        inventory: [{ name: 'Sword', image: 'sword-image.jpg' }],
-        currentResourceValue: 100,
-      })
-    })
-
-    it('should combine selected option consequence with narrative', () => {
-      const result = serializeCyoaNarrative(cyoaNarrative, cyoaGame, 'start-0')
-
-      expect(result.narrative).toBe(
-        'You fight bravely\n\nYou find yourself standing before a massive sleeping dragon...',
-      )
-      expect(result.currentResourceValue).toBe(90) // 100 + (-10)
-    })
-
-    it('should calculate resource value correctly for multiple choices', () => {
-      const gameWithMultipleChoices = {
-        ...cyoaGame,
-        choicePoints: [
-          {
-            ...cyoaGame.choicePoints[0],
-            options: [
-              { name: 'Option 1', rank: 1, consequence: 'Result 1', resourcesToAdd: -10 },
-              { name: 'Option 2', rank: 2, consequence: 'Result 2', resourcesToAdd: -20 },
-            ],
-          },
-          {
-            ...cyoaGame.choicePoints[0],
-            options: [
-              { name: 'Option 3', rank: 1, consequence: 'Result 3', resourcesToAdd: 5 },
-              { name: 'Option 4', rank: 2, consequence: 'Result 4', resourcesToAdd: -15 },
-            ],
-          },
-        ],
-      }
-
-      const result = serializeCyoaNarrative(cyoaNarrative, gameWithMultipleChoices, 'start-0-1')
-
-      expect(result.currentResourceValue).toBe(75) // 100 + (-10) + (-15)
-      expect(result.narrative).toBe(
-        'Result 4\n\nYou find yourself standing before a massive sleeping dragon...',
-      )
+      expect(result.image).toBeUndefined()
     })
   })
 })

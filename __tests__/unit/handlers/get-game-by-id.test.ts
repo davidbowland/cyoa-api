@@ -26,7 +26,7 @@ describe('get-game-by-id', () => {
       expect(JSON.parse(result.body)).toEqual({
         description: 'A test adventure game',
         image: 'test-image.jpg',
-        initialNarrativeId: 'start',
+        initialChoiceId: 'start',
         lossResourceThreshold: 0,
         resourceName: 'Health',
         resourceImage: 'https://cyoa-assets.dbowland.com/images/a-friendly-adventure/resource.png',

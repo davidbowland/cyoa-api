@@ -28,7 +28,7 @@ describe('get-games', () => {
           description: 'A test adventure game',
           gameId,
           image: 'test-image.jpg',
-          initialNarrativeId: 'start',
+          initialChoiceId: 'start',
           lossResourceThreshold: 0,
           resourceName: 'Health',
           resourceImage:
@@ -40,7 +40,7 @@ describe('get-games', () => {
           description: 'A test adventure game',
           gameId: secondGameId,
           image: 'test-image.jpg',
-          initialNarrativeId: 'start',
+          initialChoiceId: 'start',
           lossResourceThreshold: 0,
           resourceName: 'Health',
           resourceImage:

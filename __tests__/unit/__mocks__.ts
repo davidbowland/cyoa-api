@@ -4,16 +4,13 @@ import {
   CyoaNarrative,
   CreateNarrativeEvent,
   GameId,
+  ImagePrompt,
   NarrativeGenerationData,
   NarrativeId,
   TextPrompt,
   TextPromptConfig,
   PromptId,
 } from '@types'
-
-// Common
-
-export const uuid = 'test-uuid-123'
 
 // Games
 
@@ -32,12 +29,14 @@ export const cyoaGame: CyoaGame = {
   resourceImage: 'https://cyoa-assets.dbowland.com/images/a-friendly-adventure/resource.png',
   startingResourceValue: 100,
   lossResourceThreshold: 0,
-  initialNarrativeId: 'start',
+  lossCondition: 'reduce',
+  initialChoiceId: 'start',
   inspirationAuthor: {
     name: 'Agatha Christie',
     style:
       'Clever plotting with careful clue placement. Measured pacing that builds tension while maintaining clarity and logical deduction.',
   },
+  winNarrative: 'You have successfully completed your quest!',
   choicePoints: [
     {
       keyInformationToIntroduce: ['Important clue 1'],
@@ -49,6 +48,7 @@ export const cyoaGame: CyoaGame = {
         { name: 'Fight', rank: 1, consequence: 'You fight bravely', resourcesToAdd: -10 },
         { name: 'Run', rank: 2, consequence: 'You flee the scene', resourcesToAdd: -20 },
       ],
+      lossNarrative: 'You have failed in your quest.',
     },
   ],
 }
@@ -57,8 +57,24 @@ export const serializedGame = {
   description: 'A test adventure game',
   image: 'test-image.jpg',
   resourceName: 'Health',
+  resourceImage: 'https://cyoa-assets.dbowland.com/images/a-friendly-adventure/resource.png',
+  startingResourceValue: 100,
+  lossResourceThreshold: 0,
   title: 'Test Adventure',
-  initialNarrativeId: 'start',
+  initialChoiceId: 'start',
+}
+
+export const serializedChoice = {
+  narrative: 'You fight bravely\n\nYou find yourself standing before a massive sleeping dragon...',
+  chapterTitle: "The Dragon's Lair",
+  image: 'https://cyoa-assets.dbowland.com/images/a-friendly-adventure/test-narrative-id.png',
+  choice: 'You see a sleeping dragon. What do you do?',
+  options: [
+    { name: 'Sneak past quietly', narrative: 'You carefully tiptoe past the sleeping beast...' },
+    { name: 'Wake the dragon', narrative: 'You loudly call out to wake the dragon...' },
+  ],
+  inventory: [{ name: 'Sword', image: 'sword-image.jpg' }],
+  currentResourceValue: 90,
 }
 
 // Prompts
@@ -76,6 +92,18 @@ export const promptId: PromptId = '5253'
 export const prompt: TextPrompt = {
   config: promptConfig,
   contents: 'You are a helpful assistant. ${data}',
+}
+
+export const imagePrompt: ImagePrompt = {
+  config: {
+    model: 'amazon.nova-canvas-v1:0',
+    quality: 'standard',
+    cfgScale: 8,
+    height: 512,
+    width: 512,
+    seed: 0,
+  },
+  contents: 'No text, not deformed, no surreal',
 }
 
 // Bedrock
@@ -102,6 +130,7 @@ export const cyoaGamePromptOutput = {
 export const cyoaChoicesPromptOutput = {
   keyInformation: ['The dragon guards the treasure', 'The wizard knows ancient spells'],
   redHerrings: ['There might be goblins nearby', 'The forest has hidden traps'],
+  winNarrative: 'You have successfully completed your quest and saved the kingdom!',
   choicePoints: [
     {
       keyInformationToIntroduce: ['The wizard knows ancient spells'],
@@ -117,21 +146,9 @@ export const cyoaChoicesPromptOutput = {
   ],
 }
 
-export const invokeModelCyoaGameResponse = {
-  body: new TextEncoder().encode(
-    JSON.stringify({
-      content: [
-        {
-          text: JSON.stringify(cyoaGamePromptOutput),
-        },
-      ],
-    }),
-  ),
-}
-
 // Narratives
 
-export const narrativeId: NarrativeId = 'start'
+export const narrativeId: NarrativeId = 'narrative-0'
 
 export const createNarrativeEvent: CreateNarrativeEvent = {
   gameId,
@@ -139,11 +156,6 @@ export const createNarrativeEvent: CreateNarrativeEvent = {
 }
 
 export const narrativeGenerationData: NarrativeGenerationData = {
-  recap: 'Previous events recap',
-  lastChoiceMade: 'Asked for help',
-  lastOptionSelected: 'Ask for help',
-  bestOption: 'Ask for help',
-  currentInventory: ['Sword', 'Magic Wand'],
   inventoryAvailable: ['Health Potion'],
   existingNarrative: 'You approach the dragon carefully',
   previousChoice: 'What do you investigate first?',
@@ -167,53 +179,32 @@ export const narrativeGenerationData: NarrativeGenerationData = {
 
 export const cyoaNarrative: CyoaNarrative = {
   narrative: 'You find yourself standing before a massive sleeping dragon...',
-  recap: 'Previous events recap',
   chapterTitle: "The Dragon's Lair",
   image: 'https://cyoa-assets.dbowland.com/images/a-friendly-adventure/test-narrative-id.png',
   choice: 'You see a sleeping dragon. What do you do?',
   options: [
-    { name: 'Sneak past quietly', rank: 1, consequence: 'You move silently', resourcesToAdd: -7 },
-    { name: 'Wake the dragon', rank: 2, consequence: 'The dragon awakens', resourcesToAdd: -19 },
+    { name: 'Sneak past quietly', narrative: 'You carefully tiptoe past the sleeping beast...' },
+    { name: 'Wake the dragon', narrative: 'You loudly call out to wake the dragon...' },
   ],
   inventory: [{ name: 'Sword', image: 'sword-image.jpg' }],
+  losingTitle: 'Defeat',
+  losingNarrative: 'The dragon awakens and you are defeated.',
 }
 
 export const createNarrativePromptOutput = {
   chapterTitle: "The Dragon's Lair",
   narrative: 'You find yourself standing before a massive sleeping dragon...',
   imageDescription: 'A dark cave with a massive sleeping dragon surrounded by treasure',
+  losingTitle: 'Defeat',
+  losingNarrative: 'The dragon awakens and you are defeated.',
   options: [
     { narrative: 'You carefully tiptoe past the sleeping beast...' },
     { narrative: 'You loudly call out to wake the dragon...' },
   ],
 }
 
-export const invokeModelNarrativeResponse = {
-  body: new TextEncoder().encode(
-    JSON.stringify({
-      content: [
-        {
-          text: JSON.stringify(createNarrativePromptOutput),
-        },
-      ],
-    }),
-  ),
-}
-
 export const endingNarrativePromptOutput = {
   narrative: 'You have successfully completed your quest and saved the kingdom!',
   chapterTitle: 'Victory',
   imageDescription: 'A triumphant hero standing in golden sunlight',
-}
-
-export const invokeModelEndingNarrativeResponse = {
-  body: new TextEncoder().encode(
-    JSON.stringify({
-      content: [
-        {
-          text: JSON.stringify(endingNarrativePromptOutput),
-        },
-      ],
-    }),
-  ),
 }

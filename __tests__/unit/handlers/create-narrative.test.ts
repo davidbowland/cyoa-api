@@ -1,120 +1,81 @@
-import { cyoaNarrative } from '../__mocks__'
-import eventJson from '@events/create-narrative.json'
+import { createNarrativeEvent, cyoaNarrative, narrativeGenerationData } from '../__mocks__'
 import { createNarrativeHandler } from '@handlers/create-narrative'
-import * as narrativeGenerationOrchestrator from '@services/narrative-generation-orchestrator'
-import { SQSNarrativeEvent } from '@types'
+import * as createNarratives from '@services/create-narratives'
+import * as dynamodb from '@services/dynamodb'
 import * as logging from '@utils/logging'
 
-jest.mock('@services/narrative-generation-orchestrator')
+jest.mock('@services/create-narratives')
+jest.mock('@services/dynamodb')
 jest.mock('@utils/logging')
-
-const sqsEventTyped = eventJson as SQSNarrativeEvent
 
 describe('create-narrative', () => {
   describe('createNarrativeHandler', () => {
     beforeAll(() => {
-      jest.mocked(narrativeGenerationOrchestrator.createNarrative).mockResolvedValue(cyoaNarrative)
+      jest
+        .mocked(dynamodb)
+        .getNarrativeById.mockResolvedValue({ generationData: narrativeGenerationData })
+      jest.mocked(createNarratives).createNarrative.mockResolvedValue(cyoaNarrative)
     })
 
-    it('should parse SQS message and create narrative with gameId and narrativeId', async () => {
-      await createNarrativeHandler(sqsEventTyped)
+    it('should create narrative with gameId and narrativeId', async () => {
+      await createNarrativeHandler(createNarrativeEvent)
 
-      expect(narrativeGenerationOrchestrator.createNarrative).toHaveBeenCalledWith(
-        'test-game-id',
-        'test-narrative-id',
+      expect(dynamodb.getNarrativeById).toHaveBeenCalledWith('a-friendly-adventure', 'narrative-0')
+      expect(createNarratives.createNarrative).toHaveBeenCalledWith(
+        'a-friendly-adventure',
+        'narrative-0',
+        narrativeGenerationData,
       )
     })
 
-    it('should log error and continue processing when message parsing fails', async () => {
-      const invalidSqsEvent = {
-        Records: [
-          {
-            body: 'invalid-json',
-            messageId: 'test-message-id',
-            receiptHandle: 'test-receipt-handle',
-          },
-        ],
-      } as SQSNarrativeEvent
+    it('should throw error when generation data not found', async () => {
+      jest.mocked(dynamodb).getNarrativeById.mockResolvedValueOnce({ generationData: undefined })
 
-      await createNarrativeHandler(invalidSqsEvent)
+      await expect(createNarrativeHandler(createNarrativeEvent)).rejects.toThrow(
+        'No generation data found',
+      )
 
       expect(logging.logError).toHaveBeenCalledWith(
-        'Failed to process narrative creation',
+        'Failed to create narrative',
         expect.objectContaining({
           error: expect.any(Error),
-          record: 'test-message-id',
+          event: createNarrativeEvent,
         }),
       )
     })
 
     it('should retry narrative creation and eventually succeed', async () => {
       jest
-        .mocked(narrativeGenerationOrchestrator.createNarrative)
-        .mockRejectedValueOnce(new Error('First failure'))
+        .mocked(dynamodb)
+        .getNarrativeById.mockResolvedValue({ generationData: narrativeGenerationData })
       jest
-        .mocked(narrativeGenerationOrchestrator.createNarrative)
-        .mockResolvedValueOnce(cyoaNarrative)
+        .mocked(createNarratives)
+        .createNarrative.mockRejectedValueOnce(new Error('First failure'))
+      jest.mocked(createNarratives).createNarrative.mockResolvedValueOnce(cyoaNarrative)
 
-      await createNarrativeHandler(sqsEventTyped)
+      await createNarrativeHandler(createNarrativeEvent)
 
-      expect(narrativeGenerationOrchestrator.createNarrative).toHaveBeenCalledTimes(2)
+      expect(createNarratives.createNarrative).toHaveBeenCalledTimes(2)
       expect(logging.logError).toHaveBeenCalledWith(
         'Narrative creation failed, retrying',
         expect.objectContaining({
           error: expect.any(Error),
-          gameId: 'test-game-id',
-          narrativeId: 'test-narrative-id',
+          gameId: 'a-friendly-adventure',
+          narrativeId: 'narrative-0',
         }),
       )
     })
 
     it('should retry narrative creation up to 5 times before giving up', async () => {
       const error = new Error('Persistent failure')
-      jest.mocked(narrativeGenerationOrchestrator.createNarrative).mockRejectedValue(error)
-
-      await createNarrativeHandler(sqsEventTyped)
-
-      expect(narrativeGenerationOrchestrator.createNarrative).toHaveBeenCalledTimes(5)
-      expect(logging.logError).toHaveBeenCalledWith(
-        'Narrative creation failed, retrying',
-        expect.objectContaining({
-          error,
-          gameId: 'test-game-id',
-          narrativeId: 'test-narrative-id',
-        }),
-      )
-    })
-
-    it('should process multiple SQS records', async () => {
-      const multiRecordEvent = {
-        Records: [
-          sqsEventTyped.Records[0],
-          {
-            body: '{"gameId":"game-2","narrativeId":"narrative-2"}',
-            messageId: 'test-message-id-456',
-            receiptHandle: 'test-receipt-handle-2',
-          },
-        ],
-      } as SQSNarrativeEvent
-
       jest
-        .mocked(narrativeGenerationOrchestrator.createNarrative)
-        .mockResolvedValueOnce(cyoaNarrative)
-      jest
-        .mocked(narrativeGenerationOrchestrator.createNarrative)
-        .mockResolvedValueOnce(cyoaNarrative)
+        .mocked(dynamodb)
+        .getNarrativeById.mockResolvedValue({ generationData: narrativeGenerationData })
+      jest.mocked(createNarratives).createNarrative.mockRejectedValue(error)
 
-      await createNarrativeHandler(multiRecordEvent)
+      await createNarrativeHandler(createNarrativeEvent)
 
-      expect(narrativeGenerationOrchestrator.createNarrative).toHaveBeenCalledTimes(2)
-      expect(narrativeGenerationOrchestrator.createNarrative).toHaveBeenCalledWith(
-        'test-game-id',
-        'test-narrative-id',
-      )
-      expect(narrativeGenerationOrchestrator.createNarrative).toHaveBeenCalledWith(
-        'game-2',
-        'narrative-2',
-      )
+      expect(createNarratives.createNarrative).toHaveBeenCalledTimes(5)
     })
   })
 })

@@ -8,7 +8,7 @@ export const serializeCyoaGame = (game: CyoaGame): CyoaGameSerialized => ({
   startingResourceValue: game.startingResourceValue,
   lossResourceThreshold: game.lossResourceThreshold,
   title: game.title,
-  initialNarrativeId: game.initialNarrativeId,
+  initialChoiceId: game.initialChoiceId,
 })
 
 const combineNarrative = (
