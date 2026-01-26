@@ -310,7 +310,7 @@ Resources:
   GetChoiceByIdFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: src/handlers/get-narrative-by-id.getChoiceByIdHandler
+      Handler: src/handlers/get-choice-by-id.getChoiceByIdHandler
       Runtime: nodejs22.x
       Architectures:
         - x86_64

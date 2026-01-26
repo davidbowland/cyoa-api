@@ -12,7 +12,7 @@ export const createNarrativeHandler = async (event: CreateNarrativeEvent): Promi
       throw new Error('No generation data found')
     }
 
-    for (let index = 0; index < 5; index++) {
+    for (let index = 0; index < 2; index++) {
       try {
         await createNarrative(gameId, narrativeId, generationData)
         log('Narrative created successfully', { gameId, narrativeId })

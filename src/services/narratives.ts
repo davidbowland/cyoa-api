@@ -33,6 +33,7 @@ export const queueNarrativeGeneration = async (
       consequence: opt.consequence,
     })),
     outline: game.outline,
+    lossNarrative: currentChoice.lossNarrative,
     inspirationAuthor: game.inspirationAuthor,
     generationStartTime: Date.now(),
   }

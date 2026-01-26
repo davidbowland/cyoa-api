@@ -35,28 +35,36 @@ describe('narratives/narrative-content', () => {
       const result = await generateNarrativeContent(cyoaGame, generationDataWithInventory)
 
       expect(dynamodb.getPromptById).toHaveBeenCalledWith('create-narrative')
-      expect(bedrock.invokeModel).toHaveBeenCalledWith(
-        prompt,
-        expect.objectContaining({
-          inventoryAvailable: ['Sword'],
-          existingNarrative: generationDataWithInventory.existingNarrative,
-          previousChoice: generationDataWithInventory.previousChoice,
-          previousOptions: generationDataWithInventory.previousOptions,
-          nextChoice: generationDataWithInventory.nextChoice,
-          nextOptions: generationDataWithInventory.nextOptions,
-          outline: generationDataWithInventory.outline,
-          inspirationAuthor: generationDataWithInventory.inspirationAuthor,
-        }),
-      )
+      expect(bedrock.invokeModel).toHaveBeenCalledWith(prompt, {
+        inventoryAvailable: ['Sword'],
+        existingNarrative: generationDataWithInventory.existingNarrative,
+        previousChoice: generationDataWithInventory.previousChoice,
+        previousOptions: generationDataWithInventory.previousOptions,
+        nextChoice: generationDataWithInventory.nextChoice,
+        nextOptions: generationDataWithInventory.nextOptions,
+        outline: generationDataWithInventory.outline,
+        lossNarrative: generationDataWithInventory.lossNarrative,
+        inspirationAuthor: generationDataWithInventory.inspirationAuthor,
+      })
       expect(result).toEqual({
-        narrative: expect.objectContaining({
+        narrative: {
           narrative: 'You find yourself standing before a massive sleeping dragon...',
           chapterTitle: "The Dragon's Lair",
           choice: 'You see a sleeping dragon. What do you do?',
           losingTitle: 'Defeat',
           losingNarrative: 'The dragon awakens and you are defeated.',
           inventory: [{ name: 'Sword', image: 'sword-image.jpg' }],
-        }),
+          options: [
+            {
+              name: 'Fight',
+              narrative: 'You carefully tiptoe past the sleeping beast...',
+            },
+            {
+              name: 'Run',
+              narrative: 'You loudly call out to wake the dragon...',
+            },
+          ],
+        },
         imageDescription: 'A dark cave with a massive sleeping dragon surrounded by treasure',
       })
     })
@@ -98,17 +106,15 @@ describe('narratives/narrative-content', () => {
       const result = await generateEndingNarrativeContent(cyoaGame, narrativeGenerationData)
 
       expect(dynamodb.getPromptById).toHaveBeenCalledWith('create-ending-narrative')
-      expect(bedrock.invokeModel).toHaveBeenCalledWith(
-        prompt,
-        expect.objectContaining({
-          inventoryAvailable: narrativeGenerationData.inventoryAvailable,
-          existingNarrative: cyoaGame.winNarrative,
-          previousChoice: narrativeGenerationData.previousChoice,
-          previousOptions: narrativeGenerationData.previousOptions,
-          outline: narrativeGenerationData.outline,
-          inspirationAuthor: narrativeGenerationData.inspirationAuthor,
-        }),
-      )
+      expect(bedrock.invokeModel).toHaveBeenCalledWith(prompt, {
+        inventoryAvailable: narrativeGenerationData.inventoryAvailable,
+        existingNarrative: cyoaGame.winNarrative,
+        previousChoice: narrativeGenerationData.previousChoice,
+        previousOptions: narrativeGenerationData.previousOptions,
+        lossNarrative: narrativeGenerationData.lossNarrative,
+        outline: narrativeGenerationData.outline,
+        inspirationAuthor: narrativeGenerationData.inspirationAuthor,
+      })
       expect(result).toEqual({
         narrative: {
           narrative: 'You have successfully completed your quest and saved the kingdom!',

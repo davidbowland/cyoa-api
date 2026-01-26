@@ -11,7 +11,7 @@ An outline and the important parts of the narrative have already been generated.
   - Elaborate on the existing narrative
   - ALWAYS include important details from the existing narrative
   - Use the overall story outline to help consistency
-  - Generate the story necessary to wrap up the story
+  - Generate the narrative necessary to wrap up the story
   - Narratives should be long and short enough take about 30 seconds to read
   - ALWAYS use the style of the author mentioned
   - NEVER mention the previous choice NOR the previous options
@@ -30,6 +30,15 @@ An outline and the important parts of the narrative have already been generated.
   - Focus on the setting, atmosphere, and key visual elements
   - Keep it concise but vivid (1-2 sentences)
   - NEVER include text or numbers in the image
+- Generate a losing narrative for when the player's resources have reached the limit
+  - Use lossNarrative for reference and ALWAYS include important details
+  - Generate the narrative necessary to wrap up the story
+  - Narratives should be long and short enough take about 30 seconds to read
+  - ALWAYS use the style of the author mentioned
+  - NEVER mention the previous choice NOR the previous options
+  - THINK DEEPLY about how to connect EVERY option narrative to this losing narrative
+    - This losing narrative will be shown to the player directly after EVERY option narrative
+- Generate a short title for the losing narrative
 
 Make sure the narratives, title, and image are inoffensive and not emmotionally charged
 </instructions>
@@ -41,6 +50,8 @@ Output your thinking in <thinking> tags followed by valid JSON with the keys wit
   "narrative": "string",
   "imageDescription": "string",
   "options": [{ "narrative": "string" }],
+  "losingNarrative": "string",
+  "losingTitle": "string"
 }
 </output>
 

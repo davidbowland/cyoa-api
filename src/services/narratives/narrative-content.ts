@@ -31,6 +31,7 @@ export const generateNarrativeContent = async (
     nextChoice: generationData.nextChoice,
     nextOptions: generationData.nextOptions,
     outline: generationData.outline,
+    lossNarrative: generationData.lossNarrative,
     inspirationAuthor: generationData.inspirationAuthor,
   }
 
@@ -119,6 +120,7 @@ export const generateEndingNarrativeContent = async (
     previousChoice: generationData.previousChoice,
     previousOptions: generationData.previousOptions,
     outline: generationData.outline,
+    lossNarrative: generationData.lossNarrative,
     inspirationAuthor: generationData.inspirationAuthor,
   }
   const prompt = await getPromptById<TextPrompt>(promptIdCreateEndingNarrative)

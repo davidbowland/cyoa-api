@@ -2,7 +2,7 @@ import { createGame } from '../services/create-games'
 import { log, logError } from '../utils/logging'
 
 export const createGameHandler = async (): Promise<void> => {
-  for (let index = 0; index < 5; index++) {
+  for (let index = 0; index < 2; index++) {
     try {
       const { gameId } = await createGame()
       log('Game created successfully', { gameId })

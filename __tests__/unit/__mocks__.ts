@@ -142,6 +142,7 @@ export const cyoaChoicesPromptOutput = {
         { name: 'Ask for help', rank: 1, consequence: 'The wizard aids you' },
         { name: 'Challenge the wizard', rank: 2, consequence: 'The wizard is offended' },
       ],
+      lossNarrative: 'The dragon kills you!',
     },
   ],
 }
@@ -169,6 +170,7 @@ export const narrativeGenerationData: NarrativeGenerationData = {
     { name: 'Wake the dragon', rank: 2, consequence: 'The dragon awakens' },
   ],
   outline: 'Test outline',
+  lossNarrative: 'The dragon kills you!',
   inspirationAuthor: {
     name: 'Agatha Christie',
     style:

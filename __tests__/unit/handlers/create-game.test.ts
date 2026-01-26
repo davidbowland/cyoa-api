@@ -26,20 +26,19 @@ describe('create-game', () => {
 
     it('should keep retrying until game creation succeeds', async () => {
       jest.mocked(createGames).createGame.mockRejectedValueOnce(new Error('First failure'))
-      jest.mocked(createGames).createGame.mockRejectedValueOnce(new Error('Second failure'))
       jest.mocked(createGames).createGame.mockResolvedValueOnce({ game: cyoaGame, gameId })
 
       await createGameHandler()
 
-      expect(createGames.createGame).toHaveBeenCalledTimes(3)
+      expect(createGames.createGame).toHaveBeenCalledTimes(2)
     })
 
-    it('should retry up to 5 times before giving up', async () => {
+    it('should retry 2 times before giving up', async () => {
       jest.mocked(createGames).createGame.mockRejectedValue(new Error('Persistent failure'))
 
       await createGameHandler()
 
-      expect(createGames.createGame).toHaveBeenCalledTimes(5)
+      expect(createGames.createGame).toHaveBeenCalledTimes(2)
     })
   })
 })

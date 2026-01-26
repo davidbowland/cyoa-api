@@ -66,7 +66,7 @@ describe('create-narrative', () => {
       )
     })
 
-    it('should retry narrative creation up to 5 times before giving up', async () => {
+    it('should retry narrative creation 2 times before giving up', async () => {
       const error = new Error('Persistent failure')
       jest
         .mocked(dynamodb)
@@ -75,7 +75,7 @@ describe('create-narrative', () => {
 
       await createNarrativeHandler(createNarrativeEvent)
 
-      expect(createNarratives.createNarrative).toHaveBeenCalledTimes(5)
+      expect(createNarratives.createNarrative).toHaveBeenCalledTimes(2)
     })
   })
 })

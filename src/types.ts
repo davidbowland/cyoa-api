@@ -133,6 +133,7 @@ export interface NarrativeGenerationData {
   nextChoice?: string
   nextOptions?: Array<{ name: string; rank: number; consequence: string }>
   outline: string
+  lossNarrative: string
   inspirationAuthor: Author
   generationStartTime: number
 }
