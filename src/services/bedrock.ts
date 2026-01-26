@@ -16,6 +16,9 @@ export const invokeModel = async <T>(
   return invokeModelMessage(promptWithContext)
 }
 
+const removeThinkingTags = (input: string): string =>
+  input.replace(/(^\s*<thinking>.*?<\/thinking>\s*|^\s*|\s*`(json)?\s*|\s*$)/gs, '',)
+
 const invokeModelMessage = async <T>(prompt: TextPrompt): Promise<T> => {
   logDebug('Invoking model', { prompt })
   const messageBody = {
@@ -37,12 +40,7 @@ const invokeModelMessage = async <T>(prompt: TextPrompt): Promise<T> => {
   const response = await runtimeClient.send(command)
   const modelResponse = JSON.parse(new TextDecoder().decode(response.body))
   logDebug('Model response', { modelResponse, text: modelResponse.content[0].text })
-  return JSON.parse(
-    modelResponse.content[0].text.replace(
-      /(^\s*<thinking>.*?<\/thinking>\s*|^\s*|\s*`(json)?\s*|\s*$)/gs,
-      '',
-    ),
-  )
+  return JSON.parse(removeThinkingTags(modelResponse.content[0].text))
 }
 
 export const generateImage = async (

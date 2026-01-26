@@ -1,7 +1,7 @@
+import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda'
+
 import { getGameById } from '../services/dynamodb'
 import {
-  APIGatewayProxyEventV2,
-  APIGatewayProxyResultV2,
   CyoaGameSerialized,
   GameId,
 } from '../types'

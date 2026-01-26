@@ -68,7 +68,9 @@ describe('serialize', () => {
     it('should combine selected option consequence with narrative', () => {
       const result = serializeCyoaNarrative(cyoaNarrative, cyoaGame, 'start-0')
 
-      expect(result.narrative).toBe('You fight bravely\n\nYou find yourself standing before a massive sleeping dragon...')
+      expect(result.narrative).toBe(
+        'You fight bravely\n\nYou find yourself standing before a massive sleeping dragon...',
+      )
       expect(result.currentResourceValue).toBe(90) // 100 + (-10)
     })
 
@@ -96,7 +98,9 @@ describe('serialize', () => {
       const result = serializeCyoaNarrative(cyoaNarrative, gameWithMultipleChoices, 'start-0-1')
 
       expect(result.currentResourceValue).toBe(75) // 100 + (-10) + (-15)
-      expect(result.narrative).toBe('Result 4\n\nYou find yourself standing before a massive sleeping dragon...')
+      expect(result.narrative).toBe(
+        'Result 4\n\nYou find yourself standing before a massive sleeping dragon...',
+      )
     })
   })
 })

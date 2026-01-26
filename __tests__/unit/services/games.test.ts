@@ -202,9 +202,7 @@ describe('games', () => {
         ...mockGeneratedGame,
         title: '',
       }
-      jest
-        .mocked(bedrock)
-        .invokeModel.mockResolvedValueOnce(invalidGeneratedGame)
+      jest.mocked(bedrock).invokeModel.mockResolvedValueOnce(invalidGeneratedGame)
 
       await expect(createGame()).rejects.toThrow()
     })

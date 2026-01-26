@@ -18,13 +18,12 @@ import {
   CyoaGame,
   CyoaNarrative,
   GameId,
-  GameWithTimestamp,
+  CyoaGameWithTimestamp,
   NarrativeGenerationData,
   NarrativeId,
   PromptId,
 } from '../types'
 import { xrayCapture } from '../utils/logging'
-import { parseNarrativeId } from '../utils/narratives'
 
 const dynamodb = xrayCapture(new DynamoDB({ apiVersion: '2012-08-10' }))
 
@@ -83,7 +82,7 @@ export const getGames = async (): Promise<{ gameId: GameId; game: CyoaGame }[]> 
   })
   const response = await dynamodb.send(command)
 
-  const games: GameWithTimestamp[] =
+  const games: CyoaGameWithTimestamp[] =
     response.Items?.map((item: any) => ({
       game: JSON.parse(item.Data.S as string) as CyoaGame,
       gameId: item.GameId.S as GameId,
@@ -91,8 +90,8 @@ export const getGames = async (): Promise<{ gameId: GameId; game: CyoaGame }[]> 
     })) || []
 
   return games
-    .sort((a: GameWithTimestamp, b: GameWithTimestamp) => b.createdAt - a.createdAt)
-    .map(({ game, gameId }: GameWithTimestamp) => ({ game, gameId }))
+    .sort((a: CyoaGameWithTimestamp, b: CyoaGameWithTimestamp) => b.createdAt - a.createdAt)
+    .map(({ game, gameId }: CyoaGameWithTimestamp) => ({ game, gameId }))
 }
 
 /* Narratives */
@@ -106,14 +105,13 @@ export const getNarrativeById = async (
   gameId: GameId,
   narrativeId: NarrativeId,
 ): Promise<GetNarrativeResult> => {
-  const { storageKey } = parseNarrativeId(narrativeId)
   const command = new GetItemCommand({
     Key: {
       GameId: {
-        S: `${gameId}`,
+        S: gameId,
       },
       NarrativeId: {
-        S: storageKey,
+        S: narrativeId,
       },
     },
     TableName: dynamodbNarrativesTableName,
@@ -142,7 +140,7 @@ export const getNarrativesByIds = async (
       [dynamodbNarrativesTableName]: {
         Keys: narrativeIds.map((id) => ({
           GameId: { S: gameId },
-          NarrativeId: { S: parseNarrativeId(id).storageKey },
+          NarrativeId: { S: id },
         })),
       },
     },
@@ -150,20 +148,11 @@ export const getNarrativesByIds = async (
   const response: BatchGetItemCommandOutput = await dynamodb.send(command)
 
   const items = response.Responses?.[dynamodbNarrativesTableName] || []
-
-  const storageKeyToNarrativeId = new Map(
-    narrativeIds.map((id) => [parseNarrativeId(id).storageKey, id])
-  )
-
-  return items.map((item) => {
-    const storageKey = item.NarrativeId?.S as string
-    const narrativeId = storageKeyToNarrativeId.get(storageKey)!
-    return {
-      narrativeId,
-      generationData: item.GenerationData?.S ? JSON.parse(item.GenerationData.S) : undefined,
-      narrative: item.Data?.S ? JSON.parse(item.Data.S) : undefined,
-    }
-  })
+  return items.map((item) => ({
+    narrativeId: item.NarrativeId?.S as string,
+    generationData: item.GenerationData?.S ? JSON.parse(item.GenerationData.S) : undefined,
+    narrative: item.Data?.S ? JSON.parse(item.Data.S) : undefined,
+  }))
 }
 
 export const setNarrativeById = async (
@@ -171,17 +160,16 @@ export const setNarrativeById = async (
   narrativeId: NarrativeId,
   data: CyoaNarrative,
 ): Promise<PutItemOutput> => {
-  const { storageKey } = parseNarrativeId(narrativeId)
   const command = new PutItemCommand({
     Item: {
       Data: {
         S: JSON.stringify(data),
       },
       GameId: {
-        S: `${gameId}`,
+        S: gameId,
       },
       NarrativeId: {
-        S: storageKey,
+        S: narrativeId,
       },
     },
     TableName: dynamodbNarrativesTableName,
@@ -194,17 +182,16 @@ export const setNarrativeGenerationData = async (
   narrativeId: NarrativeId,
   generationData: NarrativeGenerationData,
 ): Promise<PutItemOutput> => {
-  const { storageKey } = parseNarrativeId(narrativeId)
   const command = new PutItemCommand({
     Item: {
       GenerationData: {
         S: JSON.stringify(generationData),
       },
       GameId: {
-        S: `${gameId}`,
+        S: gameId,
       },
       NarrativeId: {
-        S: storageKey,
+        S: narrativeId,
       },
     },
     TableName: dynamodbNarrativesTableName,

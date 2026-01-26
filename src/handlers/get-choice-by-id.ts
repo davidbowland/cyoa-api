@@ -1,35 +1,30 @@
-import { getGameById } from '../services/dynamodb'
-import { ensureNarrativeExists } from '../services/narrative-generation-orchestrator'
+import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda'
+import { retrieveChoiceById } from '../services/choices'
 import {
-  APIGatewayProxyEventV2,
-  APIGatewayProxyResultV2,
-  CyoaNarrativeSerialized,
+  ChoiceId,
+  CyoaChoiceSerialized,
   GameId,
-  NarrativeId,
 } from '../types'
 import { log, logError } from '../utils/logging'
-import { serializeCyoaNarrative } from '../utils/serialize'
 import status from '../utils/status'
 
-export const getNarrativeByIdHandler = async (
+export const getChoiceByIdHandler = async (
   event: APIGatewayProxyEventV2,
 ): Promise<
-  APIGatewayProxyResultV2<CyoaNarrativeSerialized | { message: string } | { error: string }>
+  APIGatewayProxyResultV2<CyoaChoiceSerialized | { message: string } | { error: string }>
 > => {
   log('Received event', { ...event, body: undefined })
 
   try {
     const gameId = event.pathParameters?.gameId as GameId
-    const narrativeId = event.pathParameters?.narrativeId as NarrativeId
-
-    const game = await getGameById(gameId)
-    const result = await ensureNarrativeExists(gameId, narrativeId, game)
+    const choiceId = event.pathParameters?.choiceId as ChoiceId
+    const result = await retrieveChoiceById(gameId, choiceId)
 
     switch (result.status) {
     case 'ready':
       return {
         ...status.OK,
-        body: JSON.stringify(serializeCyoaNarrative(result.narrative!, game, narrativeId)),
+        body: JSON.stringify(result.choice),
       }
     case 'generating':
       return { ...status.ACCEPTED, body: JSON.stringify({ message: result.message }) }
@@ -39,9 +34,9 @@ export const getNarrativeByIdHandler = async (
     }
   } catch (error: unknown) {
     logError('Failed to get narrative', {
+      choiceId: event.pathParameters?.choiceId,
       error,
       gameId: event.pathParameters?.gameId,
-      narrativeId: event.pathParameters?.narrativeId,
     })
     return {
       ...status.INTERNAL_SERVER_ERROR,

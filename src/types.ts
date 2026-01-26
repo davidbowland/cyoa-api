@@ -1,5 +1,3 @@
-export * from 'aws-lambda'
-
 // Common Types
 
 export interface StringObject {
@@ -10,6 +8,7 @@ export interface StringObject {
 
 export type GameId = string
 export type NarrativeId = string
+export type ChoiceId = string
 export type PromptId = string
 
 export interface CyoaOption {
@@ -21,14 +20,17 @@ export interface CyoaOption {
 
 export interface CyoaNarrativeOption {
   name: string
-  rank: number
-  consequence: string
-  resourcesToAdd: number
+  narrative: string
 }
 
 export interface CyoaInventory {
   name: string
   image?: string
+}
+
+export interface CyoaInventoryWithDescription {
+  name: string
+  imageDescription?: string
 }
 
 export interface CyoaCharacter {
@@ -44,6 +46,7 @@ export interface CyoaChoicePoint {
   choiceNarrative: string
   choice: string
   options: CyoaOption[]
+  lossNarrative: string
 }
 
 export interface CyoaGame {
@@ -59,25 +62,39 @@ export interface CyoaGame {
   resourceImage?: string
   startingResourceValue: number
   lossResourceThreshold: number
+  lossCondition: 'accumulate' | 'reduce'
   choicePoints: CyoaChoicePoint[]
   initialNarrativeId: string
   inspirationAuthor: Author
+  winNarrative: string
+}
+
+export interface CyoaGameFormatted {
+  title: string
+  description: string
+  outline: string
+  characters: CyoaCharacter[]
+  inventory: CyoaInventoryWithDescription[]
+  resourceName: string
+  startingResourceValue: number
+  lossResourceThreshold: number
+}
+
+export interface CyoaGameWithTimestamp {
+  game: CyoaGame
+  gameId: GameId
+  createdAt: number
 }
 
 export interface CyoaNarrative {
   narrative: string
-  recap: string
   chapterTitle: string
   image?: string
   choice?: string
   options: CyoaNarrativeOption[]
   inventory: CyoaInventory[]
-}
-
-export interface GameWithTimestamp {
-  game: CyoaGame
-  gameId: GameId
-  createdAt: number
+  losingTitle: string
+  losingNarrative: string
 }
 
 // Serialized Types (for API responses)
@@ -97,7 +114,7 @@ export interface CyoaOptionSerialized {
   name: string
 }
 
-export interface CyoaNarrativeSerialized {
+export interface CyoaChoiceSerialized {
   narrative: string
   chapterTitle: string
   image?: string
@@ -110,17 +127,12 @@ export interface CyoaNarrativeSerialized {
 // Generation and Processing Types
 
 export interface NarrativeGenerationData {
-  recap: string
-  lastChoiceMade: string
-  lastOptionSelected: string
-  bestOption: string
-  currentInventory: string[]
   inventoryAvailable: string[]
   existingNarrative: string
-  previousChoice: string
-  previousOptions: Array<{ name: string; rank: number; consequence: string }>
-  nextChoice: string
-  nextOptions: Array<{ name: string; rank: number; consequence: string }>
+  previousChoice?: string
+  previousOptions?: Array<{ name: string; rank: number; consequence: string }>
+  nextChoice?: string
+  nextOptions?: Array<{ name: string; rank: number; consequence: string }>
   outline: string
   inspirationAuthor: Author
   generationStartTime: number
@@ -142,14 +154,6 @@ export interface GameTheme {
 export interface CreateNarrativeEvent {
   gameId: GameId
   narrativeId: NarrativeId
-}
-
-export interface SQSNarrativeEvent {
-  Records: Array<{
-    body: string
-    messageId: string
-    receiptHandle: string
-  }>
 }
 
 export interface NarrativeContextS3Data {
@@ -239,8 +243,8 @@ export interface CreateChoicesPromptOutput {
   keyInformation?: string[]
   redHerrings?: string[]
   choicePoints?: CreateChoicesPromptChoicePoint[]
-  winNarrative?: string
   lossNarrative?: string
+  winNarrative?: string
 }
 
 export interface CreateNarrativePromptOption {
@@ -252,6 +256,8 @@ export interface CreateNarrativePromptOutput {
   narrative?: string
   imageDescription?: string
   options?: CreateNarrativePromptOption[]
+  losingTitle?: string
+  losingNarrative?: string
 }
 
 export interface EndingNarrativePromptOutput {
@@ -269,6 +275,11 @@ export interface ImageGenerationOptions {
   width?: number
   seed?: number
   negativeText?: string
+}
+
+export interface ImageGenerationData {
+  imageGenerationOptions: ImageGenerationOptions
+  model: string
 }
 
 export interface ImageGenerationResponse {

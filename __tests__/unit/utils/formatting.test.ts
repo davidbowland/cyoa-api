@@ -137,7 +137,9 @@ describe('formatting', () => {
     it('should throw error for invalid game prompt output', () => {
       const invalidInput = { ...cyoaGamePromptOutput, title: '' }
 
-      expect(() => formatCyoaGame(invalidInput as any, cyoaChoicesPromptOutput, testAuthor)).toThrow()
+      expect(() =>
+        formatCyoaGame(invalidInput as any, cyoaChoicesPromptOutput, testAuthor),
+      ).toThrow()
     })
 
     it('should throw error for missing required fields', () => {
@@ -194,11 +196,7 @@ describe('formatting', () => {
     }
 
     it('should format valid narrative prompt output', () => {
-      const result = formatNarrative(
-        createNarrativePromptOutput,
-        narrativeGenerationData,
-        mockGame,
-      )
+      const result = formatNarrative(createNarrativePromptOutput, narrativeGenerationData, mockGame)
 
       expect(result).toEqual({
         narrative: {
@@ -220,10 +218,7 @@ describe('formatting', () => {
               resourcesToAdd: -19,
             },
           ],
-          inventory: [
-            { name: 'Sword', image: 'sword-image.jpg' },
-            { name: 'Magic Wand' },
-          ],
+          inventory: [{ name: 'Sword', image: 'sword-image.jpg' }, { name: 'Magic Wand' }],
         },
         imageDescription: 'A dark cave with a massive sleeping dragon surrounded by treasure',
       })
@@ -240,9 +235,7 @@ describe('formatting', () => {
     it('should throw error for missing required fields', () => {
       const { narrative: _, ...incompleteInput } = createNarrativePromptOutput
 
-      expect(() =>
-        formatNarrative(incompleteInput, narrativeGenerationData, mockGame),
-      ).toThrow()
+      expect(() => formatNarrative(incompleteInput, narrativeGenerationData, mockGame)).toThrow()
     })
 
     it('should throw error for invalid option structure', () => {
@@ -252,11 +245,7 @@ describe('formatting', () => {
       }
 
       expect(() =>
-        formatNarrative(
-          invalidOptionsInput as any,
-          narrativeGenerationData,
-          mockGame,
-        ),
+        formatNarrative(invalidOptionsInput as any, narrativeGenerationData, mockGame),
       ).toThrow()
     })
 
@@ -278,26 +267,28 @@ describe('formatting', () => {
       }
 
       expect(() =>
-        formatNarrative(
-          emptyStringInput as any,
-          narrativeGenerationData,
-          mockGame,
-        ),
+        formatNarrative(emptyStringInput as any, narrativeGenerationData, mockGame),
       ).toThrow()
     })
 
     it('should use randomized options in narrative output', () => {
       const shuffledOptions = [
-        { name: 'Wake the dragon', rank: 2, consequence: 'The dragon awakens', resourcesToAdd: -19 },
-        { name: 'Sneak past quietly', rank: 1, consequence: 'You move silently', resourcesToAdd: -7 },
+        {
+          name: 'Wake the dragon',
+          rank: 2,
+          consequence: 'The dragon awakens',
+          resourcesToAdd: -19,
+        },
+        {
+          name: 'Sneak past quietly',
+          rank: 1,
+          consequence: 'You move silently',
+          resourcesToAdd: -7,
+        },
       ]
       jest.mocked(randomUtils).getRandomSample.mockReturnValueOnce(shuffledOptions)
 
-      const result = formatNarrative(
-        createNarrativePromptOutput,
-        narrativeGenerationData,
-        mockGame,
-      )
+      const result = formatNarrative(createNarrativePromptOutput, narrativeGenerationData, mockGame)
 
       expect(result.narrative.options).toEqual(shuffledOptions)
       expect(randomUtils.getRandomSample).toHaveBeenCalledWith(

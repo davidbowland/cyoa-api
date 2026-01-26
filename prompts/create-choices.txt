@@ -43,10 +43,10 @@ Come up with the plan for a choose-your-own-adventure story based on the author,
       - Don't mention the resource increasing or decreasing
       - For wrong options, ALWAYS allude to the right option, but don't mention it directly
     - Rank each option, with 1 being the best choice -- NEVER skip numbers
-- A 3-5 sentence description of what should happen in the narrative if the player wins / completes the game
-  - Base this on outline, resourceName, startingResourceValue, and lossResourceThreshold
-- A 3-5 sentence description of what should happen in the narrative if the player loses the game
-  - Base this on outline, resourceName, startingResourceValue, and lossResourceThreshold
+    - A 3-5 sentence description of what should happen in the narrative if the player's resources have crossed the threshold and the player has lost the game
+      - Base this on the outline, resourceName, startingResourceValue, and lossResourceThreshold
+- A 3-5 sentence description of what should happen in the narrative if the player correctly chooses and beats the game
+  - Base this on the outline, resourceName, and the final choice generated
 
 Think deeply about the most engaging and challenging story. Based on the choices and outline, when is it most important to introduce which key information? OR which red herrings? Think about key information and red herrings a second time as a seasoned CYOA game designer. When is it important to introduce those items so they aren't suspicious and aren't obvious?
 
@@ -67,11 +67,11 @@ Output your thinking in <thinking> tags followed by valid JSON with the keys wit
       "choice": "string",
       "options": [
         { "name": "string", "rank": number, "consequence": "string" }
-      ]
+      ],
+      "lossNarrative": "string"
     }
   ],
-  "winNarrative": "string",
-  "lossNarrative": "string"
+  "winNarrative": "string"
 }
 </output>
 
@@ -80,7 +80,6 @@ Output your thinking in <thinking> tags followed by valid JSON with the keys wit
   "resourceName": "Suspicion Points",
   "startingResourceValue": 0,
   "lossResourceThreshold": 80,
-  lossCondition: 'accumulate',
   choiceCount: 12,
   keyInformationCount: 2,
   redHerringCount: 3,

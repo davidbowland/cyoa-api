@@ -4,7 +4,7 @@
 You are creating a choose-your-own-adventure game. The best choices should lead to the best outcome. Some choices can be puzzles the user needs to figure out or remember. You are writing the narrative and choices based on a story generated earlier.
 </context>
 <instructions>
-An outline and the important parts of the narrative have already been generated. Given those, the choice the player, and then options with their consequences, generate the narrative for each option plus the narrative for the current choice.
+An outline and the important parts of the narrative have already been generated. Given those and the options with their consequences, generate the narrative for each option plus the narrative for the current choice.
 
 - Generate the narrative for the current choice
   - Elaborate on the existing narrative
@@ -34,7 +34,7 @@ An outline and the important parts of the narrative have already been generated.
 Make sure the narratives, title, and image are inoffensive and not emmotionally charged
 </instructions>
 <output>
-Output your thinking in <thinking> tags followed by valid JSON with the keys with NOTTHING ELSE (double-check that your JSON is valid with \n instead of newlines and " escaped):
+Output your thinking in <thinking> tags followed by valid JSON with the keys with NOTHING ELSE (double-check that your JSON is valid with \n instead of newlines and " escaped):
 
 {
   "chapterTitle": "string"

@@ -28,7 +28,6 @@ Mappings:
       originAccessIdentity: E25604SQJB5XYQ
       project: cyoa
       promptsTable: cyoa-api-prompts
-      queueName: cyoa-narratives-to-generate.fifo
       scheduledGameCreationEnabled: true
       zoneId: Z072422417XWM8PIXXSFA
     test:
@@ -43,7 +42,6 @@ Mappings:
       originAccessIdentity: E2UUWYVZTOVX9H
       project: cyoa-test
       promptsTable: cyoa-api-prompts-test
-      queueName: cyoa-narratives-to-generate-test.fifo
       scheduledGameCreationEnabled: false
       zoneId: Z01312547RGU1BYKIJXY
 
@@ -238,8 +236,12 @@ Resources:
               Resource: '*'
         - S3WritePolicy:
             BucketName: !Ref AssetsBucket
-        - SQSSendMessagePolicy:
-            QueueName: !FindInMap [EnvironmentMap, !Ref Environment, queueName]
+        - Version: 2012-10-17
+          Statement:
+            - Action:
+                - 'lambda:InvokeFunction'
+              Effect: Allow
+              Resource: !GetAtt CreateNarrativeFunction.Arn
       Environment:
         Variables:
           CREATE_NARRATIVE_FUNCTION_NAME: !Ref CreateNarrativeFunction
@@ -259,10 +261,6 @@ Resources:
           RESOURCE_TO_ADD_PERCENT_MIN: 175
           S3_ASSETS_BUCKET: !Ref AssetsBucket
           S3_ASSETS_DOMAIN: !FindInMap [EnvironmentMap, !Ref Environment, domainAssets]
-          SQS_MESSAGE_QUEUE_ID: narratives
-          SQS_QUEUE_URL: !Sub
-            - 'https://sqs.us-east-1.amazonaws.com/${AWS::AccountId}/${Queue}'
-            - Queue: !FindInMap [EnvironmentMap, !Ref Environment, queueName]
       Events:
         Schedule:
           Type: Schedule
@@ -307,17 +305,17 @@ Resources:
       FilterPattern: '[timestamp, uuid, level="ERROR", message]'
       LogGroupName: !Ref CreateGameLogGroup
 
-  # Narratives
+  # Choices
 
-  GetNarrativeByIdFunction:
+  GetChoiceByIdFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: src/handlers/get-narrative-by-id.getNarrativeByIdHandler
+      Handler: src/handlers/get-narrative-by-id.getChoiceByIdHandler
       Runtime: nodejs22.x
       Architectures:
         - x86_64
       MemorySize: 1024
-      Description: Retrieve narrative by ID
+      Description: Retrieve choice by ID
       Policies:
         - AWSLambdaBasicExecutionRole
         - DynamoDBReadPolicy:
@@ -326,8 +324,12 @@ Resources:
             TableName: !Ref NarrativesTable
         - S3WritePolicy:
             BucketName: !Ref AssetsBucket
-        - SQSSendMessagePolicy:
-            QueueName: !FindInMap [EnvironmentMap, !Ref Environment, queueName]
+        - Version: 2012-10-17
+          Statement:
+            - Action:
+                - 'lambda:InvokeFunction'
+              Effect: Allow
+              Resource: !GetAtt CreateNarrativeFunction.Arn
       Environment:
         Variables:
           CREATE_NARRATIVE_FUNCTION_NAME: !Ref CreateNarrativeFunction
@@ -336,16 +338,12 @@ Resources:
           DYNAMODB_NARRATIVES_TABLE_NAME: !Ref NarrativesTable
           S3_ASSETS_BUCKET: !Ref AssetsBucket
           S3_ASSETS_DOMAIN: !FindInMap [EnvironmentMap, !Ref Environment, domainAssets]
-          SQS_MESSAGE_QUEUE_ID: narratives
-          SQS_QUEUE_URL: !Sub
-            - 'https://sqs.us-east-1.amazonaws.com/${AWS::AccountId}/${Queue}'
-            - Queue: !FindInMap [EnvironmentMap, !Ref Environment, queueName]
       Events:
         Api:
           Type: HttpApi
           Properties:
             ApiId: !Ref HttpApi
-            Path: /games/{gameId}/narratives/{narrativeId}
+            Path: /games/{gameId}/choices/{choiceId}
             Method: get
       Tags:
         'created-by': 'cyoa-api'
@@ -360,12 +358,12 @@ Resources:
         Target: 'es2023'
         Sourcemap: true
         EntryPoints:
-          - src/handlers/get-narrative-by-id.ts
+          - src/handlers/get-choice-by-id.ts
 
-  GetNarrativeByIdLogGroup:
+  GetChoiceByIdLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub /aws/lambda/${GetNarrativeByIdFunction}
+      LogGroupName: !Sub /aws/lambda/${GetChoiceByIdFunction}
       RetentionInDays: 30
       Tags:
         - Key: 'created-by'
@@ -375,14 +373,16 @@ Resources:
         - Key: 'environment'
           Value: !Ref Environment
 
-  GetNarrativeByIdGroupSubscription:
+  GetChoiceByIdGroupSubscription:
     Type: AWS::Logs::SubscriptionFilter
     Properties:
       DestinationArn: !Sub
         - 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${Function}'
         - Function: !FindInMap [EnvironmentMap, !Ref Environment, logStreamFunction]
       FilterPattern: '[timestamp, uuid, level="ERROR", message]'
-      LogGroupName: !Ref GetNarrativeByIdLogGroup
+      LogGroupName: !Ref GetChoiceByIdLogGroup
+
+  # Narratives
 
   CreateNarrativeFunction:
     Type: AWS::Serverless::Function
@@ -403,8 +403,6 @@ Resources:
             TableName: !Ref PromptsTable
         - S3CrudPolicy:
             BucketName: !Ref AssetsBucket
-        - SQSPollerPolicy:
-            QueueName: !GetAtt NarrativeGenerationQueue.QueueName
         - Version: 2012-10-17
           Statement:
             - Action:
@@ -422,22 +420,15 @@ Resources:
           INSPIRATION_ADJECTIVES_COUNT: 1
           INSPIRATION_NOUNS_COUNT: 3
           INSPIRATION_VERBS_COUNT: 2
+          PROMPT_ID_COVER_IMAGE: cover-image
+          PROMPT_ID_CREATE_ENDING_NARRATIVE: create-ending-narrative
           PROMPT_ID_CREATE_NARRATIVE: create-narrative
           PROMPT_ID_INVENTORY_IMAGE: inventory-image
-          PROMPT_ID_COVER_IMAGE: cover-image
-          PROMPT_ID_LOSE_GAME: lose-game
           PROMPT_ID_NARRATIVE_IMAGE: narrative-image
-          PROMPT_ID_WIN_GAME: win-game
           RESOURCE_TO_ADD_PERCENT_MAX: 275
           RESOURCE_TO_ADD_PERCENT_MIN: 175
           S3_ASSETS_BUCKET: !Ref AssetsBucket
           S3_ASSETS_DOMAIN: !FindInMap [EnvironmentMap, !Ref Environment, domainAssets]
-      Events:
-        SQSQueueEvent:
-          Type: SQS
-          Properties:
-            BatchSize: 1
-            Queue: !GetAtt NarrativeGenerationQueue.Arn
       Tags:
         'created-by': 'cyoa-api'
         'created-for': 'cyoa'
@@ -641,22 +632,3 @@ Resources:
       HostedZoneId: !FindInMap [EnvironmentMap, !Ref Environment, zoneId]
       Name: !FindInMap [EnvironmentMap, !Ref Environment, domainAssets]
       Type: A
-
-  # SQS
-
-  NarrativeGenerationQueue:
-    Type: AWS::SQS::Queue
-    Properties:
-      FifoQueue: true
-      KmsMasterKeyId: alias/aws/sqs
-      MessageRetentionPeriod: 1209600 # 14 days
-      QueueName: !FindInMap [EnvironmentMap, !Ref Environment, queueName]
-      ReceiveMessageWaitTimeSeconds: 20
-      Tags:
-        - Key: 'created-by'
-          Value: 'cyoa-api'
-        - Key: 'created-for'
-          Value: 'cyoa'
-        - Key: 'environment'
-          Value: !Ref Environment
-      VisibilityTimeout: 300

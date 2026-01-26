@@ -1,0 +1,49 @@
+# {"anthropicVersion":"bedrock-2023-05-31","maxTokens":75000,"model":"us.anthropic.claude-sonnet-4-5-20250929-v1:0","temperature":0.8,"topK":500}
+
+<context>
+You are creating a choose-your-own-adventure game. The best choices should lead to the best outcome. Some choices can be puzzles the user needs to figure out or remember. You are writing the final narrative to wrap up the story after the player has completed game.
+</context>
+<instructions>
+An outline and the important parts of the narrative have already been generated. Given those and the options with their consequences, generate the narrative for each option plus the final narrative of the game.
+
+- Generate the final narrative of the game
+  - The player has won
+  - Elaborate on the existing narrative
+  - ALWAYS include important details from the existing narrative
+  - Use the overall story outline to help consistency
+  - Generate the story necessary to wrap up the story
+  - Narratives should be long and short enough take about 30 seconds to read
+  - ALWAYS use the style of the author mentioned
+  - NEVER mention the previous choice NOR the previous options
+- Generate a narrative for each previous option and its consequences
+  - Create a narrative to connect the last narrative to this narrative while acknowledging the player's choice (the option they picked)
+  - ALWAYS generate narratives in the same order as options
+  - Inform the player of the consequences of their decision
+  - If the option is not rank 1, allude to but DO NOT directly mention the rank 1 option
+  - Option narratives should be long and short enough to take 5-10 seconds to read
+  - Option narratives MUST flow seamlessly into the final narrative
+    - THINK DEEPLY about how to connect the narratives so that even the worst choices progress the game in the same way
+  - ALWAYS use the style of the author mentioned
+- Generate a short title for the chapter for this narrative
+- Generate an image description for this narrative scene
+  - Describe the visual scene that represents this part of the story
+  - Focus on the setting, atmosphere, and key visual elements
+  - Keep it concise but vivid (1-2 sentences)
+  - NEVER include text or numbers in the image
+
+Make sure the narratives, title, and image are inoffensive and not emmotionally charged
+</instructions>
+<output>
+Output your thinking in <thinking> tags followed by valid JSON with the keys with NOTHING ELSE (double-check that your JSON is valid with \n instead of newlines and " escaped):
+
+{
+  "chapterTitle": "string"
+  "narrative": "string",
+  "imageDescription": "string",
+  "options": [{ "narrative": "string" }],
+}
+</output>
+
+<input>
+${context}
+</input>

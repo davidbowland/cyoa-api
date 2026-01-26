@@ -1,12 +1,4 @@
-import {
-  CyoaGame,
-  CyoaGameSerialized,
-  CyoaNarrative,
-  CyoaNarrativeSerialized,
-  CyoaOptionSerialized,
-  NarrativeId,
-} from '../types'
-import { calculateCurrentResourceValue, parseNarrativeId } from './narratives'
+import { CyoaChoiceSerialized, CyoaGame, CyoaGameSerialized, CyoaNarrative } from '../types'
 
 export const serializeCyoaGame = (game: CyoaGame): CyoaGameSerialized => ({
   description: game.description,
@@ -19,37 +11,31 @@ export const serializeCyoaGame = (game: CyoaGame): CyoaGameSerialized => ({
   initialNarrativeId: game.initialNarrativeId,
 })
 
-export const serializeCyoaNarrative = (
+const combineNarrative = (
   narrative: CyoaNarrative,
-  game: CyoaGame,
-  narrativeId: NarrativeId,
-): CyoaNarrativeSerialized => {
-  const currentResourceValue = calculateCurrentResourceValue(game, narrativeId)
-  const { selectedOptionIndices, choicePointIndex } = parseNarrativeId(narrativeId)
-
-  let combinedNarrative = narrative.narrative
-
-  if (selectedOptionIndices.length > 0) {
-    const lastOptionIndex = selectedOptionIndices[selectedOptionIndices.length - 1]
-    const lastChoiceIndex = choicePointIndex - 1
-    const lastChoice = game.choicePoints[lastChoiceIndex]
-    const selectedOption = lastChoice?.options[lastOptionIndex]
-
-    if (selectedOption) {
-      combinedNarrative = `${selectedOption.consequence}\n\n${narrative.narrative}`
-    }
+  latestOptionSelected: number,
+  isLoss: boolean,
+): string => {
+  const selectedOption = narrative.options[latestOptionSelected]
+  if (selectedOption) {
+    return `${selectedOption.narrative}\n\n${isLoss ? narrative.losingNarrative : narrative.narrative}`
   }
+  return narrative.narrative
+}
 
+export const serializeCyoaChoice = (
+  narrative: CyoaNarrative,
+  isLoss: boolean,
+  currentResourceValue: number,
+  latestOptionSelected: number,
+): CyoaChoiceSerialized => {
+  const combinedNarrative = combineNarrative(narrative, latestOptionSelected, isLoss)
   return {
     narrative: combinedNarrative,
     chapterTitle: narrative.chapterTitle,
     image: narrative.image,
     choice: narrative.choice,
-    options: narrative.options.map(
-      (option): CyoaOptionSerialized => ({
-        name: option.name,
-      }),
-    ),
+    options: narrative.options,
     inventory: narrative.inventory,
     currentResourceValue,
   }
