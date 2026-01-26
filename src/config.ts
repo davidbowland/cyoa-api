@@ -47,8 +47,3 @@ export const bedrockImageModelId = process.env.BEDROCK_IMAGE_MODEL_ID || 'amazon
 
 export const s3AssetsBucket = process.env.S3_ASSETS_BUCKET as string
 export const s3AssetsDomain = process.env.S3_ASSETS_DOMAIN as string
-
-// SQS
-
-export const sqsMessageGroupId = process.env.SQS_MESSAGE_QUEUE_ID as string
-export const sqsQueueUrl = process.env.SQS_QUEUE_URL as string

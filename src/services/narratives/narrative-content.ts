@@ -8,6 +8,7 @@ import {
   CyoaNarrative,
   CyoaNarrativeOption,
   EndingNarrativePromptOutput,
+  GenerateNarrativeContentResult,
   NarrativeGenerationData,
   TextPrompt,
 } from '../../types'
@@ -17,11 +18,6 @@ import { invokeModel } from '../bedrock'
 import { getPromptById } from '../dynamodb'
 
 const ajv = new Ajv({ allErrors: true })
-
-interface GenerateNarrativeContentResult {
-  narrative: CyoaNarrative
-  imageDescription: string
-}
 
 export const generateNarrativeContent = async (
   game: CyoaGame,

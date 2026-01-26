@@ -16,9 +16,11 @@ import {
 } from '../config'
 import {
   CyoaGame,
+  CyoaGameWithTimestamp,
   CyoaNarrative,
   GameId,
-  CyoaGameWithTimestamp,
+  GetNarrativeResult,
+  GetNarrativesResult,
   NarrativeGenerationData,
   NarrativeId,
   PromptId,
@@ -96,11 +98,6 @@ export const getGames = async (): Promise<{ gameId: GameId; game: CyoaGame }[]> 
 
 /* Narratives */
 
-interface GetNarrativeResult {
-  narrative?: CyoaNarrative
-  generationData?: NarrativeGenerationData
-}
-
 export const getNarrativeById = async (
   gameId: GameId,
   narrativeId: NarrativeId,
@@ -121,10 +118,6 @@ export const getNarrativeById = async (
     return { generationData: JSON.parse(response.Item.GenerationData.S) }
   }
   return { narrative: JSON.parse(response.Item.Data.S) }
-}
-
-interface GetNarrativesResult extends GetNarrativeResult {
-  narrativeId: string
 }
 
 export const getNarrativesByIds = async (

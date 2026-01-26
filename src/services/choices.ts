@@ -1,18 +1,10 @@
-import { ChoiceId, CyoaChoiceSerialized, CyoaGame, GameId } from '../types'
+import { ChoiceId, ChoiceResult, CyoaGame, GameId } from '../types'
 import { calculateCurrentResourceValue, isGameLost, parseChoiceId } from '../utils/choices'
 import { log } from '../utils/logging'
 import { isGenerating } from '../utils/narratives'
 import { serializeCyoaChoice } from '../utils/serialize'
 import { getGameById, getNarrativeById } from './dynamodb'
 import { queueNarrativeGeneration } from './narratives'
-
-type ChoiceStatus = 'ready' | 'generating' | 'not_found'
-
-interface ChoiceResult {
-  choice?: CyoaChoiceSerialized
-  message?: string
-  status: ChoiceStatus
-}
 
 export const retrieveChoiceById = async (
   gameId: GameId,

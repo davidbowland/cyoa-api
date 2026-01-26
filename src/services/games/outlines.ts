@@ -3,12 +3,11 @@ import Ajv from 'ajv'
 import { gameThemes, inventoryCounts, lossConditions } from '../../assets/configurations'
 import { promptIdCreateGame } from '../../config'
 import {
-  Author,
   CreateGamePromptOutput,
   CyoaCharacter,
   CyoaGameFormatted,
   CyoaInventoryWithDescription,
-  GameTheme,
+  GameOutlineResults,
   TextPrompt,
 } from '../../types'
 import { log } from '../../utils/logging'
@@ -17,14 +16,6 @@ import { invokeModel } from '../bedrock'
 import { getPromptById } from '../dynamodb'
 
 const ajv = new Ajv({ allErrors: true })
-
-interface GameOutlineResults {
-  game: CyoaGameFormatted
-  imageDescription: string
-  inspirationAuthor: Author
-  resourceImageDescription: string
-  storyType: GameTheme
-}
 
 export const generateGameOutline = async (
   existingGameTitles: string[],

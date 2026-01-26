@@ -69,15 +69,17 @@ export interface CyoaGame {
   winNarrative: string
 }
 
-export interface CyoaGameFormatted {
-  title: string
-  description: string
-  outline: string
-  characters: CyoaCharacter[]
+export type CyoaGameFormatted = Pick<
+  CyoaGame,
+  | 'title'
+  | 'description'
+  | 'outline'
+  | 'characters'
+  | 'resourceName'
+  | 'startingResourceValue'
+  | 'lossResourceThreshold'
+> & {
   inventory: CyoaInventoryWithDescription[]
-  resourceName: string
-  startingResourceValue: number
-  lossResourceThreshold: number
 }
 
 export interface CyoaGameWithTimestamp {
@@ -99,27 +101,24 @@ export interface CyoaNarrative {
 
 // Serialized Types (for API responses)
 
-export interface CyoaGameSerialized {
-  title: string
-  description: string
-  image?: string
-  resourceName: string
-  resourceImage?: string
-  startingResourceValue: number
-  lossResourceThreshold: number
-  initialNarrativeId: string
-}
-
-export interface CyoaOptionSerialized {
-  name: string
-}
+export type CyoaGameSerialized = Pick<
+  CyoaGame,
+  | 'title'
+  | 'description'
+  | 'image'
+  | 'resourceName'
+  | 'resourceImage'
+  | 'startingResourceValue'
+  | 'lossResourceThreshold'
+  | 'initialNarrativeId'
+>
 
 export interface CyoaChoiceSerialized {
   narrative: string
   chapterTitle: string
   image?: string
   choice?: string
-  options: CyoaOptionSerialized[]
+  options: CyoaNarrativeOption[]
   inventory: CyoaInventory[]
   currentResourceValue: number
 }
@@ -156,13 +155,6 @@ export interface CreateNarrativeEvent {
   narrativeId: NarrativeId
 }
 
-export interface NarrativeContextS3Data {
-  gameId: string
-  narrativeId: string
-  generationData: NarrativeGenerationData
-  timestamp: number
-}
-
 // Prompt Configuration Types
 
 export interface TextPromptConfig {
@@ -180,12 +172,6 @@ export interface ImagePromptConfig {
   height: number
   width: number
   seed: number
-}
-
-export interface LargePromptOptions {
-  chunkSize?: number
-  useSystemMessage?: boolean
-  systemMessage?: string
 }
 
 export interface TextPrompt {
@@ -284,4 +270,42 @@ export interface ImageGenerationData {
 
 export interface ImageGenerationResponse {
   imageData: Uint8Array
+}
+
+// Service Result Types
+
+export type ChoiceResult =
+  | { status: 'ready'; choice: CyoaChoiceSerialized }
+  | { status: 'generating'; message: string }
+  | { status: 'not_found'; message: string }
+
+export interface GetNarrativeResult {
+  narrative?: CyoaNarrative
+  generationData?: NarrativeGenerationData
+}
+
+export interface GetNarrativesResult extends GetNarrativeResult {
+  narrativeId: string
+}
+
+export interface GameOutlineResults {
+  game: CyoaGameFormatted
+  imageDescription: string
+  inspirationAuthor: Author
+  resourceImageDescription: string
+  storyType: GameTheme
+}
+
+export interface GenerateNarrativeContentResult {
+  narrative: CyoaNarrative
+  imageDescription: string
+}
+
+// Utility Types
+
+export interface ChoiceIdParts {
+  choicePointIndex: number
+  latestOptionSelected: number
+  narrativeId: NarrativeId
+  selectedOptionIndices: number[]
 }

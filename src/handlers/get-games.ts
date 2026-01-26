@@ -1,4 +1,7 @@
-import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda'
+import {
+  APIGatewayProxyEventV2,
+  APIGatewayProxyResultV2,
+} from 'aws-lambda'
 
 import { getGames } from '../services/dynamodb'
 import { log, logError } from '../utils/logging'

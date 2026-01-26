@@ -1,12 +1,5 @@
-import { ChoiceId, CyoaGame, NarrativeId } from '../types'
+import { ChoiceId, ChoiceIdParts, CyoaGame, NarrativeId } from '../types'
 import { getNarrativeIdByIndex } from './narratives'
-
-interface ChoiceIdParts {
-  choicePointIndex: number
-  latestOptionSelected: number
-  narrativeId: NarrativeId
-  selectedOptionIndices: number[]
-}
 
 export const parseChoiceId = (choiceId: ChoiceId): ChoiceIdParts => {
   const parts = choiceId.split('-')
