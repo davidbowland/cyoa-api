@@ -14,11 +14,11 @@ export const retrieveChoiceById = async (
     parseChoiceId(choiceId)
   const game = await getGameById(gameId)
   const existing = await getNarrativeById(gameId, narrativeId)
-  const current = game.choicePoints[choicePointIndex]
-  const isLastNarrative = current === undefined && choicePointIndex !== game.choicePoints.length
-  if (isLastNarrative || current?.options[latestOptionSelected] === undefined) {
-    return { status: 'not_found', message: 'Choice not found' }
-  }
+  // const current = game.choicePoints[choicePointIndex]
+  // const isLastNarrative = current === undefined && choicePointIndex !== game.choicePoints.length
+  // if (isLastNarrative || current?.options[latestOptionSelected] === undefined) {
+  //   return { status: 'not_found', message: 'Choice not found' }
+  // }
 
   if (existing.narrative) {
     await ensureNextNarrativeExists(gameId, choiceId, game)
