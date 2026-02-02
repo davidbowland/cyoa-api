@@ -9,7 +9,7 @@ import status from '../utils/status'
 export const getGameByIdHandler = async (
   event: APIGatewayProxyEventV2,
 ): Promise<APIGatewayProxyResultV2<CyoaGameSerialized>> => {
-  log('Received event', { ...event, body: undefined })
+  log('Received event', { event })
 
   const gameId = event.pathParameters?.gameId as GameId
   try {

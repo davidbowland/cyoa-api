@@ -10,7 +10,7 @@ export const getChoiceByIdHandler = async (
 ): Promise<
   APIGatewayProxyResultV2<CyoaChoiceSerialized | { message: string } | { error: string }>
 > => {
-  log('Received event', { ...event, body: undefined })
+  log('Received event', { event })
 
   try {
     const gameId = event.pathParameters?.gameId as GameId

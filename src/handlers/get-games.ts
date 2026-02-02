@@ -8,7 +8,7 @@ import status from '../utils/status'
 export const getGamesHandler = async (
   event: APIGatewayProxyEventV2,
 ): Promise<APIGatewayProxyResultV2<unknown>> => {
-  log('Received event', { ...event, body: undefined })
+  log('Received event', { event })
 
   try {
     const games = await getGames()

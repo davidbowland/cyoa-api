@@ -37,52 +37,54 @@ describe('choices', () => {
       })
       expect(dynamodb.getGameById).toHaveBeenCalledWith(gameId)
       expect(dynamodb.getNarrativeById).toHaveBeenCalledWith(gameId, 'narrative-1')
+      expect(dynamodb.getNarrativeById).toHaveBeenCalledWith(gameId, 'narrative-2')
     })
 
-    it('queues next narrative generation when current narrative exists', async () => {
-      const gameWithThreeChoices = {
-        ...cyoaGame,
-        choicePoints: [
-          cyoaGame.choicePoints[0],
-          cyoaGame.choicePoints[0],
-          cyoaGame.choicePoints[0],
-        ],
-      }
-      jest.mocked(dynamodb).getGameById.mockResolvedValueOnce(gameWithThreeChoices)
+    it('queues next narrative generation when next narrative does not exist', async () => {
       jest.mocked(dynamodb).getNarrativeById.mockResolvedValueOnce({ narrative: cyoaNarrative })
-      jest.mocked(dynamodb).getNarrativeById.mockResolvedValueOnce({})
+      jest.mocked(dynamodb).getNarrativeById.mockRejectedValueOnce(new Error('Not found'))
 
       await retrieveChoiceById(gameId, choiceId)
 
       expect(narratives.queueNarrativeGeneration).toHaveBeenCalledWith(
         gameId,
-        gameWithThreeChoices,
+        gameWithTwoChoices,
         2,
       )
     })
 
-    // eslint-disable-next-line jest/no-disabled-tests
-    it.skip('returns not_found when choice point does not exist', async () => {
-      const invalidChoiceId: ChoiceId = 'start-0-0-0-0-0-0-0-0'
-
-      const result = await retrieveChoiceById(gameId, invalidChoiceId)
-
-      expect(result).toEqual({
-        status: 'not_found',
-        message: 'Choice not found',
+    it('queues next narrative generation when next narrative generation expired', async () => {
+      jest.mocked(dynamodb).getNarrativeById.mockResolvedValueOnce({ narrative: cyoaNarrative })
+      jest.mocked(dynamodb).getNarrativeById.mockResolvedValueOnce({
+        generationData: { ...narrativeGenerationData, generationStartTime: mockNow - 600000 },
       })
+
+      await retrieveChoiceById(gameId, choiceId)
+
+      expect(narratives.queueNarrativeGeneration).toHaveBeenCalledWith(
+        gameId,
+        gameWithTwoChoices,
+        2,
+      )
     })
 
-    // eslint-disable-next-line jest/no-disabled-tests
-    it.skip('returns not_found when option does not exist', async () => {
-      const invalidChoiceId: ChoiceId = 'start-5'
+    it('does not queue next narrative when next narrative is generating', async () => {
+      jest
+        .mocked(dynamodb)
+        .getNarrativeById.mockResolvedValueOnce({ narrative: cyoaNarrative })
+        .mockResolvedValueOnce({
+          generationData: { ...narrativeGenerationData, generationStartTime: mockNow },
+        })
 
-      const result = await retrieveChoiceById(gameId, invalidChoiceId)
+      await retrieveChoiceById(gameId, choiceId)
 
-      expect(result).toEqual({
-        status: 'not_found',
-        message: 'Choice not found',
-      })
+      expect(narratives.queueNarrativeGeneration).not.toHaveBeenCalled()
+    })
+
+    it('does not queue next narrative when next narrative exists', async () => {
+      await retrieveChoiceById(gameId, choiceId)
+
+      expect(narratives.queueNarrativeGeneration).not.toHaveBeenCalled()
     })
 
     it('returns generating status when narrative is being generated', async () => {

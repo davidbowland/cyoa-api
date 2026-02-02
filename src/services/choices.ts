@@ -54,9 +54,25 @@ export const retrieveChoiceById = async (
 
 const ensureNextNarrativeExists = async (gameId: GameId, choiceId: ChoiceId, game: CyoaGame) => {
   const { choicePointIndex, narrativeId } = parseChoiceId(`${choiceId}-0`)
-  const { narrative, generationData } = await getNarrativeById(gameId, narrativeId)
-  if (narrative || (generationData && isGenerating(generationData))) {
-    return
+  try {
+    const { narrative, generationData } = await getNarrativeById(gameId, narrativeId)
+    if (narrative || (generationData && isGenerating(generationData))) {
+      log('Next narrative found', { gameId, choiceId, narrativeId, choicePointIndex })
+      return
+    }
+    log('Generation time expired, re-queueing generation', {
+      gameId,
+      choiceId,
+      narrativeId,
+      choicePointIndex,
+    })
+  } catch {
+    log('Next narrative not found, queuing generation', {
+      gameId,
+      choiceId,
+      narrativeId,
+      choicePointIndex,
+    })
   }
   await queueNarrativeGeneration(gameId, game, choicePointIndex)
 }

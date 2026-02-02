@@ -3,6 +3,7 @@ import {
   BatchGetItemCommandOutput,
   DynamoDB,
   GetItemCommand,
+  GetItemCommandOutput,
   PutItemCommand,
   PutItemOutput,
   QueryCommand,
@@ -113,11 +114,11 @@ export const getNarrativeById = async (
     },
     TableName: dynamodbNarrativesTableName,
   })
-  const response = await dynamodb.send(command)
-  if (response.Item.GenerationData?.S) {
+  const response: GetItemCommandOutput = await dynamodb.send(command)
+  if (response.Item?.GenerationData?.S) {
     return { generationData: JSON.parse(response.Item.GenerationData.S) }
   }
-  return { narrative: JSON.parse(response.Item.Data.S) }
+  return { narrative: JSON.parse(response.Item?.Data?.S as string) }
 }
 
 export const getNarrativesByIds = async (
