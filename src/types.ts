@@ -128,6 +128,7 @@ export interface CyoaChoiceSerialized {
 export interface NarrativeGenerationData {
   inventoryAvailable: string[]
   existingNarrative: string
+  previousNarrative?: string
   previousChoice?: string
   previousOptions?: Array<{ name: string; rank: number; consequence: string }>
   nextChoice?: string

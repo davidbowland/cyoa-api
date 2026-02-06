@@ -26,6 +26,7 @@ export const generateNarrativeContent = async (
   const modelContext = {
     inventoryAvailable: generationData.inventoryAvailable,
     existingNarrative: generationData.existingNarrative,
+    previousNarrative: generationData.previousNarrative,
     previousChoice: generationData.previousChoice,
     previousOptions: generationData.previousOptions,
     nextChoice: generationData.nextChoice,
@@ -117,6 +118,7 @@ export const generateEndingNarrativeContent = async (
   const modelContext = {
     inventoryAvailable: generationData.inventoryAvailable,
     existingNarrative: game.winNarrative,
+    previousNarrative: generationData.previousNarrative,
     previousChoice: generationData.previousChoice,
     previousOptions: generationData.previousOptions,
     outline: generationData.outline,

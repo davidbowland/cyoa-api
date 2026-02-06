@@ -34,6 +34,7 @@ describe('narratives', () => {
         expect.objectContaining({
           inventoryAvailable: ['Sword'],
           existingNarrative: 'You encounter a challenge',
+          previousNarrative: undefined,
           previousChoice: undefined,
           previousOptions: undefined,
           nextChoice: 'You see a sleeping dragon. What do you do?',
@@ -67,6 +68,7 @@ describe('narratives', () => {
         gameId,
         'narrative-1',
         expect.objectContaining({
+          previousNarrative: 'You encounter a challenge',
           previousChoice: 'You see a sleeping dragon. What do you do?',
           previousOptions: [
             { name: 'Fight', rank: 1, consequence: 'You fight bravely' },

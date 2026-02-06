@@ -20,6 +20,7 @@ export const queueNarrativeGeneration = async (
   const generationData: NarrativeGenerationData = {
     inventoryAvailable: currentChoice.inventoryAvailable,
     existingNarrative: currentChoice.choiceNarrative,
+    previousNarrative: lastChoice?.choiceNarrative,
     previousChoice: lastChoice?.choice,
     previousOptions: lastChoice?.options.map((opt) => ({
       name: opt.name,

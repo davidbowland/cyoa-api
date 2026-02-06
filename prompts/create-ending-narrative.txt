@@ -10,6 +10,7 @@ An outline and the important parts of the narrative have already been generated.
   - The player has won
   - Elaborate on the existing narrative
   - ALWAYS include important details from the existing narrative
+  - ALWAYS MAKE NARRATIVE AND PREVIOUS OPTIONS FOLLOW NATURALLY FROM the previousNarrative
   - Use the overall story outline to help consistency
   - Generate the narrative necessary to wrap up the story
   - Narratives should be long and short enough take about 30 seconds to read
@@ -18,6 +19,7 @@ An outline and the important parts of the narrative have already been generated.
 - Generate a narrative for each previous option and its consequences
   - Create a narrative to connect the last narrative to this narrative while acknowledging the player's choice (the option they picked)
   - ALWAYS generate narratives in the same order as options
+  - ALWAYS MAKE NARRATIVE AND PREVIOUS OPTIONS FOLLOW NATURALLY FROM the previousNarrative
   - Inform the player of the consequences of their decision
   - If the option is not rank 1, allude to but DO NOT directly mention the rank 1 option
   - Option narratives should be long and short enough to take 5-10 seconds to read

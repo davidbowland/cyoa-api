@@ -38,6 +38,7 @@ describe('narratives/narrative-content', () => {
       expect(bedrock.invokeModel).toHaveBeenCalledWith(prompt, {
         inventoryAvailable: ['Sword'],
         existingNarrative: generationDataWithInventory.existingNarrative,
+        previousNarrative: generationDataWithInventory.previousNarrative,
         previousChoice: generationDataWithInventory.previousChoice,
         previousOptions: generationDataWithInventory.previousOptions,
         nextChoice: generationDataWithInventory.nextChoice,
@@ -109,6 +110,7 @@ describe('narratives/narrative-content', () => {
       expect(bedrock.invokeModel).toHaveBeenCalledWith(prompt, {
         inventoryAvailable: narrativeGenerationData.inventoryAvailable,
         existingNarrative: cyoaGame.winNarrative,
+        previousNarrative: narrativeGenerationData.previousNarrative,
         previousChoice: narrativeGenerationData.previousChoice,
         previousOptions: narrativeGenerationData.previousOptions,
         lossNarrative: narrativeGenerationData.lossNarrative,

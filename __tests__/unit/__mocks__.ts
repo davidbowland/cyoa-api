@@ -159,6 +159,7 @@ export const createNarrativeEvent: CreateNarrativeEvent = {
 export const narrativeGenerationData: NarrativeGenerationData = {
   inventoryAvailable: ['Health Potion'],
   existingNarrative: 'You approach the dragon carefully',
+  previousNarrative: 'You entered the dark cave',
   previousChoice: 'What do you investigate first?',
   previousOptions: [
     { name: 'Sneak past quietly', rank: 1, consequence: 'You move silently' },
