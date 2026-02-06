@@ -28,6 +28,7 @@ Come up with the plan for a choose-your-own-adventure story based on the author,
     - A list of inventory items the player should have available when the choice is made
     - A 1-3 sentence description of what should happen in the narrative before the choice is made,
       - Will be passed to an LLM later to generate full narrative, so ONLY mention important details
+      - NEVER assume previous choices or incorporate the consequence of previous choices
     - The choice text, which should be 1-2 SHORT sentences that focus ONLY on the decision
       - BAD: Dr Mark introduces the dates 1857 and 1942. Which door do you open?
       - GOOD: Which door do you open?

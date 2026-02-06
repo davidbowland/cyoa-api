@@ -23,6 +23,66 @@ describe('choices', () => {
   })
 
   describe('retrieveChoiceById', () => {
+    it('returns ending narrative when it exists', async () => {
+      const endingChoiceId: ChoiceId = 'start-0-0'
+      jest.mocked(dynamodb).getGameById.mockResolvedValueOnce(gameWithTwoChoices)
+      jest.mocked(dynamodb).getNarrativeById.mockResolvedValueOnce({ narrative: cyoaNarrative })
+
+      const result = await retrieveChoiceById(gameId, endingChoiceId)
+
+      expect(result.status).toBe('ready')
+      expect(result).toEqual({
+        status: 'ready',
+        choice: expect.objectContaining({
+          narrative: expect.any(String),
+          chapterTitle: "The Dragon's Lair",
+        }),
+      })
+      expect(narratives.queueNarrativeGeneration).not.toHaveBeenCalled()
+    })
+
+    it('returns not_found when trying to access narrative beyond ending', async () => {
+      const beyondEndingChoiceId: ChoiceId = 'start-0-0-0'
+      jest.mocked(dynamodb).getGameById.mockResolvedValueOnce(gameWithTwoChoices)
+      jest.mocked(dynamodb).getNarrativeById.mockResolvedValueOnce({})
+
+      const result = await retrieveChoiceById(gameId, beyondEndingChoiceId)
+
+      expect(result).toEqual({
+        status: 'not_found',
+        message: 'Choice not found',
+      })
+      expect(narratives.queueNarrativeGeneration).not.toHaveBeenCalled()
+    })
+
+    it('returns not_found when option index is invalid', async () => {
+      const invalidOptionChoiceId: ChoiceId = 'start-5'
+      jest.mocked(dynamodb).getGameById.mockResolvedValueOnce(gameWithTwoChoices)
+      jest.mocked(dynamodb).getNarrativeById.mockResolvedValueOnce({})
+
+      const result = await retrieveChoiceById(gameId, invalidOptionChoiceId)
+
+      expect(result).toEqual({
+        status: 'not_found',
+        message: 'Choice not found',
+      })
+      expect(narratives.queueNarrativeGeneration).not.toHaveBeenCalled()
+    })
+
+    it('returns not_found when choice point index is invalid', async () => {
+      const invalidChoicePointId: ChoiceId = 'start-0-0-0-0'
+      jest.mocked(dynamodb).getGameById.mockResolvedValueOnce(gameWithTwoChoices)
+      jest.mocked(dynamodb).getNarrativeById.mockResolvedValueOnce({})
+
+      const result = await retrieveChoiceById(gameId, invalidChoicePointId)
+
+      expect(result).toEqual({
+        status: 'not_found',
+        message: 'Choice not found',
+      })
+      expect(narratives.queueNarrativeGeneration).not.toHaveBeenCalled()
+    })
+
     it('returns existing narrative when ready', async () => {
       const result = await retrieveChoiceById(gameId, choiceId)
 
