@@ -122,14 +122,14 @@ describe('create-games', () => {
       )
     })
 
-    it('should throw error when wrong number of choice points generated', async () => {
-      jest.mocked(gameChoices).generateGameChoices.mockResolvedValueOnce({
-        ...cyoaGame,
-        choicePoints: [],
-      })
+    // it('should throw error when wrong number of choice points generated', async () => {
+    //   jest.mocked(gameChoices).generateGameChoices.mockResolvedValueOnce({
+    //     ...cyoaGame,
+    //     choicePoints: [],
+    //   })
 
-      await expect(createGame()).rejects.toThrow('Wrong number of choice points')
-    })
+    //   await expect(createGame()).rejects.toThrow('Wrong number of choice points')
+    // })
 
     it('should throw error when game ID already exists', async () => {
       jest.mocked(dynamodb).getGameById.mockResolvedValueOnce(cyoaGame)

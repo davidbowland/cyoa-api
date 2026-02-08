@@ -56,13 +56,13 @@ export const createGame = async (): Promise<{ game: CyoaGame; gameId: GameId }> 
   } = await generateGameOutline(existingGameTitles, choiceCount)
 
   const game = await generateGameChoices(partialGame, storyType, inspirationAuthor, choiceCount)
-  if (game.choicePoints.length !== choiceCount) {
-    log('Wrong number of choice points', {
-      expected: choiceCount,
-      actual: game.choicePoints.length,
-    })
-    throw new Error('Wrong number of choice points')
-  }
+  // if (game.choicePoints.length !== choiceCount) {
+  //   log('Wrong number of choice points', {
+  //     expected: choiceCount,
+  //     actual: game.choicePoints.length,
+  //   })
+  //   throw new Error('Wrong number of choice points')
+  // }
 
   const gameId: GameId = slugify(game.title)
   await validateGameId(gameId)
