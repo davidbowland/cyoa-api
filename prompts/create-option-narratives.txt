@@ -1,0 +1,33 @@
+# {"anthropicVersion":"bedrock-2023-05-31","maxTokens":75000,"model":"us.anthropic.claude-sonnet-4-5-20250929-v1:0","temperature":0.6,"topK":500}
+
+<context>
+You are creating a choose-your-own-adventure game. The best choices should lead to the best outcome. Some choices can be puzzles the user needs to figure out or remember. You are writing narratives for available choice options, bridging the gap between the previous narrative and the next one.
+</context>
+<instructions>
+The previous and next narrative have already been generated. Given those and the options with their consequences, generate a narrative for each option that bridges the gap between narratives.
+
+- Generate a narrative for each option and its consequences
+  - Create a narrative to connect the last narrative to the next narrative while acknowledging the player's choice (the option they picked)
+  - ALWAYS generate options narratives in the same order as the input data
+  - ALWAYS MAKE OPTION NARRATIVES FOLLOW NATURALLY FROM previousNarrative to nextNarrative
+    - THINK DEEPLY about how to connect the narratives so that even the worst choices progress the game in the same way
+  - If the next narrative assumes a choice, make the option narrative bridge the gap (player drops or find an item, finds a secret passageway, etc)
+  - DO NOT repeat information from the next narrative, but set it up
+  - Inform the player of the consequences of their decision
+  - If the option is not rank 1, allude to but DO NOT directly mention the rank 1 option
+  - Option narratives should be 1 to 3 paragraphs, thinking about it considering the author's style and what is required to bridge the previous and next narratives
+  - ALWAYS use the style of the author mentioned
+
+Make sure the narratives are inoffensive and not emmotionally charged
+</instructions>
+<output>
+Output your thinking in <thinking> tags followed by valid JSON with the keys with NOTHING ELSE (double-check that your JSON is valid with \n instead of newlines and " escaped):
+
+{
+  "options": [{ "narrative": "string" }]
+}
+</output>
+
+<input>
+${context}
+</input>

@@ -1,10 +1,12 @@
 import { cyoaGame, cyoaNarrative, gameId, narrativeGenerationData, narrativeId } from '../__mocks__'
 import { createNarrative } from '@services/create-narratives'
 import * as dynamodb from '@services/dynamodb'
+import * as endingNarrativeContent from '@services/narratives/ending-narrative-content'
 import * as narrativeContent from '@services/narratives/narrative-content'
 import * as narrativeImageGeneration from '@services/narratives/narrative-image-generation'
 
 jest.mock('@services/dynamodb')
+jest.mock('@services/narratives/ending-narrative-content')
 jest.mock('@services/narratives/narrative-content')
 jest.mock('@services/narratives/narrative-image-generation')
 jest.mock('@utils/logging')
@@ -70,14 +72,14 @@ describe('create-narratives', () => {
         losingTitle: '',
         losingNarrative: '',
       }
-      jest.mocked(narrativeContent).generateEndingNarrativeContent.mockResolvedValueOnce({
+      jest.mocked(endingNarrativeContent).generateEndingNarrativeContent.mockResolvedValueOnce({
         narrative: endingNarrative,
         imageDescription: 'A triumphant hero standing in golden sunlight',
       })
 
       const result = await createNarrative(gameId, narrativeId, endingGenerationData)
 
-      expect(narrativeContent.generateEndingNarrativeContent).toHaveBeenCalledWith(
+      expect(endingNarrativeContent.generateEndingNarrativeContent).toHaveBeenCalledWith(
         cyoaGame,
         endingGenerationData,
       )

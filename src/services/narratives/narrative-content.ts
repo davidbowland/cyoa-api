@@ -1,19 +1,18 @@
 import Ajv from 'ajv'
 
-import { promptIdCreateEndingNarrative, promptIdCreateNarrative } from '../../config'
+import { promptIdCreateNarrative, promptIdCreateOptionNarrative } from '../../config'
 import {
   CreateNarrativePromptOutput,
+  CreateOptionNarrativePromptOutput,
   CyoaGame,
   CyoaInventory,
   CyoaNarrative,
   CyoaNarrativeOption,
-  EndingNarrativePromptOutput,
   GenerateNarrativeContentResult,
   NarrativeGenerationData,
   TextPrompt,
 } from '../../types'
 import { log } from '../../utils/logging'
-import { getRandomSample } from '../../utils/random'
 import { invokeModel } from '../bedrock'
 import { getPromptById } from '../dynamodb'
 
@@ -23,7 +22,7 @@ export const generateNarrativeContent = async (
   game: CyoaGame,
   generationData: NarrativeGenerationData,
 ): Promise<GenerateNarrativeContentResult> => {
-  const modelContext = {
+  const narrativeModelContext = {
     inventoryAvailable: generationData.inventoryAvailable,
     existingNarrative: generationData.existingNarrative,
     previousNarrative: generationData.previousNarrative,
@@ -36,17 +35,46 @@ export const generateNarrativeContent = async (
     inspirationAuthor: generationData.inspirationAuthor,
   }
 
-  const prompt = await getPromptById<TextPrompt>(promptIdCreateNarrative)
+  const narrativePrompt = await getPromptById<TextPrompt>(promptIdCreateNarrative)
+  const optionNarrativePrompt = await getPromptById<TextPrompt>(promptIdCreateOptionNarrative)
   log('Creating narrative with context', {
     gameId: game.title,
-    modelContext,
+    modelContext: narrativeModelContext,
     promptId: promptIdCreateNarrative,
   })
 
-  const generatedNarrative = await invokeModel<CreateNarrativePromptOutput>(prompt, modelContext)
+  const generatedNarrative = await invokeModel<CreateNarrativePromptOutput>(
+    narrativePrompt,
+    narrativeModelContext,
+  )
   log('Generated narrative', { generatedNarrative })
+  const { narrative: narrativeWithoutOptions, imageDescription } = formatNarrative(
+    generatedNarrative,
+    generationData,
+    game,
+  )
 
-  const { narrative, imageDescription } = formatNarrative(generatedNarrative, generationData, game)
+  const optionNarrativeModelContext = {
+    previousNarrative: generatedNarrative.narrative,
+    previousChoice: generationData.previousChoice,
+    previousOptions: generationData.previousOptions,
+    nextNarrative: narrativeWithoutOptions.narrative,
+    inspirationAuthor: generationData.inspirationAuthor,
+  }
+  log('Creating option narratives with context', {
+    gameId: game.title,
+    modelContext: optionNarrativeModelContext,
+    promptId: optionNarrativePrompt,
+  })
+
+  const generatedOptionNarratives = await invokeModel<CreateOptionNarrativePromptOutput>(
+    optionNarrativePrompt,
+    optionNarrativeModelContext,
+  )
+  log('Generated option narratives', { generatedOptionNarratives })
+
+  const { options } = formatOptionNarrative(generatedOptionNarratives, generationData, game)
+  const narrative = { ...narrativeWithoutOptions, options }
   return { narrative, imageDescription }
 }
 
@@ -54,21 +82,46 @@ export const formatNarrative = (
   input: CreateNarrativePromptOutput,
   generationData: NarrativeGenerationData,
   game: CyoaGame,
-): { narrative: CyoaNarrative; imageDescription: string } => {
+): { narrative: Omit<CyoaNarrative, 'options'>; imageDescription: string } => {
   const jsonTypeDefinition = {
     type: 'object',
-    required: [
-      'chapterTitle',
-      'narrative',
-      'imageDescription',
-      'options',
-      'losingTitle',
-      'losingNarrative',
-    ],
+    required: ['chapterTitle', 'narrative', 'imageDescription', 'losingTitle', 'losingNarrative'],
     properties: {
       chapterTitle: { type: 'string', minLength: 1 },
       narrative: { type: 'string', minLength: 1 },
       imageDescription: { type: 'string', minLength: 1 },
+      losingTitle: { type: 'string', minLength: 1 },
+      losingNarrative: { type: 'string', minLength: 1 },
+    },
+  }
+  if (ajv.validate(jsonTypeDefinition, input) === false) {
+    throw new Error(JSON.stringify(ajv.errors))
+  }
+
+  const inventoryItems = generationData.inventoryAvailable
+    .map((name) => game.inventory.find((item) => item.name === name))
+    .filter((item): item is CyoaInventory => item !== undefined)
+
+  const narrative = {
+    narrative: input.narrative as string,
+    chapterTitle: input.chapterTitle as string,
+    choice: generationData.nextChoice,
+    inventory: inventoryItems,
+    losingTitle: input.losingTitle as string,
+    losingNarrative: input.losingNarrative as string,
+  }
+  return { narrative, imageDescription: input.imageDescription as string }
+}
+
+export const formatOptionNarrative = (
+  input: CreateOptionNarrativePromptOutput,
+  generationData: NarrativeGenerationData,
+  game: CyoaGame,
+): Pick<CyoaNarrative, 'options'> => {
+  const jsonTypeDefinition = {
+    type: 'object',
+    required: ['options'],
+    properties: {
       options: {
         type: 'array',
         items: {
@@ -79,8 +132,6 @@ export const formatNarrative = (
           },
         },
       },
-      losingTitle: { type: 'string', minLength: 1 },
-      losingNarrative: { type: 'string', minLength: 1 },
     },
   }
   if (ajv.validate(jsonTypeDefinition, input) === false) {
@@ -92,75 +143,8 @@ export const formatNarrative = (
     throw new Error('Choice point not found in game')
   }
 
-  const inventoryItems = generationData.inventoryAvailable
-    .map((name) => game.inventory.find((item) => item.name === name))
-    .filter((item): item is CyoaInventory => item !== undefined)
-
   const optionsWithNarratives: CyoaNarrativeOption[] = currentChoicePoint.options.map(
     (option, idx) => ({ name: option.name, narrative: input.options?.[idx]?.narrative as string }),
   )
-  const narrative: CyoaNarrative = {
-    narrative: input.narrative as string,
-    chapterTitle: input.chapterTitle as string,
-    choice: generationData.nextChoice,
-    options: getRandomSample(optionsWithNarratives, optionsWithNarratives.length),
-    inventory: inventoryItems,
-    losingTitle: input.losingTitle as string,
-    losingNarrative: input.losingNarrative as string,
-  }
-  return { narrative, imageDescription: input.imageDescription as string }
-}
-
-export const generateEndingNarrativeContent = async (
-  game: CyoaGame,
-  generationData: NarrativeGenerationData,
-): Promise<GenerateNarrativeContentResult> => {
-  const modelContext = {
-    inventoryAvailable: generationData.inventoryAvailable,
-    existingNarrative: game.winNarrative,
-    previousNarrative: generationData.previousNarrative,
-    previousChoice: generationData.previousChoice,
-    previousOptions: generationData.previousOptions,
-    outline: generationData.outline,
-    lossNarrative: generationData.lossNarrative,
-    inspirationAuthor: generationData.inspirationAuthor,
-  }
-  const prompt = await getPromptById<TextPrompt>(promptIdCreateEndingNarrative)
-  log('Creating ending narrative with context', {
-    promptIdCreateEndingNarrative,
-    modelContext,
-  })
-
-  const generatedNarrative = await invokeModel<EndingNarrativePromptOutput>(prompt, modelContext)
-  log('Generated ending narrative', { generatedNarrative })
-
-  const { narrative, imageDescription } = formatEndingNarrative(generatedNarrative)
-  return { narrative, imageDescription }
-}
-
-export const formatEndingNarrative = (
-  input: EndingNarrativePromptOutput,
-): { narrative: CyoaNarrative; imageDescription: string } => {
-  const jsonTypeDefinition = {
-    type: 'object',
-    required: ['narrative', 'chapterTitle', 'imageDescription'],
-    properties: {
-      narrative: { type: 'string', minLength: 1 },
-      chapterTitle: { type: 'string', minLength: 1 },
-      imageDescription: { type: 'string', minLength: 1 },
-    },
-  }
-  if (ajv.validate(jsonTypeDefinition, input) === false) {
-    throw new Error(JSON.stringify(ajv.errors))
-  }
-
-  const narrative: CyoaNarrative = {
-    narrative: input.narrative as string,
-    chapterTitle: input.chapterTitle as string,
-    options: [],
-    inventory: [],
-    losingTitle: '',
-    losingNarrative: '',
-  }
-  return { narrative, imageDescription: input.imageDescription as string }
+  return { options: optionsWithNarratives }
 }

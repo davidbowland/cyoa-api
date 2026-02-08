@@ -1,26 +1,23 @@
 import {
   cyoaGame,
   createNarrativePromptOutput,
-  endingNarrativePromptOutput,
   narrativeGenerationData,
   prompt,
 } from '../../__mocks__'
 import * as bedrock from '@services/bedrock'
 import * as dynamodb from '@services/dynamodb'
 import {
-  generateEndingNarrativeContent,
+  formatNarrative,
+  formatOptionNarrative,
   generateNarrativeContent,
 } from '@services/narratives/narrative-content'
-import * as randomUtils from '@utils/random'
 
 jest.mock('@services/bedrock')
 jest.mock('@services/dynamodb')
-jest.mock('@utils/random')
 jest.mock('@utils/logging')
 
 describe('narratives/narrative-content', () => {
   beforeAll(() => {
-    jest.mocked(randomUtils).getRandomSample.mockImplementation((array) => [...array])
     jest.mocked(dynamodb).getPromptById.mockResolvedValue(prompt)
     jest.mocked(bedrock).invokeModel.mockResolvedValue(createNarrativePromptOutput)
   })
@@ -35,6 +32,7 @@ describe('narratives/narrative-content', () => {
       const result = await generateNarrativeContent(cyoaGame, generationDataWithInventory)
 
       expect(dynamodb.getPromptById).toHaveBeenCalledWith('create-narrative')
+      expect(dynamodb.getPromptById).toHaveBeenCalledWith('create-option-narrative')
       expect(bedrock.invokeModel).toHaveBeenCalledWith(prompt, {
         inventoryAvailable: ['Sword'],
         existingNarrative: generationDataWithInventory.existingNarrative,
@@ -45,6 +43,13 @@ describe('narratives/narrative-content', () => {
         nextOptions: generationDataWithInventory.nextOptions,
         outline: generationDataWithInventory.outline,
         lossNarrative: generationDataWithInventory.lossNarrative,
+        inspirationAuthor: generationDataWithInventory.inspirationAuthor,
+      })
+      expect(bedrock.invokeModel).toHaveBeenCalledWith(prompt, {
+        previousNarrative: createNarrativePromptOutput.narrative,
+        previousChoice: generationDataWithInventory.previousChoice,
+        previousOptions: generationDataWithInventory.previousOptions,
+        nextNarrative: 'You find yourself standing before a massive sleeping dragon...',
         inspirationAuthor: generationDataWithInventory.inspirationAuthor,
       })
       expect(result).toEqual({
@@ -100,44 +105,139 @@ describe('narratives/narrative-content', () => {
     })
   })
 
-  describe('generateEndingNarrativeContent', () => {
-    it('should generate ending narrative content successfully', async () => {
-      jest.mocked(bedrock).invokeModel.mockResolvedValueOnce(endingNarrativePromptOutput)
+  describe('formatNarrative', () => {
+    it('should format narrative correctly with inventory', () => {
+      const generationDataWithInventory = {
+        ...narrativeGenerationData,
+        inventoryAvailable: ['Sword'],
+      }
 
-      const result = await generateEndingNarrativeContent(cyoaGame, narrativeGenerationData)
+      const result = formatNarrative(
+        createNarrativePromptOutput,
+        generationDataWithInventory,
+        cyoaGame,
+      )
 
-      expect(dynamodb.getPromptById).toHaveBeenCalledWith('create-ending-narrative')
-      expect(bedrock.invokeModel).toHaveBeenCalledWith(prompt, {
-        inventoryAvailable: narrativeGenerationData.inventoryAvailable,
-        existingNarrative: cyoaGame.winNarrative,
-        previousNarrative: narrativeGenerationData.previousNarrative,
-        previousChoice: narrativeGenerationData.previousChoice,
-        previousOptions: narrativeGenerationData.previousOptions,
-        lossNarrative: narrativeGenerationData.lossNarrative,
-        outline: narrativeGenerationData.outline,
-        inspirationAuthor: narrativeGenerationData.inspirationAuthor,
-      })
       expect(result).toEqual({
         narrative: {
-          narrative: 'You have successfully completed your quest and saved the kingdom!',
-          chapterTitle: 'Victory',
-          choice: undefined,
-          options: [],
-          inventory: [],
-          losingTitle: '',
-          losingNarrative: '',
+          narrative: 'You find yourself standing before a massive sleeping dragon...',
+          chapterTitle: "The Dragon's Lair",
+          choice: 'You see a sleeping dragon. What do you do?',
+          losingTitle: 'Defeat',
+          losingNarrative: 'The dragon awakens and you are defeated.',
+          inventory: [{ name: 'Sword', image: 'sword-image.jpg' }],
         },
-        imageDescription: 'A triumphant hero standing in golden sunlight',
+        imageDescription: 'A dark cave with a massive sleeping dragon surrounded by treasure',
       })
     })
 
-    it('should throw error for invalid ending narrative prompt output', async () => {
-      const invalidOutput = { ...endingNarrativePromptOutput, narrative: '' }
-      jest.mocked(bedrock).invokeModel.mockResolvedValueOnce(invalidOutput)
+    it('should filter out non-existent inventory items', () => {
+      const generationDataWithInvalidInventory = {
+        ...narrativeGenerationData,
+        inventoryAvailable: ['Sword', 'Non-existent Item'],
+      }
 
-      await expect(
-        generateEndingNarrativeContent(cyoaGame, narrativeGenerationData),
-      ).rejects.toThrow()
+      const result = formatNarrative(
+        createNarrativePromptOutput,
+        generationDataWithInvalidInventory,
+        cyoaGame,
+      )
+
+      expect(result.narrative.inventory).toEqual([{ name: 'Sword', image: 'sword-image.jpg' }])
+    })
+
+    it('should throw error when narrative is missing', () => {
+      const invalidOutput = { ...createNarrativePromptOutput, narrative: undefined }
+
+      expect(() => formatNarrative(invalidOutput, narrativeGenerationData, cyoaGame)).toThrow()
+    })
+
+    it('should throw error when chapterTitle is missing', () => {
+      const invalidOutput = { ...createNarrativePromptOutput, chapterTitle: undefined }
+
+      expect(() => formatNarrative(invalidOutput, narrativeGenerationData, cyoaGame)).toThrow()
+    })
+
+    it('should throw error when imageDescription is missing', () => {
+      const invalidOutput = { ...createNarrativePromptOutput, imageDescription: undefined }
+
+      expect(() => formatNarrative(invalidOutput, narrativeGenerationData, cyoaGame)).toThrow()
+    })
+
+    it('should throw error when losingTitle is missing', () => {
+      const invalidOutput = { ...createNarrativePromptOutput, losingTitle: undefined }
+
+      expect(() => formatNarrative(invalidOutput, narrativeGenerationData, cyoaGame)).toThrow()
+    })
+
+    it('should throw error when losingNarrative is missing', () => {
+      const invalidOutput = { ...createNarrativePromptOutput, losingNarrative: undefined }
+
+      expect(() => formatNarrative(invalidOutput, narrativeGenerationData, cyoaGame)).toThrow()
+    })
+  })
+
+  describe('formatOptionNarrative', () => {
+    it('should format option narratives correctly', () => {
+      const result = formatOptionNarrative(
+        createNarrativePromptOutput,
+        narrativeGenerationData,
+        cyoaGame,
+      )
+
+      expect(result).toEqual({
+        options: [
+          {
+            name: 'Fight',
+            narrative: 'You carefully tiptoe past the sleeping beast...',
+          },
+          {
+            name: 'Run',
+            narrative: 'You loudly call out to wake the dragon...',
+          },
+        ],
+      })
+    })
+
+    it('should throw error when choice point not found in game', () => {
+      const invalidGenerationData = {
+        ...narrativeGenerationData,
+        nextChoice: 'Non-existent choice',
+      }
+
+      expect(() =>
+        formatOptionNarrative(createNarrativePromptOutput, invalidGenerationData, cyoaGame),
+      ).toThrow('Choice point not found in game')
+    })
+
+    it('should throw error when options array is missing', () => {
+      const invalidOutput = { ...createNarrativePromptOutput, options: undefined }
+
+      expect(() =>
+        formatOptionNarrative(invalidOutput, narrativeGenerationData, cyoaGame),
+      ).toThrow()
+    })
+
+    it('should throw error when option narrative is missing', () => {
+      const invalidOutput = {
+        ...createNarrativePromptOutput,
+        options: [{ narrative: 'Valid narrative' }, {}],
+      }
+
+      expect(() =>
+        formatOptionNarrative(invalidOutput, narrativeGenerationData, cyoaGame),
+      ).toThrow()
+    })
+
+    it('should throw error when option narrative is empty string', () => {
+      const invalidOutput = {
+        ...createNarrativePromptOutput,
+        options: [{ narrative: 'Valid narrative' }, { narrative: '' }],
+      }
+
+      expect(() =>
+        formatOptionNarrative(invalidOutput, narrativeGenerationData, cyoaGame),
+      ).toThrow()
     })
   })
 })

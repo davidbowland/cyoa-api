@@ -423,6 +423,7 @@ Resources:
           PROMPT_ID_COVER_IMAGE: cover-image
           PROMPT_ID_CREATE_ENDING_NARRATIVE: create-ending-narrative
           PROMPT_ID_CREATE_NARRATIVE: create-narrative
+          PROMPT_ID_CREATE_OPTION_NARRATIVE: create-option-narrative
           PROMPT_ID_INVENTORY_IMAGE: inventory-image
           PROMPT_ID_NARRATIVE_IMAGE: narrative-image
           RESOURCE_TO_ADD_PERCENT_MAX: 275

@@ -15,10 +15,10 @@ const getRandomSampleLoop = <T>(
   if (count === 1) {
     return [value]
   } else if (withDuplicates) {
-    return [value, ...getRandomSample(array, count - 1, true, max)]
+    return [value, ...getRandomSampleLoop(array, count - 1, true, max)]
   } else {
     array[index] = array[max]
-    return [value, ...getRandomSample(array, count - 1, false, max - 1)]
+    return [value, ...getRandomSampleLoop(array, count - 1, false, max - 1)]
   }
 }
 

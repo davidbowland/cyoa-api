@@ -40,6 +40,7 @@ export interface CyoaCharacter {
 }
 
 export interface CyoaChoicePoint {
+  charactersToIntroduce: string[]
   keyInformationToIntroduce: string[]
   redHerringsToIntroduce: string[]
   inventoryAvailable: string[]
@@ -219,6 +220,7 @@ export interface CreateChoicesPromptOption {
 }
 
 export interface CreateChoicesPromptChoicePoint {
+  charactersToIntroduce?: string[]
   keyInformationToIntroduce?: string[]
   redHerringsToIntroduce?: string[]
   inventoryAvailable?: string[]
@@ -234,17 +236,20 @@ export interface CreateChoicesPromptOutput {
   winNarrative?: string
 }
 
-export interface CreateNarrativePromptOption {
-  narrative?: string
-}
-
 export interface CreateNarrativePromptOutput {
   chapterTitle?: string
   narrative?: string
   imageDescription?: string
-  options?: CreateNarrativePromptOption[]
   losingTitle?: string
   losingNarrative?: string
+}
+
+export interface CreateNarrativePromptOption {
+  narrative?: string
+}
+
+export interface CreateOptionNarrativePromptOutput {
+  options?: CreateNarrativePromptOption[]
 }
 
 export interface EndingNarrativePromptOutput {

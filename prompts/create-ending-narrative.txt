@@ -4,28 +4,19 @@
 You are creating a choose-your-own-adventure game. The best choices should lead to the best outcome. Some choices can be puzzles the user needs to figure out or remember. You are writing the final narrative to wrap up the story after the player has completed game.
 </context>
 <instructions>
-An outline and the important parts of the narrative have already been generated. Given those and the options with their consequences, generate the narrative for each option plus the final narrative of the game.
+An outline and the important parts of the narrative have already been generated. Given those, generate the narrative for the final narrative of the game.
 
 - Generate the final narrative of the game
   - The player has won
   - Elaborate on the existing narrative
   - ALWAYS include important details from the existing narrative
-  - ALWAYS MAKE NARRATIVE AND PREVIOUS OPTIONS FOLLOW NATURALLY FROM the previousNarrative
+  - ALWAYS MAKE NARRATIVE FOLLOW NATURALLY FROM previousNarrative
   - Use the overall story outline to help consistency
-  - Generate the narrative necessary to wrap up the story
-  - Narratives should be long and short enough take about 30 seconds to read
+  - Generate the narrative necessary to wrap up the story triumphantly
+  - Narratives should be 5 to 9 paragrahs, thinking about it considering the author's style
   - ALWAYS use the style of the author mentioned
-  - NEVER mention the previous choice NOR the previous options
-- Generate a narrative for each previous option and its consequences
-  - Create a narrative to connect the last narrative to this narrative while acknowledging the player's choice (the option they picked)
-  - ALWAYS generate narratives in the same order as options
-  - ALWAYS MAKE NARRATIVE AND PREVIOUS OPTIONS FOLLOW NATURALLY FROM the previousNarrative
-  - Inform the player of the consequences of their decision
-  - If the option is not rank 1, allude to but DO NOT directly mention the rank 1 option
-  - Option narratives should be long and short enough to take 5-10 seconds to read
-  - Option narratives MUST flow seamlessly into the final narrative
-    - THINK DEEPLY about how to connect the narratives so that even the worst choices progress the game in the same way
-  - ALWAYS use the style of the author mentioned
+  - NEVER mention the previous choice NOR assume any previous option was chosen
+  - Use the second person -- "you" perspective
 - Generate a short title for the chapter for this narrative
 - Generate an image description for this narrative scene
   - Describe the visual scene that represents this part of the story
@@ -35,14 +26,13 @@ An outline and the important parts of the narrative have already been generated.
 - Generate a losing narrative for when the player's resources have reached the limit
   - Use lossNarrative for reference and ALWAYS include important details
   - Generate the narrative necessary to wrap up the story
-  - Narratives should be long and short enough take about 30 seconds to read
+  - Narratives should be 5 to 9 paragrahs, thinking about it considering the author's style
   - ALWAYS use the style of the author mentioned
-  - NEVER mention the previous choice NOR the previous options
-  - THINK DEEPLY about how to connect EVERY option narrative to this losing narrative
-    - This losing narrative will be shown to the player directly after EVERY option narrative
+  - NEVER mention the previous choice NOR assume any previous option was chosen
+  - Use the second person -- "you" perspective
 - Generate a short title for the losing narrative
 
-Make sure the narratives, title, and image are inoffensive and not emmotionally charged
+Make sure the narratives, titles, and image are inoffensive and not emmotionally charged
 </instructions>
 <output>
 Output your thinking in <thinking> tags followed by valid JSON with the keys with NOTHING ELSE (double-check that your JSON is valid with \n instead of newlines and " escaped):
@@ -51,7 +41,6 @@ Output your thinking in <thinking> tags followed by valid JSON with the keys wit
   "chapterTitle": "string"
   "narrative": "string",
   "imageDescription": "string",
-  "options": [{ "narrative": "string" }],
   "losingNarrative": "string",
   "losingTitle": "string"
 }

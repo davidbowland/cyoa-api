@@ -130,7 +130,7 @@ const formatCreateChoicesOutput = (
       resourceToAddPercentMax,
     )
     const optionsWithResources = calculateResourcesForOptions(
-      choicePoint.options,
+      getRandomSample(choicePoint.options, choicePoint.options.length),
       choicePoints.length,
       starting,
       ending,

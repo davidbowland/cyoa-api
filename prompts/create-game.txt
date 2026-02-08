@@ -54,7 +54,8 @@ Come up with the outline for a choose-your-own-adventure story based on the them
   - Do NOT generate choices, those will be generated later from your narrative
   - Describe in 1-2 sentences what happens if the player wins / succeeds
   - Describe in 1-2 sentences what happens if the player loses
-- NOT ALL inspiration words will be used. THINK ABOUT which are best and should be incorporated into the story. You can use inspiration words directly, use related words, or use random words with similar letters, sounds, or meanings to inspiration words.
+  - Use the second person -- "you" perspective
+- NOT ALL inspiration words will be used. THINK ABOUT which are best and should be incorporated into the story. You can use inspiration words directly, use related words, or use random words with similar letters, sounds, or meanings to inspiration words
 - ALL generated content MUST be inoffensive and not emmotionally charged
 
 Think deeply about the most engaging story that is suitable for cyoa. What is the overall idea? What makes the most sense as a loss condition? Who is it important to meet and who should voice them?

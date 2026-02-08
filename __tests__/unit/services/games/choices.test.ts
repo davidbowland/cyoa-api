@@ -20,7 +20,7 @@ describe('games/choices', () => {
     title: 'Test Adventure',
     description: 'A test adventure game',
     outline: 'Test outline',
-    characters: [{ name: 'Hero', imageDescription: 'A brave hero', voice: 'heroic' }],
+    characters: [{ name: 'Hero', voice: 'heroic' }],
     inventory: [{ name: 'Sword', imageDescription: 'A sharp sword' }],
     resourceName: 'Health',
     startingResourceValue: 100,

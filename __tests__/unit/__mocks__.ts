@@ -39,6 +39,7 @@ export const cyoaGame: CyoaGame = {
   winNarrative: 'You have successfully completed your quest!',
   choicePoints: [
     {
+      charactersToIntroduce: ['Mr Jones'],
       keyInformationToIntroduce: ['Important clue 1'],
       redHerringsToIntroduce: ['False clue 1'],
       inventoryAvailable: ['Sword'],

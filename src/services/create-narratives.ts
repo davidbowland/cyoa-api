@@ -1,9 +1,7 @@
 import { CyoaGame, CyoaNarrative, GameId, NarrativeGenerationData, NarrativeId } from '../types'
 import { getGameById, setNarrativeById } from './dynamodb'
-import {
-  generateEndingNarrativeContent,
-  generateNarrativeContent,
-} from './narratives/narrative-content'
+import { generateEndingNarrativeContent } from './narratives/ending-narrative-content'
+import { generateNarrativeContent } from './narratives/narrative-content'
 import { generateNarrativeImage } from './narratives/narrative-image-generation'
 
 const generateNextNarrative = async (game: CyoaGame, generationData: NarrativeGenerationData) => {
