@@ -1,6 +1,6 @@
 import Ajv from 'ajv'
 
-import { promptIdCreateNarrative, promptIdCreateOptionNarrative } from '../../config'
+import { promptIdCreateNarrative, promptIdCreateOptionNarratives } from '../../config'
 import {
   CreateNarrativePromptOutput,
   CreateOptionNarrativePromptOutput,
@@ -36,7 +36,7 @@ export const generateNarrativeContent = async (
   }
 
   const narrativePrompt = await getPromptById<TextPrompt>(promptIdCreateNarrative)
-  const optionNarrativePrompt = await getPromptById<TextPrompt>(promptIdCreateOptionNarrative)
+  const optionNarrativesPrompt = await getPromptById<TextPrompt>(promptIdCreateOptionNarratives)
   log('Creating narrative with context', {
     gameId: game.title,
     modelContext: narrativeModelContext,
@@ -54,7 +54,7 @@ export const generateNarrativeContent = async (
     game,
   )
 
-  const optionNarrativeModelContext = {
+  const optionNarrativesModelContext = {
     previousNarrative: generatedNarrative.narrative,
     previousChoice: generationData.previousChoice,
     previousOptions: generationData.previousOptions,
@@ -63,17 +63,17 @@ export const generateNarrativeContent = async (
   }
   log('Creating option narratives with context', {
     gameId: game.title,
-    modelContext: optionNarrativeModelContext,
-    promptId: optionNarrativePrompt,
+    modelContext: optionNarrativesModelContext,
+    promptId: optionNarrativesPrompt,
   })
 
   const generatedOptionNarratives = await invokeModel<CreateOptionNarrativePromptOutput>(
-    optionNarrativePrompt,
-    optionNarrativeModelContext,
+    optionNarrativesPrompt,
+    optionNarrativesModelContext,
   )
   log('Generated option narratives', { generatedOptionNarratives })
 
-  const { options } = formatOptionNarrative(generatedOptionNarratives, generationData, game)
+  const { options } = formatOptionNarratives(generatedOptionNarratives, generationData, game)
   const narrative = { ...narrativeWithoutOptions, options }
   return { narrative, imageDescription }
 }
@@ -113,7 +113,7 @@ export const formatNarrative = (
   return { narrative, imageDescription: input.imageDescription as string }
 }
 
-export const formatOptionNarrative = (
+export const formatOptionNarratives = (
   input: CreateOptionNarrativePromptOutput,
   generationData: NarrativeGenerationData,
   game: CyoaGame,

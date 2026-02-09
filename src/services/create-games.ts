@@ -55,35 +55,42 @@ export const createGame = async (): Promise<{ game: CyoaGame; gameId: GameId }> 
     storyType,
   } = await generateGameOutline(existingGameTitles, choiceCount)
 
-  const game = await generateGameChoices(partialGame, storyType, inspirationAuthor, choiceCount)
-  // if (game.choicePoints.length !== choiceCount) {
-  //   log('Wrong number of choice points', {
-  //     expected: choiceCount,
-  //     actual: game.choicePoints.length,
-  //   })
-  //   throw new Error('Wrong number of choice points')
-  // }
-
-  const gameId: GameId = slugify(game.title)
+  const gameId: GameId = slugify(partialGame.title)
   await validateGameId(gameId)
 
-  const gameWithImages = await generateGameImages(
-    gameId,
-    game,
-    imageDescription,
-    resourceImageDescription,
-  )
+  for (let index = 0; index < 2; index++) {
+    try {
+      const game = await generateGameChoices(partialGame, storyType, inspirationAuthor, choiceCount)
+      // if (game.choicePoints.length !== choiceCount) {
+      //   log('Wrong number of choice points', {
+      //     expected: choiceCount,
+      //     actual: game.choicePoints.length,
+      //   })
+      //   throw new Error('Wrong number of choice points')
+      // }
 
-  await setGameById(gameId, gameWithImages)
+      const gameWithImages = await generateGameImages(
+        gameId,
+        game,
+        imageDescription,
+        resourceImageDescription,
+      )
 
-  try {
-    await queueNarrativeGeneration(gameId, game, 0)
-  } catch (error: unknown) {
-    logError('Error creating initial narrative', {
-      gameId,
-      error,
-    })
+      await setGameById(gameId, gameWithImages)
+
+      try {
+        await queueNarrativeGeneration(gameId, game, 0)
+      } catch (error: unknown) {
+        logError('Error creating initial narrative', {
+          gameId,
+          error,
+        })
+      }
+
+      return { game: gameWithImages, gameId }
+    } catch (error: unknown) {
+      log('Game options creation failed, retrying', { error })
+    }
   }
-
-  return { game: gameWithImages, gameId }
+  throw 'Game options creation failed after 2 attempts'
 }

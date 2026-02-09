@@ -16,6 +16,7 @@ The previous and next narrative have already been generated. Given those and the
   - Inform the player of the consequences of their decision
   - If the option is not rank 1, allude to but DO NOT directly mention the rank 1 option
   - Option narratives should be 1 to 3 paragraphs, thinking about it considering the author's style and what is required to bridge the previous and next narratives
+  - Use the second person -- "you" perspective
   - ALWAYS use the style of the author mentioned
 
 Make sure the narratives are inoffensive and not emmotionally charged

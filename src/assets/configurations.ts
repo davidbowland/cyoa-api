@@ -120,38 +120,6 @@ export const gameThemes: GameTheme[] = [
     ],
   },
   {
-    name: 'Epic Fantasy',
-    description:
-      'Grand adventures in fully-realized fantasy worlds with magic, mythical creatures, and world-shaking stakes.',
-    inspirationAuthors: [
-      {
-        name: 'J.R.R. Tolkien',
-        style:
-          'Richly detailed world-building with mythic scope. Elevated, somewhat archaic language that evokes ancient legends and epic quests.',
-      },
-      {
-        name: 'Ursula K. Le Guin',
-        style:
-          'Philosophical depth with anthropological world-building. Sparse, poetic prose exploring balance, names, and power.',
-      },
-      {
-        name: 'C.S. Lewis',
-        style:
-          'Allegorical clarity with Christian undertones. Accessible language blending wonder, moral lessons, and mythological archetypes.',
-      },
-      {
-        name: 'Robert E. Howard',
-        style:
-          'Pulpy, action-driven with barbaric vitality. Muscular prose, visceral combat, and primal conflicts.',
-      },
-      {
-        name: 'Lord Dunsany',
-        style:
-          'Dreamlike, mythological with archaic elegance. Fairy tale quality with invented pantheons and timeless feel.',
-      },
-    ],
-  },
-  {
     name: 'Historical Fiction',
     description:
       'Set in real historical periods, weaving choices through actual events, cultural details, and period-appropriate challenges.',
@@ -174,7 +142,7 @@ export const gameThemes: GameTheme[] = [
       {
         name: 'Bernard Cornwell',
         style:
-          'Military action with gritty realism. First-person perspective putting reader in the battle with historical accuracy.',
+          'Military action with gritty realism. Second-person perspective putting reader in the battle with historical accuracy.',
       },
     ],
   },
@@ -195,7 +163,7 @@ export const gameThemes: GameTheme[] = [
       {
         name: 'Jim Butcher',
         style:
-          'Punchy, noir-influenced with snappy dialogue. Action-focused with humor and first-person detective voice.',
+          'Punchy, noir-influenced with snappy dialogue. Action-focused with humor and second-person detective voice.',
       },
       {
         name: 'Charles de Lint',

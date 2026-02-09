@@ -8,7 +8,7 @@ import * as bedrock from '@services/bedrock'
 import * as dynamodb from '@services/dynamodb'
 import {
   formatNarrative,
-  formatOptionNarrative,
+  formatOptionNarratives,
   generateNarrativeContent,
 } from '@services/narratives/narrative-content'
 
@@ -177,9 +177,9 @@ describe('narratives/narrative-content', () => {
     })
   })
 
-  describe('formatOptionNarrative', () => {
+  describe('formatOptionNarratives', () => {
     it('should format option narratives correctly', () => {
-      const result = formatOptionNarrative(
+      const result = formatOptionNarratives(
         createNarrativePromptOutput,
         narrativeGenerationData,
         cyoaGame,
@@ -206,7 +206,7 @@ describe('narratives/narrative-content', () => {
       }
 
       expect(() =>
-        formatOptionNarrative(createNarrativePromptOutput, invalidGenerationData, cyoaGame),
+        formatOptionNarratives(createNarrativePromptOutput, invalidGenerationData, cyoaGame),
       ).toThrow('Choice point not found in game')
     })
 
@@ -214,7 +214,7 @@ describe('narratives/narrative-content', () => {
       const invalidOutput = { ...createNarrativePromptOutput, options: undefined }
 
       expect(() =>
-        formatOptionNarrative(invalidOutput, narrativeGenerationData, cyoaGame),
+        formatOptionNarratives(invalidOutput, narrativeGenerationData, cyoaGame),
       ).toThrow()
     })
 
@@ -225,7 +225,7 @@ describe('narratives/narrative-content', () => {
       }
 
       expect(() =>
-        formatOptionNarrative(invalidOutput, narrativeGenerationData, cyoaGame),
+        formatOptionNarratives(invalidOutput, narrativeGenerationData, cyoaGame),
       ).toThrow()
     })
 
@@ -236,7 +236,7 @@ describe('narratives/narrative-content', () => {
       }
 
       expect(() =>
-        formatOptionNarrative(invalidOutput, narrativeGenerationData, cyoaGame),
+        formatOptionNarratives(invalidOutput, narrativeGenerationData, cyoaGame),
       ).toThrow()
     })
   })

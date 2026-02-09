@@ -43,8 +43,7 @@ export const retrieveChoiceById = async (
   }
 
   const current = game.choicePoints[choicePointIndex]
-  const isLastNarrative = current === undefined && choicePointIndex === game.choicePoints.length
-  if (isLastNarrative || current?.options[latestOptionSelected] === undefined) {
+  if (choicePointIndex > 0 && current?.options[latestOptionSelected] === undefined) {
     return { status: 'not_found', message: 'Choice not found' }
   }
 

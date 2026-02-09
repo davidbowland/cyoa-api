@@ -177,5 +177,33 @@ describe('create-games', () => {
       )
       expect(result.game.resourceImage).toBeUndefined()
     })
+
+    it('should retry when game choices generation fails on first attempt', async () => {
+      jest
+        .mocked(gameChoices)
+        .generateGameChoices.mockRejectedValueOnce(new Error('Generation failed'))
+
+      const result = await createGame()
+
+      expect(gameChoices.generateGameChoices).toHaveBeenCalledTimes(2)
+      expect(result).toEqual({
+        game: expect.objectContaining({
+          title: 'Test Adventure',
+          image: 'test-adventure/cover.png',
+          resourceImage: 'test-adventure/resource.png',
+        }),
+        gameId: 'test-adventure',
+      })
+    })
+
+    it('should throw error when game choices generation fails after 2 attempts', async () => {
+      jest
+        .mocked(gameChoices)
+        .generateGameChoices.mockRejectedValueOnce(new Error('Generation failed'))
+        .mockRejectedValueOnce(new Error('Generation failed again'))
+
+      await expect(createGame()).rejects.toBe('Game options creation failed after 2 attempts')
+      expect(gameChoices.generateGameChoices).toHaveBeenCalledTimes(2)
+    })
   })
 })
