@@ -9,6 +9,7 @@ jest.mock('@aws-sdk/client-bedrock-runtime', () => ({
 }))
 
 jest.mock('@utils/logging', () => ({
+  log: jest.fn(),
   logDebug: jest.fn(),
   logError: jest.fn(),
   xrayCapture: jest.fn().mockImplementation((x) => x),
@@ -95,6 +96,19 @@ describe('invokeModel', () => {
     const result = await invokeModel(mockPrompt)
 
     expect(result).toEqual({ result: 'cleaned' })
+  })
+
+  it('should log and throw error when model response is not valid JSON', async () => {
+    const invalidJsonResponse = {
+      body: new TextEncoder().encode(
+        JSON.stringify({
+          content: [{ text: 'This is not valid JSON' }],
+        }),
+      ),
+    }
+    mockSend.mockResolvedValueOnce(invalidJsonResponse)
+
+    await expect(invokeModel(mockPrompt)).rejects.toThrow()
   })
 })
 

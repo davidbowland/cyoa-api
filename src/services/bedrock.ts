@@ -2,7 +2,7 @@ import { BedrockRuntimeClient, InvokeModelCommand } from '@aws-sdk/client-bedroc
 
 import { bedrockRegion } from '../config'
 import { ImageGenerationOptions, ImageGenerationResponse, TextPrompt } from '../types'
-import { logDebug, xrayCapture } from '../utils/logging'
+import { log, logDebug, xrayCapture } from '../utils/logging'
 
 const runtimeClient = xrayCapture(new BedrockRuntimeClient({ region: bedrockRegion }))
 
@@ -28,7 +28,7 @@ const invokeModelMessage = async <T>(prompt: TextPrompt): Promise<T> => {
     temperature: prompt.config.temperature,
     top_k: prompt.config.topK,
   }
-  logDebug('Received from model', {
+  logDebug('Model body', {
     messageBody,
     messages: JSON.stringify(messageBody.messages, null, 2),
   })
@@ -40,7 +40,16 @@ const invokeModelMessage = async <T>(prompt: TextPrompt): Promise<T> => {
   const response = await runtimeClient.send(command)
   const modelResponse = JSON.parse(new TextDecoder().decode(response.body))
   logDebug('Model response', { modelResponse, text: modelResponse.content[0].text })
-  return JSON.parse(removeThinkingTags(modelResponse.content[0].text))
+
+  try {
+    return JSON.parse(removeThinkingTags(modelResponse.content[0].text))
+  } catch (error) {
+    log('Failed to parse model response as JSON', {
+      error,
+      response: modelResponse.content[0].text,
+    })
+    throw error
+  }
 }
 
 export const generateImage = async (
