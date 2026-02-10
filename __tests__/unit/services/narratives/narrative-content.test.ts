@@ -46,7 +46,7 @@ describe('narratives/narrative-content', () => {
         inspirationAuthor: generationDataWithInventory.inspirationAuthor,
       })
       expect(bedrock.invokeModel).toHaveBeenCalledWith(prompt, {
-        previousNarrative: createNarrativePromptOutput.narrative,
+        previousNarrative: generationDataWithInventory.previousNarrative,
         previousChoice: generationDataWithInventory.previousChoice,
         previousOptions: generationDataWithInventory.previousOptions,
         nextNarrative: 'You find yourself standing before a massive sleeping dragon...',
@@ -73,6 +73,20 @@ describe('narratives/narrative-content', () => {
         },
         imageDescription: 'A dark cave with a massive sleeping dragon surrounded by treasure',
       })
+    })
+
+    it('should skip option narrative generation when previousOptions is falsy', async () => {
+      const generationDataWithoutPreviousOptions = {
+        ...narrativeGenerationData,
+        previousOptions: undefined,
+      }
+
+      const result = await generateNarrativeContent(cyoaGame, generationDataWithoutPreviousOptions)
+
+      expect(dynamodb.getPromptById).toHaveBeenCalledWith('create-narrative')
+      expect(dynamodb.getPromptById).not.toHaveBeenCalledWith('create-option-narrative')
+      expect(bedrock.invokeModel).toHaveBeenCalledTimes(1)
+      expect(result.narrative.options).toEqual([])
     })
 
     it('should throw error when choice point not found in game', async () => {

@@ -36,7 +36,6 @@ export const generateNarrativeContent = async (
   }
 
   const narrativePrompt = await getPromptById<TextPrompt>(promptIdCreateNarrative)
-  const optionNarrativesPrompt = await getPromptById<TextPrompt>(promptIdCreateOptionNarratives)
   log('Creating narrative with context', {
     gameId: game.title,
     modelContext: narrativeModelContext,
@@ -54,17 +53,31 @@ export const generateNarrativeContent = async (
     game,
   )
 
+  const options = generationData.previousOptions
+    ? await generateOptionNarratives(game, generationData, narrativeWithoutOptions.narrative)
+    : []
+
+  const narrative = { ...narrativeWithoutOptions, options }
+  return { narrative, imageDescription }
+}
+
+export const generateOptionNarratives = async (
+  game: CyoaGame,
+  generationData: NarrativeGenerationData,
+  nextNarrative: string,
+): Promise<CyoaNarrativeOption[]> => {
+  const optionNarrativesPrompt = await getPromptById<TextPrompt>(promptIdCreateOptionNarratives)
   const optionNarrativesModelContext = {
-    previousNarrative: generatedNarrative.narrative,
+    previousNarrative: generationData.previousNarrative,
     previousChoice: generationData.previousChoice,
     previousOptions: generationData.previousOptions,
-    nextNarrative: narrativeWithoutOptions.narrative,
+    nextNarrative,
     inspirationAuthor: generationData.inspirationAuthor,
   }
   log('Creating option narratives with context', {
     gameId: game.title,
     modelContext: optionNarrativesModelContext,
-    promptId: optionNarrativesPrompt,
+    promptId: promptIdCreateOptionNarratives,
   })
 
   const generatedOptionNarratives = await invokeModel<CreateOptionNarrativePromptOutput>(
@@ -74,8 +87,7 @@ export const generateNarrativeContent = async (
   log('Generated option narratives', { generatedOptionNarratives })
 
   const { options } = formatOptionNarratives(generatedOptionNarratives, generationData, game)
-  const narrative = { ...narrativeWithoutOptions, options }
-  return { narrative, imageDescription }
+  return options
 }
 
 export const formatNarrative = (
