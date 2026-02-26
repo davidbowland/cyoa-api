@@ -147,32 +147,6 @@ export const gameThemes: GameTheme[] = [
     ],
   },
   {
-    name: 'Urban Fantasy',
-    description: 'Blends magical or mythical elements into a contemporary, real-world setting.',
-    inspirationAuthors: [
-      {
-        name: 'Neil Gaiman',
-        style:
-          'Blends mythological depth with contemporary voice. Lyrical yet accessible, finding magic in the mundane and making the fantastical feel real.',
-      },
-      {
-        name: 'China Miéville',
-        style:
-          'Weird, baroque density with political undertones. Inventive, sometimes challenging prose with unique fantastical elements.',
-      },
-      {
-        name: 'Jim Butcher',
-        style:
-          'Punchy, noir-influenced with snappy dialogue. Action-focused with humor and second-person detective voice.',
-      },
-      {
-        name: 'Charles de Lint',
-        style:
-          'Gentle, folkloric with character focus. Mythic elements blending naturally into contemporary life with hopeful tone.',
-      },
-    ],
-  },
-  {
     name: 'Horror/Nightmare',
     description: 'Designed to be scary, with choices leading to gruesome or unsettling endings.',
     inspirationAuthors: [

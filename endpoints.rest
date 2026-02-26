@@ -1,11 +1,11 @@
 ### Get all games
 
-GET https://cyoa-api.dbowland.com/v1/games HTTP/1.1
+GET http://localhost:3000/v1/games HTTP/1.1
 
 ### Get specific game
 
-GET https://cyoa-api.dbowland.com/v1/games/the-salt-traverse HTTP/1.1
+GET http://localhost:3000/v1/games/the-salt-traverse HTTP/1.1
 
-### Get narrative by ID
+### Get choice by ID
 
-GET https://cyoa-api.dbowland.com/v1/games/the-murky-covenant/narratives/start HTTP/1.1
+GET http://localhost:3000/games/the-shattered-sun/choices/start HTTP/1.1
