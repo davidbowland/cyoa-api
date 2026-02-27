@@ -48,9 +48,16 @@ describe('serialize', () => {
         options: [
           {
             name: 'Sneak past quietly',
-            narrative: 'You carefully tiptoe past the sleeping beast...',
+            rank: 1,
+            consequence: 'You move silently',
+            resourcesToAdd: -5,
           },
-          { name: 'Wake the dragon', narrative: 'You loudly call out to wake the dragon...' },
+          {
+            name: 'Wake the dragon',
+            rank: 2,
+            consequence: 'The dragon awakens',
+            resourcesToAdd: -15,
+          },
         ],
         inventory: [{ name: 'Sword', image: 'sword-image.jpg' }],
         currentResourceValue: 100,

@@ -53,11 +53,15 @@ export const generateNarrativeContent = async (
     game,
   )
 
-  const options = generationData.previousOptions
+  const optionNarratives = generationData.previousOptions
     ? await generateOptionNarratives(game, generationData, narrativeWithoutOptions.narrative)
     : []
 
-  const narrative = { ...narrativeWithoutOptions, options }
+  const narrative = {
+    ...narrativeWithoutOptions,
+    optionNarratives,
+    options: generationData.nextOptions ?? [],
+  }
   return { narrative, imageDescription }
 }
 
@@ -86,15 +90,19 @@ export const generateOptionNarratives = async (
   )
   log('Generated option narratives', { generatedOptionNarratives })
 
-  const { options } = formatOptionNarratives(generatedOptionNarratives, generationData, game)
-  return options
+  const { optionNarratives } = formatOptionNarratives(
+    generatedOptionNarratives,
+    generationData,
+    game,
+  )
+  return optionNarratives
 }
 
 export const formatNarrative = (
   input: CreateNarrativePromptOutput,
   generationData: NarrativeGenerationData,
   game: CyoaGame,
-): { narrative: Omit<CyoaNarrative, 'options'>; imageDescription: string } => {
+): { narrative: Omit<CyoaNarrative, 'optionNarratives' | 'options'>; imageDescription: string } => {
   const jsonTypeDefinition = {
     type: 'object',
     required: ['chapterTitle', 'narrative', 'imageDescription', 'losingTitle', 'losingNarrative'],
@@ -129,7 +137,7 @@ export const formatOptionNarratives = (
   input: CreateOptionNarrativePromptOutput,
   generationData: NarrativeGenerationData,
   game: CyoaGame,
-): Pick<CyoaNarrative, 'options'> => {
+): Pick<CyoaNarrative, 'optionNarratives'> => {
   const jsonTypeDefinition = {
     type: 'object',
     required: ['options'],
@@ -158,5 +166,5 @@ export const formatOptionNarratives = (
   const optionsWithNarratives: CyoaNarrativeOption[] = currentChoicePoint.options.map(
     (option, idx) => ({ name: option.name, narrative: input.options?.[idx]?.narrative as string }),
   )
-  return { options: optionsWithNarratives }
+  return { optionNarratives: optionsWithNarratives }
 }

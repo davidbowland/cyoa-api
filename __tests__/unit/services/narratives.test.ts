@@ -39,10 +39,11 @@ describe('narratives', () => {
           previousOptions: undefined,
           nextChoice: 'You see a sleeping dragon. What do you do?',
           nextOptions: [
-            { name: 'Fight', rank: 1, consequence: 'You fight bravely' },
-            { name: 'Run', rank: 2, consequence: 'You flee the scene' },
+            { name: 'Fight', rank: 1, consequence: 'You fight bravely', resourcesToAdd: -10 },
+            { name: 'Run', rank: 2, consequence: 'You flee the scene', resourcesToAdd: -20 },
           ],
           outline: 'Test outline',
+          lossNarrative: 'You have failed in your quest.',
           inspirationAuthor: cyoaGame.inspirationAuthor,
           generationStartTime: mockNow,
         }),
@@ -71,13 +72,13 @@ describe('narratives', () => {
           previousNarrative: 'You encounter a challenge',
           previousChoice: 'You see a sleeping dragon. What do you do?',
           previousOptions: [
-            { name: 'Fight', rank: 1, consequence: 'You fight bravely' },
-            { name: 'Run', rank: 2, consequence: 'You flee the scene' },
+            { name: 'Fight', rank: 1, consequence: 'You fight bravely', resourcesToAdd: -10 },
+            { name: 'Run', rank: 2, consequence: 'You flee the scene', resourcesToAdd: -20 },
           ],
           nextChoice: 'You see a sleeping dragon. What do you do?',
           nextOptions: [
-            { name: 'Fight', rank: 1, consequence: 'You fight bravely' },
-            { name: 'Run', rank: 2, consequence: 'You flee the scene' },
+            { name: 'Fight', rank: 1, consequence: 'You fight bravely', resourcesToAdd: -10 },
+            { name: 'Run', rank: 2, consequence: 'You flee the scene', resourcesToAdd: -20 },
           ],
         }),
       )

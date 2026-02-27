@@ -61,6 +61,7 @@ export const formatEndingNarrative = (
   const narrative: CyoaNarrative = {
     narrative: input.narrative as string,
     chapterTitle: input.chapterTitle as string,
+    optionNarratives: [],
     options: [],
     inventory: [],
     losingTitle: '',

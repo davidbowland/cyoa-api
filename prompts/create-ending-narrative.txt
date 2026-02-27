@@ -13,7 +13,7 @@ An outline and the important parts of the narrative have already been generated.
   - ALWAYS MAKE NARRATIVE FOLLOW NATURALLY FROM previousNarrative
   - Use the overall story outline to help consistency
   - Generate the narrative necessary to wrap up the story triumphantly
-  - Narratives should be 5 to 9 paragrahs, thinking about it considering the author's style
+  - Narratives should be 5 to 9 paragraphs, thinking about it considering the author's style
   - ALWAYS use the style of the author mentioned
   - NEVER mention the previous choice NOR assume any previous option was chosen
   - Use the second person -- "you" perspective

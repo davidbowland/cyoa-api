@@ -71,8 +71,8 @@ export const serializedChoice = {
   image: 'https://cyoa-assets.dbowland.com/images/a-friendly-adventure/test-narrative-id.png',
   choice: 'You see a sleeping dragon. What do you do?',
   options: [
-    { name: 'Sneak past quietly', narrative: 'You carefully tiptoe past the sleeping beast...' },
-    { name: 'Wake the dragon', narrative: 'You loudly call out to wake the dragon...' },
+    { name: 'Sneak past quietly', rank: 1, consequence: 'You move silently', resourcesToAdd: -5 },
+    { name: 'Wake the dragon', rank: 2, consequence: 'The dragon awakens', resourcesToAdd: -15 },
   ],
   inventory: [{ name: 'Sword', image: 'sword-image.jpg' }],
   currentResourceValue: 90,
@@ -163,13 +163,13 @@ export const narrativeGenerationData: NarrativeGenerationData = {
   previousNarrative: 'You entered the dark cave',
   previousChoice: 'What do you investigate first?',
   previousOptions: [
-    { name: 'Sneak past quietly', rank: 1, consequence: 'You move silently' },
-    { name: 'Wake the dragon', rank: 2, consequence: 'The dragon awakens' },
+    { name: 'Fight', rank: 1, consequence: 'You fight bravely', resourcesToAdd: -10 },
+    { name: 'Run', rank: 2, consequence: 'You flee the scene', resourcesToAdd: -20 },
   ],
   nextChoice: 'You see a sleeping dragon. What do you do?',
   nextOptions: [
-    { name: 'Sneak past quietly', rank: 1, consequence: 'You move silently' },
-    { name: 'Wake the dragon', rank: 2, consequence: 'The dragon awakens' },
+    { name: 'Fight', rank: 1, consequence: 'You fight bravely', resourcesToAdd: -10 },
+    { name: 'Run', rank: 2, consequence: 'You flee the scene', resourcesToAdd: -20 },
   ],
   outline: 'Test outline',
   lossNarrative: 'The dragon kills you!',
@@ -186,9 +186,13 @@ export const cyoaNarrative: CyoaNarrative = {
   chapterTitle: "The Dragon's Lair",
   image: 'https://cyoa-assets.dbowland.com/images/a-friendly-adventure/test-narrative-id.png',
   choice: 'You see a sleeping dragon. What do you do?',
-  options: [
+  optionNarratives: [
     { name: 'Sneak past quietly', narrative: 'You carefully tiptoe past the sleeping beast...' },
     { name: 'Wake the dragon', narrative: 'You loudly call out to wake the dragon...' },
+  ],
+  options: [
+    { name: 'Sneak past quietly', rank: 1, consequence: 'You move silently', resourcesToAdd: -5 },
+    { name: 'Wake the dragon', rank: 2, consequence: 'The dragon awakens', resourcesToAdd: -15 },
   ],
   inventory: [{ name: 'Sword', image: 'sword-image.jpg' }],
   losingTitle: 'Defeat',

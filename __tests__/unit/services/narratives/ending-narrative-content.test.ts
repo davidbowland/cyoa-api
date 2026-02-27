@@ -40,6 +40,7 @@ describe('narratives/ending-narrative-content', () => {
         narrative: {
           narrative: 'You have successfully completed your quest and saved the kingdom!',
           chapterTitle: 'Victory',
+          optionNarratives: [],
           options: [],
           inventory: [],
           losingTitle: '',
@@ -67,6 +68,7 @@ describe('narratives/ending-narrative-content', () => {
         narrative: {
           narrative: 'You have successfully completed your quest and saved the kingdom!',
           chapterTitle: 'Victory',
+          optionNarratives: [],
           options: [],
           inventory: [],
           losingTitle: '',

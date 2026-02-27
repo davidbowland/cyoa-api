@@ -60,7 +60,7 @@ describe('narratives/narrative-content', () => {
           losingTitle: 'Defeat',
           losingNarrative: 'The dragon awakens and you are defeated.',
           inventory: [{ name: 'Sword', image: 'sword-image.jpg' }],
-          options: [
+          optionNarratives: [
             {
               name: 'Fight',
               narrative: 'You carefully tiptoe past the sleeping beast...',
@@ -69,6 +69,10 @@ describe('narratives/narrative-content', () => {
               name: 'Run',
               narrative: 'You loudly call out to wake the dragon...',
             },
+          ],
+          options: [
+            { name: 'Fight', rank: 1, consequence: 'You fight bravely', resourcesToAdd: -10 },
+            { name: 'Run', rank: 2, consequence: 'You flee the scene', resourcesToAdd: -20 },
           ],
         },
         imageDescription: 'A dark cave with a massive sleeping dragon surrounded by treasure',
@@ -86,7 +90,11 @@ describe('narratives/narrative-content', () => {
       expect(dynamodb.getPromptById).toHaveBeenCalledWith('create-narrative')
       expect(dynamodb.getPromptById).not.toHaveBeenCalledWith('create-option-narrative')
       expect(bedrock.invokeModel).toHaveBeenCalledTimes(1)
-      expect(result.narrative.options).toEqual([])
+      expect(result.narrative.optionNarratives).toEqual([])
+      expect(result.narrative.options).toEqual([
+        { name: 'Fight', rank: 1, consequence: 'You fight bravely', resourcesToAdd: -10 },
+        { name: 'Run', rank: 2, consequence: 'You flee the scene', resourcesToAdd: -20 },
+      ])
     })
 
     it('should throw error when choice point not found in game', async () => {
@@ -200,7 +208,7 @@ describe('narratives/narrative-content', () => {
       )
 
       expect(result).toEqual({
-        options: [
+        optionNarratives: [
           {
             name: 'Fight',
             narrative: 'You carefully tiptoe past the sleeping beast...',

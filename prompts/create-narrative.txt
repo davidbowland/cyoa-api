@@ -7,8 +7,8 @@ You are creating a choose-your-own-adventure game. The best choices should lead 
 An outline and the important parts of the narrative have already been generated. Given those, generate the narrative for the current choice.
 
 - Generate the narrative for the current choice
-  - Elaborate on the existing narrative
-  - ALWAYS include important details from the existing narrative
+  - Retell and elaborate on the existing narrative, only your generated narrative will be shown to the player
+  - ALWAYS include important details from the existing narrative and NEVER contradict the existing narrative
   - ALWAYS MAKE NARRATIVE FOLLOW NATURALLY FROM previousNarrative
   - Use the overall story outline to help consistency
   - Generate the story necessary to set up the choice

@@ -28,7 +28,11 @@ export const retrieveChoiceById = async (
       gameId,
       choiceId,
       narrativeId,
+      current,
       currentResourceValue,
+      choicePointIndex,
+      latestOptionSelected,
+      selectedOptionIndices,
       isLost,
     })
     return {

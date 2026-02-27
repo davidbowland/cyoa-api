@@ -94,7 +94,8 @@ export interface CyoaNarrative {
   chapterTitle: string
   image?: string
   choice?: string
-  options: CyoaNarrativeOption[]
+  optionNarratives: CyoaNarrativeOption[]
+  options: CyoaOption[]
   inventory: CyoaInventory[]
   losingTitle: string
   losingNarrative: string
@@ -119,7 +120,7 @@ export interface CyoaChoiceSerialized {
   chapterTitle: string
   image?: string
   choice?: string
-  options: CyoaNarrativeOption[]
+  options: CyoaOption[]
   inventory: CyoaInventory[]
   currentResourceValue: number
 }
@@ -131,9 +132,9 @@ export interface NarrativeGenerationData {
   existingNarrative: string
   previousNarrative?: string
   previousChoice?: string
-  previousOptions?: Array<{ name: string; rank: number; consequence: string }>
+  previousOptions?: CyoaOption[]
   nextChoice?: string
-  nextOptions?: Array<{ name: string; rank: number; consequence: string }>
+  nextOptions?: CyoaOption[]
   outline: string
   lossNarrative: string
   inspirationAuthor: Author

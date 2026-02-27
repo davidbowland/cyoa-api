@@ -16,7 +16,7 @@ const combineNarrative = (
   latestOptionSelected: number,
   isLoss: boolean,
 ): string => {
-  const selectedOption = narrative.options[latestOptionSelected]
+  const selectedOption = narrative.optionNarratives?.[latestOptionSelected]
   if (selectedOption) {
     return `${selectedOption.narrative}\n\n${isLoss ? narrative.losingNarrative : narrative.narrative}`
   }
