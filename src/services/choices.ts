@@ -24,6 +24,8 @@ export const retrieveChoiceById = async (
 
     const currentResourceValue = calculateCurrentResourceValue(game, selectedOptionIndices)
     const isLost = isGameLost(game, currentResourceValue)
+    const previousChoicePoint = game.choicePoints[choicePointIndex - 1]
+    const selectedOptionName = previousChoicePoint?.options[latestOptionSelected]?.name
     log('Returning existing narrative', {
       gameId,
       choiceId,
@@ -42,6 +44,7 @@ export const retrieveChoiceById = async (
         isLost,
         currentResourceValue,
         latestOptionSelected,
+        selectedOptionName,
       ),
     }
   }

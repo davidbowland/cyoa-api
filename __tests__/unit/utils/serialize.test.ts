@@ -64,6 +64,39 @@ describe('serialize', () => {
       })
     })
 
+    it('should match option narrative by name over index', () => {
+      const narrativeWithSwappedOptions = {
+        ...cyoaNarrative,
+        optionNarratives: [
+          { name: 'Wake the dragon', narrative: 'You loudly call out to wake the dragon...' },
+          {
+            name: 'Sneak past quietly',
+            narrative: 'You carefully tiptoe past the sleeping beast...',
+          },
+        ],
+      }
+
+      const result = serializeCyoaChoice(
+        narrativeWithSwappedOptions,
+        false,
+        100,
+        0,
+        'Sneak past quietly',
+      )
+
+      expect(result.narrative).toBe(
+        'You carefully tiptoe past the sleeping beast...\n\nYou find yourself standing before a massive sleeping dragon...',
+      )
+    })
+
+    it('should fall back to index when name does not match', () => {
+      const result = serializeCyoaChoice(cyoaNarrative, false, 100, 0, 'Non-existent option')
+
+      expect(result.narrative).toBe(
+        'You carefully tiptoe past the sleeping beast...\n\nYou find yourself standing before a massive sleeping dragon...',
+      )
+    })
+
     it('should use losing narrative when game is lost', () => {
       const result = serializeCyoaChoice(cyoaNarrative, true, 0, 0)
 

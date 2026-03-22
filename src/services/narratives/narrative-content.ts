@@ -54,7 +54,7 @@ export const generateNarrativeContent = async (
   )
 
   const optionNarratives = generationData.previousOptions
-    ? await generateOptionNarratives(game, generationData, narrativeWithoutOptions.narrative)
+    ? await generateOptionNarratives(game.title, generationData, narrativeWithoutOptions.narrative)
     : []
 
   const narrative = {
@@ -66,7 +66,7 @@ export const generateNarrativeContent = async (
 }
 
 export const generateOptionNarratives = async (
-  game: CyoaGame,
+  gameTitle: string,
   generationData: NarrativeGenerationData,
   nextNarrative: string,
 ): Promise<CyoaNarrativeOption[]> => {
@@ -79,7 +79,7 @@ export const generateOptionNarratives = async (
     inspirationAuthor: generationData.inspirationAuthor,
   }
   log('Creating option narratives with context', {
-    gameId: game.title,
+    gameId: gameTitle,
     modelContext: optionNarrativesModelContext,
     promptId: promptIdCreateOptionNarratives,
   })
@@ -90,11 +90,7 @@ export const generateOptionNarratives = async (
   )
   log('Generated option narratives', { generatedOptionNarratives })
 
-  const { optionNarratives } = formatOptionNarratives(
-    generatedOptionNarratives,
-    generationData,
-    game,
-  )
+  const { optionNarratives } = formatOptionNarratives(generatedOptionNarratives, generationData)
   return optionNarratives
 }
 
@@ -136,7 +132,6 @@ export const formatNarrative = (
 export const formatOptionNarratives = (
   input: CreateOptionNarrativePromptOutput,
   generationData: NarrativeGenerationData,
-  game: CyoaGame,
 ): Pick<CyoaNarrative, 'optionNarratives'> => {
   const jsonTypeDefinition = {
     type: 'object',
@@ -158,13 +153,14 @@ export const formatOptionNarratives = (
     throw new Error(JSON.stringify(ajv.errors))
   }
 
-  const currentChoicePoint = game.choicePoints.find((cp) => cp.choice === generationData.nextChoice)
-  if (!currentChoicePoint) {
-    throw new Error('Choice point not found in game')
-  }
-
-  const optionsWithNarratives: CyoaNarrativeOption[] = currentChoicePoint.options.map(
-    (option, idx) => ({ name: option.name, narrative: input.options?.[idx]?.narrative as string }),
-  )
+  const previousOptions = generationData.previousOptions ?? []
+  // Match AI output by name to handle unpredictable ordering, fall back to index for backward compatibility
+  const optionsWithNarratives: CyoaNarrativeOption[] = previousOptions.map((option, idx) => {
+    const matchedByName = input.options?.find((o) => o.name === option.name)
+    return {
+      name: option.name,
+      narrative: (matchedByName?.narrative ?? input.options?.[idx]?.narrative) as string,
+    }
+  })
   return { optionNarratives: optionsWithNarratives }
 }

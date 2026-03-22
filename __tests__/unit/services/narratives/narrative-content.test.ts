@@ -97,17 +97,6 @@ describe('narratives/narrative-content', () => {
       ])
     })
 
-    it('should throw error when choice point not found in game', async () => {
-      const invalidGenerationData = {
-        ...narrativeGenerationData,
-        nextChoice: 'Non-existent choice',
-      }
-
-      await expect(generateNarrativeContent(cyoaGame, invalidGenerationData)).rejects.toThrow(
-        'Choice point not found in game',
-      )
-    })
-
     it('should throw error for invalid narrative prompt output', async () => {
       const invalidOutput = { ...createNarrativePromptOutput, narrative: '' }
       jest.mocked(bedrock).invokeModel.mockResolvedValueOnce(invalidOutput)
@@ -200,12 +189,8 @@ describe('narratives/narrative-content', () => {
   })
 
   describe('formatOptionNarratives', () => {
-    it('should format option narratives correctly', () => {
-      const result = formatOptionNarratives(
-        createNarrativePromptOutput,
-        narrativeGenerationData,
-        cyoaGame,
-      )
+    it('should format option narratives using index fallback when AI omits names', () => {
+      const result = formatOptionNarratives(createNarrativePromptOutput, narrativeGenerationData)
 
       expect(result).toEqual({
         optionNarratives: [
@@ -221,23 +206,36 @@ describe('narratives/narrative-content', () => {
       })
     })
 
-    it('should throw error when choice point not found in game', () => {
-      const invalidGenerationData = {
-        ...narrativeGenerationData,
-        nextChoice: 'Non-existent choice',
+    it('should match option narratives by name when AI returns names', () => {
+      // AI returns narratives in a different order than previousOptions
+      const reorderedOutput = {
+        ...createNarrativePromptOutput,
+        options: [
+          { name: 'Run', narrative: 'You loudly call out to wake the dragon...' },
+          { name: 'Fight', narrative: 'You carefully tiptoe past the sleeping beast...' },
+        ],
       }
 
-      expect(() =>
-        formatOptionNarratives(createNarrativePromptOutput, invalidGenerationData, cyoaGame),
-      ).toThrow('Choice point not found in game')
+      const result = formatOptionNarratives(reorderedOutput, narrativeGenerationData)
+
+      expect(result).toEqual({
+        optionNarratives: [
+          {
+            name: 'Fight',
+            narrative: 'You carefully tiptoe past the sleeping beast...',
+          },
+          {
+            name: 'Run',
+            narrative: 'You loudly call out to wake the dragon...',
+          },
+        ],
+      })
     })
 
     it('should throw error when options array is missing', () => {
       const invalidOutput = { ...createNarrativePromptOutput, options: undefined }
 
-      expect(() =>
-        formatOptionNarratives(invalidOutput, narrativeGenerationData, cyoaGame),
-      ).toThrow()
+      expect(() => formatOptionNarratives(invalidOutput, narrativeGenerationData)).toThrow()
     })
 
     it('should throw error when option narrative is missing', () => {
@@ -246,9 +244,7 @@ describe('narratives/narrative-content', () => {
         options: [{ narrative: 'Valid narrative' }, {}],
       }
 
-      expect(() =>
-        formatOptionNarratives(invalidOutput, narrativeGenerationData, cyoaGame),
-      ).toThrow()
+      expect(() => formatOptionNarratives(invalidOutput, narrativeGenerationData)).toThrow()
     })
 
     it('should throw error when option narrative is empty string', () => {
@@ -257,9 +253,7 @@ describe('narratives/narrative-content', () => {
         options: [{ narrative: 'Valid narrative' }, { narrative: '' }],
       }
 
-      expect(() =>
-        formatOptionNarratives(invalidOutput, narrativeGenerationData, cyoaGame),
-      ).toThrow()
+      expect(() => formatOptionNarratives(invalidOutput, narrativeGenerationData)).toThrow()
     })
   })
 })

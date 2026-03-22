@@ -25,7 +25,7 @@ Make sure the narratives are inoffensive and not emmotionally charged
 Output your thinking in <thinking> tags followed by valid JSON with the keys with NOTHING ELSE (double-check that your JSON is valid with \n instead of newlines and " escaped):
 
 {
-  "options": [{ "narrative": "string" }]
+  "options": [{ "name": "string (the option name from the input)", "narrative": "string" }]
 }
 </output>
 

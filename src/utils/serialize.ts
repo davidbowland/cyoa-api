@@ -14,9 +14,13 @@ export const serializeCyoaGame = (game: CyoaGame): CyoaGameSerialized => ({
 const combineNarrative = (
   narrative: CyoaNarrative,
   latestOptionSelected: number,
+  selectedOptionName: string | undefined,
   isLoss: boolean,
 ): string => {
-  const selectedOption = narrative.optionNarratives?.[latestOptionSelected]
+  // Match by name to handle AI reordering, fall back to index for backward compatibility
+  const selectedOption =
+    narrative.optionNarratives?.find((on) => on.name === selectedOptionName) ??
+    narrative.optionNarratives?.[latestOptionSelected]
   if (selectedOption) {
     return `${selectedOption.narrative}\n\n${isLoss ? narrative.losingNarrative : narrative.narrative}`
   }
@@ -28,8 +32,14 @@ export const serializeCyoaChoice = (
   isLoss: boolean,
   currentResourceValue: number,
   latestOptionSelected: number,
+  selectedOptionName?: string,
 ): CyoaChoiceSerialized => {
-  const combinedNarrative = combineNarrative(narrative, latestOptionSelected, isLoss)
+  const combinedNarrative = combineNarrative(
+    narrative,
+    latestOptionSelected,
+    selectedOptionName,
+    isLoss,
+  )
   return {
     narrative: combinedNarrative,
     chapterTitle: narrative.chapterTitle,

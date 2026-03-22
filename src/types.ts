@@ -246,6 +246,7 @@ export interface CreateNarrativePromptOutput {
 }
 
 export interface CreateNarrativePromptOption {
+  name?: string
   narrative?: string
 }
 
