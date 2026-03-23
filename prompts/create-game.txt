@@ -1,4 +1,4 @@
-# {"anthropicVersion":"bedrock-2023-05-31","maxTokens":75000,"model":"us.anthropic.claude-sonnet-4-6","temperature":0.6,"topK":500}
+# {"anthropicVersion":"bedrock-2023-05-31","maxTokens":115000,"model":"us.anthropic.claude-sonnet-4-6","temperature":0.6,"topK":500}
 
 <context>
 You are creating a choose-your-own-adventure game. The best choices should lead to the best outcome. Some choices can be puzzles the player needs to figure out or remember. You are creating the outline for the game that will be used in subsequent LLM prompts to generate the narrative and choices.

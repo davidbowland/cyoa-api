@@ -272,7 +272,7 @@ Resources:
         'created-by': 'cyoa-api'
         'created-for': 'cyoa'
         'environment': !Ref Environment
-      Timeout: 295
+      Timeout: 895
       Tracing: Active
     Metadata:
       BuildMethod: esbuild
