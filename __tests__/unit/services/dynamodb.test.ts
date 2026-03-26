@@ -67,15 +67,16 @@ describe('dynamodb', () => {
   describe('getGameById', () => {
     it('should return game data when game exists', async () => {
       mockSend.mockResolvedValueOnce({
-        Item: { Data: { S: JSON.stringify(cyoaGame) } },
+        Items: [{ Data: { S: JSON.stringify(cyoaGame) } }],
       })
 
       const result = await getGameById(gameId)
 
       expect(mockSend).toHaveBeenCalledWith({
-        Key: {
-          GameId: { S: gameId },
-        },
+        ExpressionAttributeValues: { ':gameId': { S: gameId } },
+        KeyConditionExpression: 'GameId = :gameId',
+        Limit: 1,
+        ScanIndexForward: false,
         TableName: 'games-table',
       })
       expect(result).toEqual(cyoaGame)
@@ -83,11 +84,22 @@ describe('dynamodb', () => {
   })
 
   describe('getGames', () => {
-    it('should return array of games with gameId from scan', async () => {
+    it('should return array of games sorted by CreatedAt descending', async () => {
+      const olderTimestamp = mockNow - 1000
+      const newerTimestamp = mockNow
+
       mockSend.mockResolvedValueOnce({
         Items: [
-          { Data: { S: JSON.stringify(cyoaGame) }, GameId: { S: '2025-01-01' } },
-          { Data: { S: JSON.stringify(cyoaGame) }, GameId: { S: '2025-01-02' } },
+          {
+            Data: { S: JSON.stringify(cyoaGame) },
+            GameId: { S: 'older-game' },
+            CreatedAt: { N: `${olderTimestamp}` },
+          },
+          {
+            Data: { S: JSON.stringify(cyoaGame) },
+            GameId: { S: 'newer-game' },
+            CreatedAt: { N: `${newerTimestamp}` },
+          },
         ],
       })
 
@@ -97,8 +109,8 @@ describe('dynamodb', () => {
         TableName: 'games-table',
       })
       expect(result).toEqual([
-        { game: cyoaGame, gameId: '2025-01-01' },
-        { game: cyoaGame, gameId: '2025-01-02' },
+        { game: cyoaGame, gameId: 'newer-game' },
+        { game: cyoaGame, gameId: 'older-game' },
       ])
     })
 
@@ -117,6 +129,9 @@ describe('dynamodb', () => {
 
       expect(mockSend).toHaveBeenCalledWith({
         Item: {
+          CreatedAt: {
+            N: `${mockNow}`,
+          },
           Data: {
             S: JSON.stringify(cyoaGame),
           },
@@ -223,19 +238,19 @@ describe('dynamodb', () => {
     })
 
     it('should return narratives for multiple IDs using BatchGetItemCommand', async () => {
-      const narrativeIds = ['start-0', 'start-1']
+      const narrativeIds = ['narrative-0', 'narrative-1']
 
       mockSend.mockResolvedValueOnce({
         Responses: {
           'narratives-table': [
             {
               GameId: { S: gameId },
-              NarrativeId: { S: 'start-0' },
+              NarrativeId: { S: 'narrative-0' },
               Data: { S: JSON.stringify(cyoaNarrative) },
             },
             {
               GameId: { S: gameId },
-              NarrativeId: { S: 'start-1' },
+              NarrativeId: { S: 'narrative-1' },
               GenerationData: { S: JSON.stringify(narrativeGenerationData) },
             },
           ],
@@ -248,15 +263,19 @@ describe('dynamodb', () => {
         RequestItems: {
           'narratives-table': {
             Keys: [
-              { GameId: { S: gameId }, NarrativeId: { S: 'start-0' } },
-              { GameId: { S: gameId }, NarrativeId: { S: 'start-1' } },
+              { GameId: { S: gameId }, NarrativeId: { S: 'narrative-0' } },
+              { GameId: { S: gameId }, NarrativeId: { S: 'narrative-1' } },
             ],
           },
         },
       })
       expect(result).toEqual([
-        { narrativeId: 'start-0', narrative: cyoaNarrative, generationData: undefined },
-        { narrativeId: 'start-1', narrative: undefined, generationData: narrativeGenerationData },
+        { narrativeId: 'narrative-0', narrative: cyoaNarrative, generationData: undefined },
+        {
+          narrativeId: 'narrative-1',
+          narrative: undefined,
+          generationData: narrativeGenerationData,
+        },
       ])
     })
 
@@ -275,18 +294,18 @@ describe('dynamodb', () => {
     })
 
     it('should return items in DynamoDB response order', async () => {
-      const narrativeIds = ['start-2', 'start-0', 'start-1']
+      const narrativeIds = ['narrative-0', 'narrative-1', 'narrative-2']
       mockSend.mockResolvedValueOnce({
         Responses: {
           'narratives-table': [
             {
               GameId: { S: gameId },
-              NarrativeId: { S: 'start-0' },
+              NarrativeId: { S: 'narrative-0' },
               Data: { S: JSON.stringify({ ...cyoaNarrative, narrative: 'Narrative 0' }) },
             },
             {
               GameId: { S: gameId },
-              NarrativeId: { S: 'start-1' },
+              NarrativeId: { S: 'narrative-1' },
               Data: { S: JSON.stringify({ ...cyoaNarrative, narrative: 'Narrative 1' }) },
             },
           ],
@@ -297,12 +316,12 @@ describe('dynamodb', () => {
 
       expect(result).toEqual([
         {
-          narrativeId: 'start-0',
+          narrativeId: 'narrative-0',
           narrative: { ...cyoaNarrative, narrative: 'Narrative 0' },
           generationData: undefined,
         },
         {
-          narrativeId: 'start-1',
+          narrativeId: 'narrative-1',
           narrative: { ...cyoaNarrative, narrative: 'Narrative 1' },
           generationData: undefined,
         },

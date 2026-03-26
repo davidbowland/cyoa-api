@@ -1,4 +1,9 @@
 {
-  "gameId": "test-game-id",
-  "narrativeId": "test-narrative-id"
+  "Records": [
+    {
+      "body": "{\"messageType\":\"narrative-generation\",\"gameId\":\"test-game-id\",\"narrativeId\":\"test-narrative-id\",\"uuid\":\"test-game-id-test-narrative-id\"}",
+      "messageId": "test-message-id-123",
+      "receiptHandle": "test-receipt-handle"
+    }
+  ]
 }

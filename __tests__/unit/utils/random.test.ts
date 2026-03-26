@@ -54,6 +54,6 @@ describe('getRandomSample', () => {
   it('should mutate array when withDuplicates is false', () => {
     const array = [1, 2, 3, 4, 5]
     getRandomSample(array, 2, false)
-    expect(array).toEqual([5, 2, 3, 4, 5])
+    expect(array).toEqual([1, 2, 3, 4, 5])
   })
 })

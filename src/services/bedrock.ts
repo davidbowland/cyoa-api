@@ -1,18 +1,25 @@
 import { BedrockRuntimeClient, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime'
 
-import { Prompt } from '../types'
-import { logDebug } from '../utils/logging'
+import { bedrockRegion } from '../config'
+import { ImageGenerationOptions, ImageGenerationResponse, TextPrompt } from '../types'
+import { log, logDebug, xrayCapture } from '../utils/logging'
 
-const runtimeClient = new BedrockRuntimeClient({ region: 'us-east-1' })
+const runtimeClient = xrayCapture(new BedrockRuntimeClient({ region: bedrockRegion }))
 
-export const invokeModel = async <T>(prompt: Prompt, context?: Record<string, any>): Promise<T> => {
+export const invokeModel = async <T>(
+  prompt: TextPrompt,
+  context?: Record<string, any>,
+): Promise<T> => {
   const promptWithContext = context
     ? { ...prompt, contents: prompt.contents.replace('${context}', JSON.stringify(context)) }
     : prompt
   return invokeModelMessage(promptWithContext)
 }
 
-const invokeModelMessage = async <T>(prompt: Prompt): Promise<T> => {
+const removeThinkingTags = (input: string): string =>
+  input.replace(/(^\s*<thinking>.*?<\/thinking>\s*|^\s*|\s*`(json)?\s*|\s*$)/gs, '')
+
+const invokeModelMessage = async <T>(prompt: TextPrompt): Promise<T> => {
   logDebug('Invoking model', { prompt })
   const messageBody = {
     anthropic_version: prompt.config.anthropicVersion,
@@ -21,7 +28,7 @@ const invokeModelMessage = async <T>(prompt: Prompt): Promise<T> => {
     temperature: prompt.config.temperature,
     top_k: prompt.config.topK,
   }
-  logDebug('Received from model', {
+  logDebug('Model body', {
     messageBody,
     messages: JSON.stringify(messageBody.messages, null, 2),
   })
@@ -33,10 +40,71 @@ const invokeModelMessage = async <T>(prompt: Prompt): Promise<T> => {
   const response = await runtimeClient.send(command)
   const modelResponse = JSON.parse(new TextDecoder().decode(response.body))
   logDebug('Model response', { modelResponse, text: modelResponse.content[0].text })
-  return JSON.parse(
-    modelResponse.content[0].text.replace(
-      /(^\s*<thinking>.*?<\/thinking>\s*|^\s*|\s*`(json)?\s*|\s*$)/gs,
-      '',
-    ),
-  )
+
+  try {
+    return JSON.parse(removeThinkingTags(modelResponse.content[0].text))
+  } catch (error) {
+    log('Failed to parse model response as JSON', {
+      error,
+      response: modelResponse.content[0].text,
+    })
+    throw error
+  }
+}
+
+export const generateImage = async (
+  promptText: string,
+  modelId: string,
+  options: ImageGenerationOptions = {},
+): Promise<ImageGenerationResponse> => {
+  const {
+    quality = 'standard',
+    cfgScale = 8.0,
+    height = 512,
+    width = 512,
+    seed = 0,
+    negativeText,
+  } = options
+
+  logDebug('Generating image with Bedrock', {
+    promptText,
+    modelId,
+    quality,
+    dimensions: `${width}x${height}`,
+    negativeText,
+  })
+
+  const negativeParams = negativeText ? { negativeText } : {}
+  const input = {
+    body: JSON.stringify({
+      taskType: 'TEXT_IMAGE',
+      textToImageParams: {
+        ...negativeParams,
+        text: promptText,
+      },
+      imageGenerationConfig: {
+        numberOfImages: 1,
+        quality,
+        cfgScale,
+        height,
+        width,
+        seed,
+      },
+    }),
+    contentType: 'application/json',
+    accept: '*/*',
+    modelId,
+  }
+
+  const command = new InvokeModelCommand(input)
+  const response = await runtimeClient.send(command)
+  const textDecoder = new TextDecoder('utf-8')
+  const jsonString = textDecoder.decode(response.body)
+  const parsedData = JSON.parse(jsonString)
+  const base64Image = parsedData.images[0]
+  const imageData = new Uint8Array(Buffer.from(base64Image, 'base64'))
+
+  logDebug('Image generated successfully', { imageSizeBytes: imageData.length })
+
+  return { imageData }
 }

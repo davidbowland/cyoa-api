@@ -1,0 +1,51 @@
+# {"anthropicVersion":"bedrock-2023-05-31","maxTokens":100000,"model":"us.anthropic.claude-sonnet-4-6","temperature":0.8,"topK":500}
+
+<context>
+You are creating a choose-your-own-adventure game. The best choices should lead to the best outcome. Some choices can be puzzles the user needs to figure out or remember. You are writing the final narrative to wrap up the story after the player has completed game.
+</context>
+<instructions>
+An outline and the important parts of the narrative have already been generated. Given those, generate the narrative for the final narrative of the game.
+
+- Generate the final narrative of the game
+  - The player has won
+  - Elaborate on the existing narrative
+  - ALWAYS include important details from the existing narrative
+  - ALWAYS MAKE NARRATIVE FOLLOW NATURALLY FROM previousNarrative
+  - Use the overall story outline to help consistency
+  - Generate the narrative necessary to wrap up the story triumphantly
+  - Narratives should be 5 to 9 paragraphs, thinking about it considering the author's style
+  - ALWAYS use the style of the author mentioned
+  - NEVER mention the previous choice NOR assume any previous option was chosen
+  - Use the second person -- "you" perspective
+- Generate a short title for the chapter for this narrative
+- Generate an image description for this narrative scene
+  - Describe the visual scene that represents this part of the story
+  - Focus on the setting, atmosphere, and key visual elements
+  - Keep it concise but vivid (1-2 sentences)
+  - NEVER include text or numbers in the image
+- Generate a losing narrative for when the player's resources have reached the limit
+  - Use lossNarrative for reference and ALWAYS include important details
+  - Generate the narrative necessary to wrap up the story
+  - Narratives should be 5 to 9 paragrahs, thinking about it considering the author's style
+  - ALWAYS use the style of the author mentioned
+  - NEVER mention the previous choice NOR assume any previous option was chosen
+  - Use the second person -- "you" perspective
+- Generate a short title for the losing narrative
+
+Make sure the narratives, titles, and image are inoffensive and not emmotionally charged
+</instructions>
+<output>
+Output your thinking in <thinking> tags followed by valid JSON with the keys with NOTHING ELSE (double-check that your JSON is valid with \n instead of newlines and " escaped):
+
+{
+  "chapterTitle": "string"
+  "narrative": "string",
+  "imageDescription": "string",
+  "losingNarrative": "string",
+  "losingTitle": "string"
+}
+</output>
+
+<input>
+${context}
+</input>

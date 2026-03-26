@@ -1,42 +1,44 @@
-import { ScheduledEvent } from 'aws-lambda'
-
 import { cyoaGame, gameId } from '../__mocks__'
-import eventJson from '@events/create-game.json'
 import { createGameHandler } from '@handlers/create-game'
-import * as games from '@services/games'
+import * as createGames from '@services/create-games'
 
-jest.mock('@services/games')
+jest.mock('@services/create-games')
 jest.mock('@utils/logging')
-
-const scheduledEvent = eventJson as ScheduledEvent
 
 describe('create-game', () => {
   describe('createGameHandler', () => {
     it('should create a game successfully', async () => {
-      jest.mocked(games).createGame.mockResolvedValueOnce({ game: cyoaGame, gameId })
+      jest.mocked(createGames).createGame.mockResolvedValueOnce({ game: cyoaGame, gameId })
 
-      await createGameHandler(scheduledEvent)
+      await createGameHandler()
 
-      expect(games.createGame).toHaveBeenCalledWith()
+      expect(createGames.createGame).toHaveBeenCalledWith()
     })
 
     it('should retry on game creation failure and eventually succeed', async () => {
-      jest.mocked(games).createGame.mockRejectedValueOnce(new Error('Creation failed'))
-      jest.mocked(games).createGame.mockResolvedValueOnce({ game: cyoaGame, gameId })
+      jest.mocked(createGames).createGame.mockRejectedValueOnce(new Error('Creation failed'))
+      jest.mocked(createGames).createGame.mockResolvedValueOnce({ game: cyoaGame, gameId })
 
-      await createGameHandler(scheduledEvent)
+      await createGameHandler()
 
-      expect(games.createGame).toHaveBeenCalledTimes(2)
+      expect(createGames.createGame).toHaveBeenCalledTimes(2)
     })
 
     it('should keep retrying until game creation succeeds', async () => {
-      jest.mocked(games).createGame.mockRejectedValueOnce(new Error('First failure'))
-      jest.mocked(games).createGame.mockRejectedValueOnce(new Error('Second failure'))
-      jest.mocked(games).createGame.mockResolvedValueOnce({ game: cyoaGame, gameId })
+      jest.mocked(createGames).createGame.mockRejectedValueOnce(new Error('First failure'))
+      jest.mocked(createGames).createGame.mockResolvedValueOnce({ game: cyoaGame, gameId })
 
-      await createGameHandler(scheduledEvent)
+      await createGameHandler()
 
-      expect(games.createGame).toHaveBeenCalledTimes(3)
+      expect(createGames.createGame).toHaveBeenCalledTimes(2)
+    })
+
+    it('should retry 2 times before giving up', async () => {
+      jest.mocked(createGames).createGame.mockRejectedValue(new Error('Persistent failure'))
+
+      await createGameHandler()
+
+      expect(createGames.createGame).toHaveBeenCalledTimes(2)
     })
   })
 })

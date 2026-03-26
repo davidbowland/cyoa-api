@@ -1,174 +1,84 @@
-import { cyoaGame, cyoaNarrative } from '../__mocks__'
-import {
-  parseNarrativeId,
-  determineRequiredNarratives,
-  isInitialNarrative,
-  isGameLost,
-  isGameWon,
-} from '@utils/narratives'
+import { cyoaNarrative, narrativeGenerationData } from '../__mocks__'
+import { applyLossView, getNarrativeIdByIndex, isGenerating } from '@utils/narratives'
 
 describe('narratives', () => {
-  describe('parseNarrativeId', () => {
-    it('parses initial narrative ID', () => {
-      const result = parseNarrativeId('start')
+  const mockNow = 1640995200000
 
-      expect(result).toEqual({
-        lastNarrativeId: '',
-        optionId: NaN,
-        choicePointIndex: 0,
-      })
+  beforeAll(() => {
+    Date.now = jest.fn().mockReturnValue(mockNow)
+  })
+
+  describe('getNarrativeIdByIndex', () => {
+    it('returns narrative ID for index 0', () => {
+      const result = getNarrativeIdByIndex(0)
+
+      expect(result).toBe('narrative-0')
     })
 
-    it('parses first level continuation ID', () => {
-      const result = parseNarrativeId('start-0')
+    it('returns narrative ID for index 5', () => {
+      const result = getNarrativeIdByIndex(5)
 
-      expect(result).toEqual({
-        lastNarrativeId: 'start',
-        optionId: 0,
-        choicePointIndex: 1,
-      })
-    })
-
-    it('parses deep continuation ID', () => {
-      const result = parseNarrativeId('start-0-1-2')
-
-      expect(result).toEqual({
-        lastNarrativeId: 'start-0-1',
-        optionId: 2,
-        choicePointIndex: 3,
-      })
+      expect(result).toBe('narrative-5')
     })
   })
 
-  describe('determineRequiredNarratives', () => {
-    it('generates upcoming narrative IDs based on options', () => {
-      const narrativeWithOptions = {
-        ...cyoaNarrative,
-        options: [
-          { name: 'Option 1', resourcesToAdd: 5 },
-          { name: 'Option 2', resourcesToAdd: -10 },
-          { name: 'Option 3', resourcesToAdd: 0 },
-        ],
+  describe('isGenerating', () => {
+    it('returns true when generation is in progress', () => {
+      const generatingData = {
+        ...narrativeGenerationData,
+        generationStartTime: mockNow - 60000,
       }
 
-      const result = determineRequiredNarratives(narrativeWithOptions, 'start')
+      const result = isGenerating(generatingData)
 
-      expect(result).toEqual(['start-0', 'start-1', 'start-2'])
-    })
-
-    it('handles narrative with no options', () => {
-      const narrativeWithoutOptions = {
-        ...cyoaNarrative,
-        options: [],
-      }
-
-      const result = determineRequiredNarratives(narrativeWithoutOptions, 'start')
-
-      expect(result).toEqual([])
-    })
-
-    it('works with continuation narrative IDs', () => {
-      const narrativeWithOptions = {
-        ...cyoaNarrative,
-        options: [
-          { name: 'Option 1', resourcesToAdd: 5 },
-          { name: 'Option 2', resourcesToAdd: -10 },
-        ],
-      }
-
-      const result = determineRequiredNarratives(narrativeWithOptions, 'start-0-1')
-
-      expect(result).toEqual(['start-0-1-0', 'start-0-1-1'])
-    })
-  })
-
-  describe('isInitialNarrative', () => {
-    it('returns true for initial narrative ID', () => {
-      const result = isInitialNarrative('start')
       expect(result).toBe(true)
     })
 
-    it('returns false for continuation narrative ID', () => {
-      const result = isInitialNarrative('start-0')
+    it('returns false when generation has timed out', () => {
+      const timedOutData = {
+        ...narrativeGenerationData,
+        generationStartTime: mockNow - 400000,
+      }
+
+      const result = isGenerating(timedOutData)
+
       expect(result).toBe(false)
     })
 
-    it('returns false for deep continuation narrative ID', () => {
-      const result = isInitialNarrative('start-0-1-2')
+    it('returns false when generation data is undefined', () => {
+      const result = isGenerating(undefined)
+
       expect(result).toBe(false)
     })
 
-    it('returns true for complex initial narrative ID without dashes', () => {
-      const result = isInitialNarrative('complexgametitle')
-      expect(result).toBe(true)
-    })
-  })
-
-  describe('isGameLost', () => {
-    it('returns true when ascending game reaches loss threshold', () => {
-      const ascendingGame = {
-        ...cyoaGame,
-        startingResourceValue: 10,
-        lossResourceThreshold: 100,
+    it('uses custom timeout when provided', () => {
+      const generatingData = {
+        ...narrativeGenerationData,
+        generationStartTime: mockNow - 60000,
       }
 
-      const result = isGameLost(ascendingGame, 100)
-      expect(result).toBe(true)
-    })
+      const result = isGenerating(generatingData, 30000)
 
-    it('returns false when ascending game is below loss threshold', () => {
-      const ascendingGame = {
-        ...cyoaGame,
-        startingResourceValue: 10,
-        lossResourceThreshold: 100,
-      }
-
-      const result = isGameLost(ascendingGame, 50)
-      expect(result).toBe(false)
-    })
-
-    it('returns true when descending game reaches loss threshold', () => {
-      const descendingGame = {
-        ...cyoaGame,
-        startingResourceValue: 100,
-        lossResourceThreshold: 0,
-      }
-
-      const result = isGameLost(descendingGame, 0)
-      expect(result).toBe(true)
-    })
-
-    it('returns false when descending game is above loss threshold', () => {
-      const descendingGame = {
-        ...cyoaGame,
-        startingResourceValue: 100,
-        lossResourceThreshold: 0,
-      }
-
-      const result = isGameLost(descendingGame, 50)
       expect(result).toBe(false)
     })
   })
 
-  describe('isGameWon', () => {
-    it('returns true when choice point index exceeds available choice points', () => {
-      const gameWithOneChoice = {
-        ...cyoaGame,
-        choicePoints: [cyoaGame.choicePoints[0]],
-      }
+  describe('applyLossView', () => {
+    it('replaces title, narrative, choice, and options with losing equivalents', () => {
+      const result = applyLossView(cyoaNarrative)
 
-      const result = isGameWon(gameWithOneChoice, 1)
-      expect(result).toBe(true)
+      expect(result.chapterTitle).toBe('Defeat')
+      expect(result.narrative).toBe('The dragon awakens and you are defeated.')
+      expect(result.choice).toBeUndefined()
+      expect(result.options).toEqual([])
     })
 
-    it('returns false when choice point index is within available choice points', () => {
-      const gameWithTwoChoices = {
-        ...cyoaGame,
-        choicePoints: [cyoaGame.choicePoints[0], cyoaGame.choicePoints[0]],
-      }
+    it('preserves remaining fields', () => {
+      const result = applyLossView(cyoaNarrative)
 
-      const result = isGameWon(gameWithTwoChoices, 1)
-      expect(result).toBe(false)
+      expect(result.image).toBe(cyoaNarrative.image)
+      expect(result.inventory).toEqual(cyoaNarrative.inventory)
+      expect(result.optionNarratives).toEqual(cyoaNarrative.optionNarratives)
     })
   })
 })

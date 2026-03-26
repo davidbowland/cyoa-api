@@ -1,0 +1,3 @@
+# {"model":"amazon.nova-canvas-v1:0","quality":"standard","cfgScale":8,"height":576,"width":1024,"seed":0}
+
+No text, no numbers, not deformed, no surreal, no grotesque, no bloody, no violent, not cartoon, no people but REALISTICALLY and PROPORTIONATE human-shaped silhouettes or shadows are fine

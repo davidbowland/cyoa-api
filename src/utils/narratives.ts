@@ -1,35 +1,21 @@
-import { CyoaGame, CyoaNarrative, NarrativeId } from '../types'
+import { narrativeGenerationTime } from '../config'
+import { CyoaNarrative, NarrativeGenerationData, NarrativeId } from '../types'
 
-interface NarrativeIdParts {
-  lastNarrativeId: NarrativeId
-  optionId: number
-  choicePointIndex: number
-}
+export const getNarrativeIdByIndex = (index: number): NarrativeId => `narrative-${index}`
 
-export const parseNarrativeId = (narrativeId: NarrativeId): NarrativeIdParts => {
-  const parts = narrativeId.split('-')
-  const choicePointIndex = parts.length - 1
-  return {
-    lastNarrativeId: parts.slice(0, -1).join('-'),
-    optionId: parseInt(parts.slice(-1)[0], 10),
-    choicePointIndex,
-  }
-}
-
-export const determineRequiredNarratives = (
-  narrative: CyoaNarrative,
-  narrativeId: NarrativeId,
-): NarrativeId[] => narrative.options.map((_, index) => `${narrativeId}-${index}`)
-
-export const isGameLost = (game: CyoaGame, currentResourceValue: number): boolean => {
-  const isAscending = game.startingResourceValue < game.lossResourceThreshold
-  return (
-    (isAscending && currentResourceValue >= game.lossResourceThreshold) ||
-    (!isAscending && currentResourceValue <= game.lossResourceThreshold)
+export const isGenerating = (
+  generationData: NarrativeGenerationData | undefined,
+  timeout = narrativeGenerationTime,
+): boolean =>
+  !!(
+    generationData?.generationStartTime &&
+    generationData?.generationStartTime + timeout > Date.now()
   )
-}
 
-export const isGameWon = (game: CyoaGame, choicePointIndex: number): boolean =>
-  choicePointIndex >= game.choicePoints.length
-
-export const isInitialNarrative = (narrativeId: NarrativeId): boolean => !narrativeId.includes('-')
+export const applyLossView = (narrative: CyoaNarrative): CyoaNarrative => ({
+  ...narrative,
+  chapterTitle: narrative.losingTitle,
+  narrative: narrative.losingNarrative,
+  choice: undefined,
+  options: [],
+})

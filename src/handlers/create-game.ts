@@ -1,19 +1,18 @@
-import { ScheduledEvent } from 'aws-lambda'
+import { createGame } from '../services/create-games'
+import { log, logError } from '../utils/logging'
 
-import { createGame } from '../services/games'
-import { log } from '../utils/logging'
-
-export const createGameHandler = async (event: ScheduledEvent): Promise<void> => {
-  log('Received event', { event })
-
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
+export const createGameHandler = async (): Promise<void> => {
+  for (let index = 0; index < 2; index++) {
     try {
-      const { game, gameId } = await createGame()
-      log('Game created successfully', { game, gameId })
-      break
+      const { gameId } = await createGame()
+      log('Game created successfully', { gameId })
+      return
     } catch (error: unknown) {
-      log('Game creation failed, retrying', { error })
+      if (index === 0) {
+        logError('Game creation failed, retrying', { error })
+      } else {
+        log('Game creation failed, retrying', { error })
+      }
     }
   }
 }

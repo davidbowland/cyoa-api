@@ -1,111 +1,43 @@
 import { InvokeCommand, LambdaClient } from '@aws-sdk/client-lambda'
 
-import { adjectives } from '../assets/adjectives'
-import { nouns } from '../assets/nouns'
-import { verbs } from '../assets/verbs'
-import {
-  createNarrativeFunctionName,
-  inspirationAdjectivesCount,
-  inspirationNounsCount,
-  inspirationVerbsCount,
-} from '../config'
-import {
-  CreateNarrativePromptOutput,
-  CyoaChoicePoint,
-  CyoaNarrative,
-  GameId,
-  NarrativeGenerationData,
-  NarrativeId,
-} from '../types'
-import { formatNarrative } from '../utils/formatting'
+import { createNarrativeFunctionName } from '../config'
+import { CyoaGame, GameId, NarrativeGenerationData } from '../types'
 import { log, xrayCapture } from '../utils/logging'
-import { getRandomSample } from '../utils/random'
-import { invokeModel } from './bedrock'
-import {
-  getGameById,
-  getNarrativeById,
-  getPromptById,
-  setNarrativeById,
-  setNarrativeGenerationData,
-} from './dynamodb'
-import { selectPromptId } from './prompt-selection'
+import { getNarrativeIdByIndex } from '../utils/narratives'
+import { setNarrativeGenerationData } from './dynamodb'
 
-const lambda = xrayCapture(new LambdaClient({ region: 'us-east-1' }))
+const lambda = xrayCapture(new LambdaClient({ apiVersion: '2012-08-10' }))
 
-const GENERATION_TIME = 300_000 // 5 minutes
-
-export const isGenerating = (
-  generationData: NarrativeGenerationData | undefined,
-  timeout = GENERATION_TIME,
-): boolean =>
-  !!(
-    generationData?.generationStartTime &&
-    generationData?.generationStartTime + timeout > Date.now()
-  )
-
-export const startNarrativeGeneration = async (
+export const queueNarrativeGeneration = async (
   gameId: GameId,
-  narrativeId: NarrativeId,
-  generationData: Pick<
-    NarrativeGenerationData,
-    'recap' | 'currentResourceValue' | 'lastChoiceMade' | 'currentInventory'
-  >,
-  currentChoice: CyoaChoicePoint,
+  game: CyoaGame,
+  choiceIndex: number,
 ): Promise<void> => {
-  const fullGenerationData: NarrativeGenerationData = {
-    ...generationData,
-    inventoryToIntroduce: currentChoice.inventoryToIntroduce,
-    keyInformationToIntroduce: currentChoice.keyInformationToIntroduce,
-    redHerringsToIntroduce: currentChoice.redHerringsToIntroduce,
-    inventoryOrInformationConsumed: currentChoice.inventoryOrInformationConsumed,
-    nextChoice: currentChoice.choice,
-    options: currentChoice.options,
+  const currentChoice = game.choicePoints[choiceIndex]
+  const lastChoice = game.choicePoints[choiceIndex - 1]
+  const narrativeId = getNarrativeIdByIndex(choiceIndex)
+
+  const generationData: NarrativeGenerationData = {
+    inventoryAvailable: currentChoice?.inventoryAvailable ?? [],
+    existingNarrative: currentChoice?.choiceNarrative ?? '',
+    previousNarrative: lastChoice?.choiceNarrative,
+    previousChoice: lastChoice?.choice,
+    previousOptions: lastChoice?.options,
+    nextChoice: currentChoice?.choice,
+    nextOptions: currentChoice?.options,
+    outline: game.outline,
+    lossNarrative: currentChoice?.lossNarrative ?? '',
+    inspirationAuthor: game.inspirationAuthor,
     generationStartTime: Date.now(),
   }
+  await setNarrativeGenerationData(gameId, narrativeId, generationData)
 
-  await setNarrativeGenerationData(gameId, narrativeId, fullGenerationData)
-
+  // Invoke create-narrative lambda asynchronously
   const command = new InvokeCommand({
     FunctionName: createNarrativeFunctionName,
     InvocationType: 'Event',
     Payload: JSON.stringify({ gameId, narrativeId }),
   })
-
   await lambda.send(command)
-  log('CreateNarrativeFunction invoked', { gameId, narrativeId })
-}
-
-export const createNarrative = async (
-  gameId: GameId,
-  narrativeId: NarrativeId,
-): Promise<CyoaNarrative> => {
-  const game = await getGameById(gameId)
-  const { generationData } = await getNarrativeById(gameId, narrativeId)
-
-  if (!generationData) {
-    throw new Error('Generation data not found')
-  }
-
-  const inspirationNouns = getRandomSample<string>([...nouns], inspirationNounsCount)
-  const inspirationVerbs = getRandomSample<string>([...verbs], inspirationVerbsCount)
-  const inspirationAdjectives = getRandomSample<string>([...adjectives], inspirationAdjectivesCount)
-
-  const modelContext = {
-    ...generationData,
-    outline: game.outline,
-    resourceName: game.resourceName,
-    lossResourceThreshold: game.lossResourceThreshold,
-    inspirationWords: inspirationNouns.concat(inspirationVerbs).concat(inspirationAdjectives),
-  }
-  log('Creating narrative with context', { gameId, narrativeId, modelContext })
-
-  const promptId = selectPromptId(game, narrativeId, generationData.currentResourceValue)
-  const prompt = await getPromptById(promptId)
-  const generatedNarrative = await invokeModel<CreateNarrativePromptOutput>(prompt, modelContext)
-  log('Narrative generated', { gameId, narrativeId, generatedNarrative })
-
-  const narrative = formatNarrative(generatedNarrative, generationData)
-  await setNarrativeById(gameId, narrativeId, narrative)
-
-  return narrative
+  log('Narrative generation queued', { gameId, narrativeId })
 }

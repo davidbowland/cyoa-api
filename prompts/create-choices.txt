@@ -1,0 +1,89 @@
+# {"anthropicVersion":"bedrock-2023-05-31","maxTokens":115000,"model":"us.anthropic.claude-sonnet-4-6","temperature":0.6,"topK":500}
+
+<context>
+You are creating a choose-your-own-adventure game. The best choices should lead to the best outcome. Some choices can be puzzles the player needs to figure out or remember. You are creating a plan for the game that will be used in subsequent LLM prompts to generate the narratives for each choice.
+</context>
+<instructions>
+Come up with the plan for a choose-your-own-adventure story based on the author, theme, style, title, and outline.
+
+- Create a list of possible key information
+  - Generate keyInformationCount choices or [] if count is 0
+  - Key information might includes numbers, combinations, names, words, or phrases
+  - Key numbers must be 4-6 digits
+  - Key information, especially combinations, can be hidden (for example, as a date or time) but should make sense with the story (the code 12:53 hidden as a time by a character) obvious things like years and USE VALID FORMATS (4:07am rather than 4:7am)
+  - Key information will eventually be the answer for an option
+  - NEVER INTRODUCE KEY INFORMATION IN THE SAME CHOICE WHERE YOU ASK ABOUT IT
+- Create a list of red herring information
+  - Generate redHerringCount choices or [] if count is 0
+  - Red herrings might include numbers, combinations, names, words, or phrases
+  - Red herrings should be slightly out of touch with the story (eg the current time, a soft drink brand, etc)
+  - Examine the generated key information to decide what red herrings to create
+  - NEVER use key information values as a red herring, red herrings MUST BE UNIQUE
+- Divide the outline into sections to create choiceCount number of choices
+  - For each choice, generate:
+    - A list of characters being encountered for the first time
+    - A list of key information to be introduced in the narrative
+    - A list of red herrings to be introduced in the narrative
+      - SUBTLY introduce red herrings
+      - Red herrings do not to have to be introduced in the same choice as the key information
+    - A list of inventory items the player should have available when the choice is made
+    - A 2-4 sentence description of what should happen in the narrative before the choice is made
+      - Will be passed to an LLM later to generate full narrative
+        - ALWAYS mention important details
+        - ALWAYS introduce new characters
+        - If this is the first choice, ALWAYS explain how the resource and loss condition connects with the story, implying a loss when the condition is crossed
+      - NEVER assume previous choices or incorporate the consequence of previous choices
+      - Use the second person -- "you" perspective
+    - The choice text, which should be 1-2 SHORT sentences that focus ONLY on the decision
+      - BAD: Dr Mark introduces the dates 1857 and 1942. Which door do you open?
+      - GOOD: Which door do you open?
+      - NEVER ask about key information introduced in the same choice
+    - Think about how many options there should be -- 3, 4, 5, or 6 -- with each choice different
+    - Think of ONE correct option, which should be rank 1
+    - A list of options, each of which should:
+      - Have short option text, only containing the answer (BAD: `1984 (when building built)`, GOOD: `1984`)
+      - Have a 1-2 sentence narrative of the consequence of the player's choice (good if correct choice, bad if not correct) and how to allow the narrative to continue (eg the player couldn't open the safe, but finds the combination taped under a desk)
+      - Have a rank number
+      - Require EXTREME thought to figure out
+      - Based on something in previous narratives, especially correct options
+      - Don't mention the resource increasing or decreasing
+      - For wrong options, ALWAYS allude to the right option, but don't mention it directly
+    - Rank each option, with 1 being the best choice -- NEVER skip numbers
+    - A 3-5 sentence description of what should happen in the narrative if the player's resources have crossed the threshold and the player has lost the game
+      - Base this on the outline, resourceName, startingResourceValue, and lossResourceThreshold
+- A 3-5 sentence description of what should happen in the narrative if the player correctly chooses and beats the game
+  - Base this on the outline, resourceName, and the final choice generated
+- NOT ALL inspiration words will be used. THINK ABOUT which are best and should be incorporated into the story. You can use inspiration words directly, use related words, or use random words with similar letters, sounds, or meanings to inspiration words
+- ALL generated content MUST be inoffensive and not emmotionally charged
+
+Think deeply about the most engaging and challenging story. Based on the choices and outline, when is it most important to introduce which key information? OR which red herrings? Think about key information and red herrings a second time as a seasoned CYOA game designer. When is it important to introduce those items so they aren't suspicious and aren't obvious?
+
+Think about what choices should be made and when. Think about what should happen if the player wins or loses.
+</instructions>
+<output>
+Output your thinking in <thinking> tags followed by valid JSON with the keys with NOTHING ELSE (double-check that your JSON is valid with \n instead of newlines and " escaped):
+
+{
+  "keyInformation": ["string"],
+  "redHerrings": ["string"],
+  "choicePoints": [
+    {
+      "charactersToIntroduce": ["string"],
+      "keyInformationToIntroduce": ["string"],
+      "redHerringsToIntroduce": ["string"]
+      "inventoryAvailable": ["string"],
+      "choiceNarrative": "string",
+      "choice": "string",
+      "options": [
+        { "name": "string", "rank": number, "consequence": "string" }
+      ],
+      "lossNarrative": "string"
+    }
+  ],
+  "winNarrative": "string"
+}
+</output>
+
+<input>
+${context}
+</input>
