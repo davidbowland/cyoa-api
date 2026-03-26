@@ -1,7 +1,7 @@
 import { ChoiceId, ChoiceResult, CyoaGame, GameId } from '../types'
 import { calculateCurrentResourceValue, isGameLost, parseChoiceId } from '../utils/choices'
 import { log, logWarn } from '../utils/logging'
-import { isGenerating } from '../utils/narratives'
+import { applyLossView, isGenerating } from '../utils/narratives'
 import { serializeCyoaChoice } from '../utils/serialize'
 import { getGameById, getNarrativeById } from './dynamodb'
 import { queueNarrativeGeneration } from './narratives'
@@ -30,6 +30,7 @@ export const retrieveChoiceById = async (
     const isLost = isGameLost(game, currentResourceValue)
     const previousChoicePoint = game.choicePoints[choicePointIndex - 1]
     const selectedOptionName = previousChoicePoint?.options[latestOptionSelected]?.name
+    const narrativeView = isLost ? applyLossView(existing.narrative) : existing.narrative
     log('Returning existing narrative', {
       gameId,
       choiceId,
@@ -44,8 +45,7 @@ export const retrieveChoiceById = async (
     return {
       status: 'ready',
       choice: serializeCyoaChoice(
-        existing.narrative,
-        isLost,
+        narrativeView,
         currentResourceValue,
         latestOptionSelected,
         selectedOptionName,

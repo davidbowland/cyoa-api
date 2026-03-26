@@ -276,6 +276,9 @@ describe('choices', () => {
         status: 'ready',
         choice: expect.objectContaining({
           narrative: expect.stringContaining('The dragon awakens and you are defeated.'),
+          chapterTitle: 'Defeat',
+          choice: undefined,
+          options: [],
         }),
       })
     })

@@ -37,7 +37,7 @@ describe('serialize', () => {
 
   describe('serializeCyoaChoice', () => {
     it('should return serialized choice with combined narrative', () => {
-      const result = serializeCyoaChoice(cyoaNarrative, false, 100, 0)
+      const result = serializeCyoaChoice(cyoaNarrative, 100, 0)
 
       expect(result).toEqual({
         narrative:
@@ -76,13 +76,7 @@ describe('serialize', () => {
         ],
       }
 
-      const result = serializeCyoaChoice(
-        narrativeWithSwappedOptions,
-        false,
-        100,
-        0,
-        'Sneak past quietly',
-      )
+      const result = serializeCyoaChoice(narrativeWithSwappedOptions, 100, 0, 'Sneak past quietly')
 
       expect(result.narrative).toBe(
         'You carefully tiptoe past the sleeping beast...\n\nYou find yourself standing before a massive sleeping dragon...',
@@ -90,23 +84,15 @@ describe('serialize', () => {
     })
 
     it('should fall back to index when name does not match', () => {
-      const result = serializeCyoaChoice(cyoaNarrative, false, 100, 0, 'Non-existent option')
+      const result = serializeCyoaChoice(cyoaNarrative, 100, 0, 'Non-existent option')
 
       expect(result.narrative).toBe(
         'You carefully tiptoe past the sleeping beast...\n\nYou find yourself standing before a massive sleeping dragon...',
       )
     })
 
-    it('should use losing narrative when game is lost', () => {
-      const result = serializeCyoaChoice(cyoaNarrative, true, 0, 0)
-
-      expect(result.narrative).toBe(
-        'You carefully tiptoe past the sleeping beast...\n\nThe dragon awakens and you are defeated.',
-      )
-    })
-
     it('should handle narrative without selected option', () => {
-      const result = serializeCyoaChoice(cyoaNarrative, false, 100, 5)
+      const result = serializeCyoaChoice(cyoaNarrative, 100, 5)
 
       expect(result.narrative).toBe(
         'You find yourself standing before a massive sleeping dragon...',
@@ -115,7 +101,7 @@ describe('serialize', () => {
 
     it('should handle narrative without optional image field', () => {
       const narrativeWithoutImage = { ...cyoaNarrative, image: undefined }
-      const result = serializeCyoaChoice(narrativeWithoutImage, false, 100, 0)
+      const result = serializeCyoaChoice(narrativeWithoutImage, 100, 0)
 
       expect(result.image).toBeUndefined()
     })

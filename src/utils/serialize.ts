@@ -15,31 +15,24 @@ const combineNarrative = (
   narrative: CyoaNarrative,
   latestOptionSelected: number,
   selectedOptionName: string | undefined,
-  isLoss: boolean,
 ): string => {
   // Match by name to handle AI reordering, fall back to index for backward compatibility
   const selectedOption =
     narrative.optionNarratives?.find((on) => on.name === selectedOptionName) ??
     narrative.optionNarratives?.[latestOptionSelected]
   if (selectedOption) {
-    return `${selectedOption.narrative}\n\n${isLoss ? narrative.losingNarrative : narrative.narrative}`
+    return `${selectedOption.narrative}\n\n${narrative.narrative}`
   }
   return narrative.narrative
 }
 
 export const serializeCyoaChoice = (
   narrative: CyoaNarrative,
-  isLoss: boolean,
   currentResourceValue: number,
   latestOptionSelected: number,
   selectedOptionName?: string,
 ): CyoaChoiceSerialized => {
-  const combinedNarrative = combineNarrative(
-    narrative,
-    latestOptionSelected,
-    selectedOptionName,
-    isLoss,
-  )
+  const combinedNarrative = combineNarrative(narrative, latestOptionSelected, selectedOptionName)
   return {
     narrative: combinedNarrative,
     chapterTitle: narrative.chapterTitle,

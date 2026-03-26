@@ -1,5 +1,5 @@
-import { narrativeGenerationData } from '../__mocks__'
-import { getNarrativeIdByIndex, isGenerating } from '@utils/narratives'
+import { cyoaNarrative, narrativeGenerationData } from '../__mocks__'
+import { applyLossView, getNarrativeIdByIndex, isGenerating } from '@utils/narratives'
 
 describe('narratives', () => {
   const mockNow = 1640995200000
@@ -60,6 +60,25 @@ describe('narratives', () => {
       const result = isGenerating(generatingData, 30000)
 
       expect(result).toBe(false)
+    })
+  })
+
+  describe('applyLossView', () => {
+    it('replaces title, narrative, choice, and options with losing equivalents', () => {
+      const result = applyLossView(cyoaNarrative)
+
+      expect(result.chapterTitle).toBe('Defeat')
+      expect(result.narrative).toBe('The dragon awakens and you are defeated.')
+      expect(result.choice).toBeUndefined()
+      expect(result.options).toEqual([])
+    })
+
+    it('preserves remaining fields', () => {
+      const result = applyLossView(cyoaNarrative)
+
+      expect(result.image).toBe(cyoaNarrative.image)
+      expect(result.inventory).toEqual(cyoaNarrative.inventory)
+      expect(result.optionNarratives).toEqual(cyoaNarrative.optionNarratives)
     })
   })
 })

@@ -1,5 +1,5 @@
 import { narrativeGenerationTime } from '../config'
-import { NarrativeGenerationData, NarrativeId } from '../types'
+import { CyoaNarrative, NarrativeGenerationData, NarrativeId } from '../types'
 
 export const getNarrativeIdByIndex = (index: number): NarrativeId => `narrative-${index}`
 
@@ -11,3 +11,11 @@ export const isGenerating = (
     generationData?.generationStartTime &&
     generationData?.generationStartTime + timeout > Date.now()
   )
+
+export const applyLossView = (narrative: CyoaNarrative): CyoaNarrative => ({
+  ...narrative,
+  chapterTitle: narrative.losingTitle,
+  narrative: narrative.losingNarrative,
+  choice: undefined,
+  options: [],
+})
