@@ -30,10 +30,10 @@ jobs:
     steps:
       - name: Checkout latest code
         uses: actions/checkout@v6
-      - name: Install Node 22
+      - name: Install Node 24
         uses: actions/setup-node@v6
         with:
-          node-version: 22.x
+          node-version: 24.x
       - name: Install and audit packages
         run: npm ci && npm audit --audit-level=critical
         env:
@@ -49,17 +49,15 @@ jobs:
     steps:
       - name: Checkout latest code
         uses: actions/checkout@v6
-      - name: Install Python 3
-        uses: actions/setup-python@v6
-        with:
-          python-version: 3.8
       - name: Install AWS SAM
         uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
 
-      - name: Install Node 22
+      - name: Install Node 24
         uses: actions/setup-node@v6
         with:
-          node-version: 22.x
+          node-version: 24.x
       - name: Build resources
         run: sam build --template ${SAM_TEMPLATE} --use-container --container-env-var NODE_ENV=production
 
@@ -99,17 +97,15 @@ jobs:
     steps:
       - name: Checkout latest code
         uses: actions/checkout@v6
-      - name: Install Python 3
-        uses: actions/setup-python@v6
-        with:
-          python-version: 3.8
       - name: Install AWS SAM
         uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
 
-      - name: Install Node 22
+      - name: Install Node 24
         uses: actions/setup-node@v6
         with:
-          node-version: 22.x
+          node-version: 24.x
       - name: Build resources
         run: sam build --template ${SAM_TEMPLATE} --use-container --container-env-var NODE_ENV=production
 
@@ -169,12 +165,10 @@ jobs:
     steps:
       - name: Checkout latest code
         uses: actions/checkout@v6
-      - name: Install Python 3
-        uses: actions/setup-python@v6
-        with:
-          python-version: 3.8
       - name: Install AWS SAM
         uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
       - uses: actions/download-artifact@v8
         with:
           name: packaged-testing.yaml
@@ -202,10 +196,10 @@ jobs:
             --role-arn ${TESTING_CLOUDFORMATION_EXECUTION_ROLE} \
             --parameter-overrides "Environment=test"
 
-      - name: Install Node 22
+      - name: Install Node 24
         uses: actions/setup-node@v6
         with:
-          node-version: 22.x
+          node-version: 24.x
       - name: Install packages for prompt deployment
         run: npm ci
       - name: Deploy prompts to testing
@@ -219,12 +213,10 @@ jobs:
     steps:
       - name: Checkout latest code
         uses: actions/checkout@v6
-      - name: Install Python 3
-        uses: actions/setup-python@v6
-        with:
-          python-version: 3.8
       - name: Install AWS SAM
         uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
       - uses: actions/download-artifact@v8
         with:
           name: packaged-prod.yaml
@@ -251,10 +243,10 @@ jobs:
             --no-fail-on-empty-changeset \
             --role-arn ${PROD_CLOUDFORMATION_EXECUTION_ROLE}
 
-      - name: Install Node 22
+      - name: Install Node 24
         uses: actions/setup-node@v6
         with:
-          node-version: 22.x
+          node-version: 24.x
       - name: Install packages for prompt deployment
         run: npm ci
       - name: Deploy prompts to production
@@ -267,10 +259,10 @@ jobs:
     steps:
       - name: Checkout latest code
         uses: actions/checkout@v6
-      - name: Install Node 22
+      - name: Install Node 24
         uses: actions/setup-node@v6
         with:
-          node-version: 22.x
+          node-version: 24.x
       - name: Set git name and email
         run: |
           git config --local user.email "${GIT_EMAIL}"
