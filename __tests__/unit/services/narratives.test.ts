@@ -83,5 +83,36 @@ describe('narratives', () => {
         }),
       )
     })
+
+    it('should queue ending narrative generation when choiceIndex is beyond choicePoints', async () => {
+      await queueNarrativeGeneration(gameId, cyoaGame, cyoaGame.choicePoints.length)
+
+      expect(dynamodb.setNarrativeGenerationData).toHaveBeenCalledWith(
+        gameId,
+        `narrative-${cyoaGame.choicePoints.length}`,
+        expect.objectContaining({
+          inventoryAvailable: [],
+          existingNarrative: '',
+          previousNarrative: 'You encounter a challenge',
+          previousChoice: 'You see a sleeping dragon. What do you do?',
+          nextChoice: undefined,
+          nextOptions: undefined,
+          lossNarrative: '',
+          outline: 'Test outline',
+          inspirationAuthor: cyoaGame.inspirationAuthor,
+          generationStartTime: mockNow,
+        }),
+      )
+      expect(mockSend).toHaveBeenCalledWith(
+        expect.objectContaining({
+          FunctionName: 'create-narrative-function',
+          InvocationType: 'Event',
+          Payload: JSON.stringify({
+            gameId,
+            narrativeId: `narrative-${cyoaGame.choicePoints.length}`,
+          }),
+        }),
+      )
+    })
   })
 })

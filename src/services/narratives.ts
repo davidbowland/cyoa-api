@@ -18,15 +18,15 @@ export const queueNarrativeGeneration = async (
   const narrativeId = getNarrativeIdByIndex(choiceIndex)
 
   const generationData: NarrativeGenerationData = {
-    inventoryAvailable: currentChoice.inventoryAvailable,
-    existingNarrative: currentChoice.choiceNarrative,
+    inventoryAvailable: currentChoice?.inventoryAvailable ?? [],
+    existingNarrative: currentChoice?.choiceNarrative ?? '',
     previousNarrative: lastChoice?.choiceNarrative,
     previousChoice: lastChoice?.choice,
     previousOptions: lastChoice?.options,
-    nextChoice: currentChoice.choice,
-    nextOptions: currentChoice.options,
+    nextChoice: currentChoice?.choice,
+    nextOptions: currentChoice?.options,
     outline: game.outline,
-    lossNarrative: currentChoice.lossNarrative,
+    lossNarrative: currentChoice?.lossNarrative ?? '',
     inspirationAuthor: game.inspirationAuthor,
     generationStartTime: Date.now(),
   }

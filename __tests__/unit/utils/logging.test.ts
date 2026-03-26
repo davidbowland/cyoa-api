@@ -1,7 +1,7 @@
 import { DynamoDB } from '@aws-sdk/client-dynamodb'
 import * as AWSXRay from 'aws-xray-sdk-core'
 
-import { log, logDebug, logError, xrayCapture } from '@utils/logging'
+import { log, logDebug, logError, logWarn, xrayCapture } from '@utils/logging'
 
 jest.mock('aws-xray-sdk-core')
 
@@ -9,6 +9,7 @@ describe('logging', () => {
   beforeAll(() => {
     console.error = jest.fn()
     console.log = jest.fn()
+    console.warn = jest.fn()
   })
 
   describe('log', () => {
@@ -44,6 +45,18 @@ describe('logging', () => {
         await logError(error)
 
         expect(console.error).toHaveBeenCalledWith(error)
+      },
+    )
+  })
+
+  describe('logWarn', () => {
+    it.each(['Hello', 0, null, undefined, { a: 1, b: 2 }])(
+      'should invoke logFunc with message',
+      async (value) => {
+        const message = `Warn message for value ${JSON.stringify(value)}`
+        await logWarn(message)
+
+        expect(console.warn).toHaveBeenCalledWith(message)
       },
     )
   })

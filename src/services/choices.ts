@@ -1,6 +1,6 @@
 import { ChoiceId, ChoiceResult, CyoaGame, GameId } from '../types'
 import { calculateCurrentResourceValue, isGameLost, parseChoiceId } from '../utils/choices'
-import { log } from '../utils/logging'
+import { log, logWarn } from '../utils/logging'
 import { isGenerating } from '../utils/narratives'
 import { serializeCyoaChoice } from '../utils/serialize'
 import { getGameById, getNarrativeById } from './dynamodb'
@@ -19,7 +19,11 @@ export const retrieveChoiceById = async (
     const current = game.choicePoints[choicePointIndex]
     const isLastNarrative = current === undefined && choicePointIndex === game.choicePoints.length
     if (!isLastNarrative) {
-      await ensureNextNarrativeExists(gameId, choiceId, game)
+      try {
+        await ensureNextNarrativeExists(gameId, choiceId, game)
+      } catch (error: unknown) {
+        logWarn('Failed to pre-generate next narrative', { gameId, choiceId, error })
+      }
     }
 
     const currentResourceValue = calculateCurrentResourceValue(game, selectedOptionIndices)

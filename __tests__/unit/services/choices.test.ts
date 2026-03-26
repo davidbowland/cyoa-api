@@ -179,6 +179,18 @@ describe('choices', () => {
       expect(narratives.queueNarrativeGeneration).not.toHaveBeenCalled()
     })
 
+    it('returns existing narrative when pre-generation of next narrative fails', async () => {
+      jest.mocked(dynamodb).getNarrativeById.mockResolvedValueOnce({ narrative: cyoaNarrative })
+      jest.mocked(dynamodb).getNarrativeById.mockRejectedValueOnce(new Error('Not found'))
+      jest
+        .mocked(narratives)
+        .queueNarrativeGeneration.mockRejectedValueOnce(new Error('Pre-generation failed'))
+
+      const result = await retrieveChoiceById(gameId, choiceId)
+
+      expect(result.status).toBe('ready')
+    })
+
     it('returns generating status when narrative is being generated', async () => {
       jest.mocked(dynamodb).getNarrativeById.mockResolvedValueOnce({
         generationData: { ...narrativeGenerationData, generationStartTime: mockNow },
