@@ -222,8 +222,6 @@ Resources:
         - AWSLambdaBasicExecutionRole
         - DynamoDBCrudPolicy:
             TableName: !Ref GamesTable
-        - DynamoDBCrudPolicy:
-            TableName: !Ref NarrativesTable
         - DynamoDBReadPolicy:
             TableName: !Ref PromptsTable
         - Version: 2012-10-17
@@ -241,24 +239,20 @@ Resources:
             - Action:
                 - 'lambda:InvokeFunction'
               Effect: Allow
-              Resource: !GetAtt CreateNarrativeFunction.Arn
+              Resource: !GetAtt CreateGameChoicesFunction.Arn
       Environment:
         Variables:
-          CREATE_NARRATIVE_FUNCTION_NAME: !Ref CreateNarrativeFunction
+          CREATE_GAME_CHOICES_FUNCTION_NAME: !Ref CreateGameChoicesFunction
           DEBUG_LOGGING: 'false'
           DYNAMODB_GAMES_TABLE_NAME: !Ref GamesTable
-          DYNAMODB_NARRATIVES_TABLE_NAME: !Ref NarrativesTable
           DYNAMODB_PROMPTS_TABLE_NAME: !Ref PromptsTable
           INSPIRATION_ADJECTIVES_COUNT: 15
           INSPIRATION_NOUNS_COUNT: 25
           INSPIRATION_VERBS_COUNT: 20
           PROMPT_ID_COVER_IMAGE: cover-image
-          PROMPT_ID_CREATE_CHOICES: create-choices
           PROMPT_ID_CREATE_GAME: create-game
           PROMPT_ID_INVENTORY_IMAGE: inventory-image
           PROMPT_ID_RESOURCE_IMAGE: resource-image
-          RESOURCE_TO_ADD_PERCENT_MAX: 275
-          RESOURCE_TO_ADD_PERCENT_MIN: 175
           S3_ASSETS_BUCKET: !Ref AssetsBucket
           S3_ASSETS_DOMAIN: !FindInMap [EnvironmentMap, !Ref Environment, domainAssets]
       Events:
@@ -272,7 +266,7 @@ Resources:
         'created-by': 'cyoa-api'
         'created-for': 'cyoa'
         'environment': !Ref Environment
-      Timeout: 895
+      Timeout: 600
       Tracing: Active
     Metadata:
       BuildMethod: esbuild
@@ -304,6 +298,89 @@ Resources:
         - Function: !FindInMap [EnvironmentMap, !Ref Environment, logStreamFunction]
       FilterPattern: '[timestamp, uuid, level="ERROR", message]'
       LogGroupName: !Ref CreateGameLogGroup
+
+  # Game Choices Generation
+
+  CreateGameChoicesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/create-game-choices.createGameChoicesHandler
+      Runtime: nodejs24.x
+      Architectures:
+        - x86_64
+      MemorySize: 1536
+      Description: Generate choices for a CYOA game
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - DynamoDBCrudPolicy:
+            TableName: !Ref GamesTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref NarrativesTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref PromptsTable
+        - Version: 2012-10-17
+          Statement:
+            - Action:
+                - 'aws-marketplace:ViewSubscriptions'
+                - 'aws-marketplace:Subscribe'
+                - 'bedrock:InvokeModel*'
+              Effect: Allow
+              Resource: '*'
+        - Version: 2012-10-17
+          Statement:
+            - Action:
+                - 'lambda:InvokeFunction'
+              Effect: Allow
+              Resource: !GetAtt CreateNarrativeFunction.Arn
+      Environment:
+        Variables:
+          CREATE_NARRATIVE_FUNCTION_NAME: !Ref CreateNarrativeFunction
+          DEBUG_LOGGING: 'false'
+          DYNAMODB_GAMES_TABLE_NAME: !Ref GamesTable
+          DYNAMODB_NARRATIVES_TABLE_NAME: !Ref NarrativesTable
+          DYNAMODB_PROMPTS_TABLE_NAME: !Ref PromptsTable
+          INSPIRATION_ADJECTIVES_COUNT: 15
+          INSPIRATION_NOUNS_COUNT: 25
+          INSPIRATION_VERBS_COUNT: 20
+          PROMPT_ID_CREATE_CHOICES: create-choices
+          RESOURCE_TO_ADD_PERCENT_MAX: 275
+          RESOURCE_TO_ADD_PERCENT_MIN: 175
+      Tags:
+        'created-by': 'cyoa-api'
+        'created-for': 'cyoa'
+        'environment': !Ref Environment
+      Timeout: 895
+      Tracing: Active
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: 'es2023'
+        Sourcemap: true
+        EntryPoints:
+          - src/handlers/create-game-choices.ts
+
+  CreateGameChoicesLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${CreateGameChoicesFunction}
+      RetentionInDays: 30
+      Tags:
+        - Key: 'created-by'
+          Value: 'cyoa-api'
+        - Key: 'created-for'
+          Value: 'cyoa'
+        - Key: 'environment'
+          Value: !Ref Environment
+
+  CreateGameChoicesGroupSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      DestinationArn: !Sub
+        - 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${Function}'
+        - Function: !FindInMap [EnvironmentMap, !Ref Environment, logStreamFunction]
+      FilterPattern: '[timestamp, uuid, level="ERROR", message]'
+      LogGroupName: !Ref CreateGameChoicesLogGroup
 
   # Choices
 

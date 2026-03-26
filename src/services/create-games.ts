@@ -1,17 +1,26 @@
+import { InvokeCommand, LambdaClient } from '@aws-sdk/client-lambda'
+
 import { choiceCounts } from '../assets/configurations'
-import { CyoaGame, GameId } from '../types'
-import { log, logError } from '../utils/logging'
+import { createGameChoicesFunctionName } from '../config'
+import {
+  CyoaGame,
+  CyoaGameFormatted,
+  CyoaInventory,
+  GameChoicesGenerationData,
+  GameId,
+} from '../types'
+import { log, xrayCapture } from '../utils/logging'
 import { getRandomSample } from '../utils/random'
 import { slugify } from '../utils/slugify'
-import { getGameById, getGames, setGameById } from './dynamodb'
-import { generateGameChoices } from './games/choices'
+import { getGameById, getGames, setGameGenerationData } from './dynamodb'
 import {
   generateGameCoverImage,
   generateInventoryImages,
   generateResourceImage,
 } from './games/game-image-generation'
 import { generateGameOutline } from './games/outlines'
-import { queueNarrativeGeneration } from './narratives'
+
+const lambda = xrayCapture(new LambdaClient({ apiVersion: '2012-08-10' }))
 
 const validateGameId = async (gameId: GameId): Promise<void> => {
   const gameIdExists = await getGameById(gameId)
@@ -25,65 +34,65 @@ const validateGameId = async (gameId: GameId): Promise<void> => {
 
 const generateGameImages = async (
   gameId: GameId,
-  game: CyoaGame,
+  gameData: CyoaGameFormatted,
   coverImageDescription: string,
   resourceImageDescription: string,
-): Promise<CyoaGame> => {
-  const coverImageData = await generateGameCoverImage(gameId, coverImageDescription)
-  const inventoryImageData = await generateInventoryImages(gameId, game.inventory)
-  const resourceImageData = await generateResourceImage(gameId, resourceImageDescription)
+): Promise<Partial<CyoaGame>> => {
+  const [coverImageData, inventoryImageData, resourceImageData] = await Promise.all([
+    generateGameCoverImage(gameId, coverImageDescription),
+    generateInventoryImages(gameId, gameData.inventory),
+    generateResourceImage(gameId, resourceImageDescription),
+  ])
 
   return {
-    ...game,
     image: coverImageData,
     inventory: inventoryImageData,
     resourceImage: resourceImageData,
   }
 }
 
-export const createGame = async (): Promise<{ game: CyoaGame; gameId: GameId }> => {
+export const createGame = async (): Promise<{ gameId: GameId }> => {
   const existingGames = await getGames()
   const existingGameTitles = existingGames.map((existingGame) => existingGame.game.title)
 
   const choiceCount = getRandomSample(choiceCounts, 1)[0]
 
   const {
-    game: partialGame,
+    game: gameData,
     imageDescription,
     inspirationAuthor,
     resourceImageDescription,
     storyType,
   } = await generateGameOutline(existingGameTitles, choiceCount)
 
-  const gameId: GameId = slugify(partialGame.title)
+  const gameId: GameId = slugify(gameData.title)
   await validateGameId(gameId)
 
-  for (let index = 0; index < 2; index++) {
-    try {
-      const game = await generateGameChoices(partialGame, storyType, inspirationAuthor, choiceCount)
+  const imageData = await generateGameImages(
+    gameId,
+    gameData,
+    imageDescription,
+    resourceImageDescription,
+  )
 
-      const gameWithImages = await generateGameImages(
-        gameId,
-        game,
-        imageDescription,
-        resourceImageDescription,
-      )
-
-      await setGameById(gameId, gameWithImages)
-
-      try {
-        await queueNarrativeGeneration(gameId, game, 0)
-      } catch (error: unknown) {
-        logError('Error creating initial narrative', {
-          gameId,
-          error,
-        })
-      }
-
-      return { game: gameWithImages, gameId }
-    } catch (error: unknown) {
-      log('Game options creation failed, retrying', { error })
-    }
+  const generationData: GameChoicesGenerationData = {
+    gameData,
+    storyType,
+    inspirationAuthor,
+    choiceCount,
+    image: imageData.image,
+    inventory: imageData.inventory as CyoaInventory[],
+    resourceImage: imageData.resourceImage,
   }
-  throw 'Game options creation failed after 2 attempts'
+  await setGameGenerationData(gameId, generationData)
+
+  const command = new InvokeCommand({
+    FunctionName: createGameChoicesFunctionName,
+    InvocationType: 'Event',
+    Payload: JSON.stringify({ gameId }),
+  })
+  await lambda.send(command)
+  log('Game choices generation queued', { gameId })
+
+  return { gameId }
 }

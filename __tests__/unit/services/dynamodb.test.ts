@@ -1,6 +1,7 @@
 import {
   cyoaGame,
   cyoaNarrative,
+  gameChoicesGenerationData,
   gameId,
   narrativeGenerationData,
   narrativeId,
@@ -10,11 +11,13 @@ import {
 } from '../__mocks__'
 import {
   getGameById,
+  getGameGenerationData,
   getGames,
   getNarrativeById,
   getNarrativesByIds,
   getPromptById,
   setGameById,
+  setGameGenerationData,
   setNarrativeById,
   setNarrativeGenerationData,
 } from '@services/dynamodb'
@@ -141,6 +144,46 @@ describe('dynamodb', () => {
         },
         TableName: 'games-table',
       })
+    })
+  })
+
+  describe('setGameGenerationData', () => {
+    it('should call DynamoDB with the correct arguments', async () => {
+      await setGameGenerationData(gameId, gameChoicesGenerationData)
+
+      expect(mockSend).toHaveBeenCalledWith({
+        Item: {
+          CreatedAt: {
+            N: `${mockNow}`,
+          },
+          GenerationData: {
+            S: JSON.stringify(gameChoicesGenerationData),
+          },
+          GameId: {
+            S: gameId,
+          },
+        },
+        TableName: 'games-table',
+      })
+    })
+  })
+
+  describe('getGameGenerationData', () => {
+    it('should return generation data when it exists', async () => {
+      mockSend.mockResolvedValueOnce({
+        Items: [{ GenerationData: { S: JSON.stringify(gameChoicesGenerationData) } }],
+      })
+
+      const result = await getGameGenerationData(gameId)
+
+      expect(mockSend).toHaveBeenCalledWith({
+        ExpressionAttributeValues: { ':gameId': { S: gameId } },
+        KeyConditionExpression: 'GameId = :gameId',
+        Limit: 1,
+        ScanIndexForward: false,
+        TableName: 'games-table',
+      })
+      expect(result).toEqual(gameChoicesGenerationData)
     })
   })
 

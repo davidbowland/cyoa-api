@@ -19,6 +19,7 @@ import {
   CyoaGame,
   CyoaGameWithTimestamp,
   CyoaNarrative,
+  GameChoicesGenerationData,
   GameId,
   GetNarrativeResult,
   GetNarrativesResult,
@@ -77,6 +78,39 @@ export const setGameById = async (gameId: GameId, data: CyoaGame): Promise<PutIt
     TableName: dynamodbGamesTableName,
   })
   return await dynamodb.send(command)
+}
+
+export const setGameGenerationData = async (
+  gameId: GameId,
+  generationData: GameChoicesGenerationData,
+): Promise<PutItemOutput> => {
+  const command = new PutItemCommand({
+    Item: {
+      CreatedAt: {
+        N: `${Date.now()}`,
+      },
+      GenerationData: {
+        S: JSON.stringify(generationData),
+      },
+      GameId: {
+        S: `${gameId}`,
+      },
+    },
+    TableName: dynamodbGamesTableName,
+  })
+  return await dynamodb.send(command)
+}
+
+export const getGameGenerationData = async (gameId: GameId): Promise<GameChoicesGenerationData> => {
+  const command = new QueryCommand({
+    ExpressionAttributeValues: { ':gameId': { S: `${gameId}` } },
+    KeyConditionExpression: 'GameId = :gameId',
+    Limit: 1,
+    ScanIndexForward: false,
+    TableName: dynamodbGamesTableName,
+  })
+  const response = await dynamodb.send(command)
+  return JSON.parse(response.Items[0].GenerationData.S as string)
 }
 
 export const getGames = async (): Promise<{ gameId: GameId; game: CyoaGame }[]> => {

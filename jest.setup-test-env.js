@@ -6,6 +6,7 @@ process.env.DYNAMODB_PROMPTS_TABLE_NAME = 'prompts-table'
 
 // Lambda
 
+process.env.CREATE_GAME_CHOICES_FUNCTION_NAME = 'create-game-choices-function'
 process.env.CREATE_NARRATIVE_FUNCTION_NAME = 'create-narrative-function'
 
 // LLM

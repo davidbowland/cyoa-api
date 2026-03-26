@@ -6,6 +6,7 @@ export const dynamodbPromptsTableName = process.env.DYNAMODB_PROMPTS_TABLE_NAME 
 
 // Lambda
 
+export const createGameChoicesFunctionName = process.env.CREATE_GAME_CHOICES_FUNCTION_NAME as string
 export const createNarrativeFunctionName = process.env.CREATE_NARRATIVE_FUNCTION_NAME as string
 
 // LLM

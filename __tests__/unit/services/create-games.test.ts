@@ -1,18 +1,24 @@
 import { cyoaGame } from '../__mocks__'
 import { createGame } from '@services/create-games'
 import * as dynamodb from '@services/dynamodb'
-import * as gameChoices from '@services/games/choices'
 import * as gameImageGeneration from '@services/games/game-image-generation'
 import * as gameOutlines from '@services/games/outlines'
-import * as narratives from '@services/narratives'
 
-jest.mock('@services/bedrock')
+const mockLambdaSend = jest.fn()
+jest.mock('@aws-sdk/client-lambda', () => ({
+  InvokeCommand: jest.fn().mockImplementation((x) => x),
+  LambdaClient: jest.fn(() => ({
+    send: (...args: any[]) => mockLambdaSend(...args),
+  })),
+}))
 jest.mock('@services/dynamodb')
-jest.mock('@services/games/choices')
 jest.mock('@services/games/game-image-generation')
 jest.mock('@services/games/outlines')
-jest.mock('@services/narratives')
-jest.mock('@utils/logging')
+jest.mock('@utils/logging', () => ({
+  log: jest.fn(),
+  logError: jest.fn(),
+  xrayCapture: jest.fn().mockImplementation((x) => x),
+}))
 
 describe('create-games', () => {
   const mockMathRandom = jest.fn()
@@ -22,8 +28,8 @@ describe('create-games', () => {
     mockMathRandom.mockReturnValue(0)
 
     jest.mocked(dynamodb).getGames.mockResolvedValue([])
-    jest.mocked(dynamodb).setGameById.mockResolvedValue({} as any)
     jest.mocked(dynamodb).getGameById.mockRejectedValue(new Error('Game not found'))
+    jest.mocked(dynamodb).setGameGenerationData.mockResolvedValue({} as any)
     jest.mocked(gameOutlines).generateGameOutline.mockResolvedValue({
       game: {
         title: 'Test Adventure',
@@ -44,11 +50,6 @@ describe('create-games', () => {
       },
       inspirationAuthor: { name: 'Test Author', style: 'Test style' },
     })
-    const gameWith7Choices = {
-      ...cyoaGame,
-      choicePoints: Array(7).fill(cyoaGame.choicePoints[0]),
-    }
-    jest.mocked(gameChoices).generateGameChoices.mockResolvedValue(gameWith7Choices)
     jest
       .mocked(gameImageGeneration)
       .generateGameCoverImage.mockResolvedValue('test-adventure/cover.png')
@@ -60,52 +61,47 @@ describe('create-games', () => {
     jest
       .mocked(gameImageGeneration)
       .generateResourceImage.mockResolvedValue('test-adventure/resource.png')
-    jest.mocked(narratives).queueNarrativeGeneration.mockResolvedValue(undefined)
+    mockLambdaSend.mockResolvedValue({})
   })
 
   describe('createGame', () => {
-    it('should create a game successfully', async () => {
+    it('should generate outline, images, store generation data, and invoke choices lambda', async () => {
       const result = await createGame()
 
       expect(dynamodb.getGames).toHaveBeenCalledWith()
       expect(gameOutlines.generateGameOutline).toHaveBeenCalledWith([], 7)
-      expect(gameChoices.generateGameChoices).toHaveBeenCalled()
       expect(dynamodb.getGameById).toHaveBeenCalledWith('test-adventure')
       expect(gameImageGeneration.generateGameCoverImage).toHaveBeenCalledWith(
         'test-adventure',
         'A mysterious forest path',
       )
-      expect(gameImageGeneration.generateInventoryImages).toHaveBeenCalledWith(
-        'test-adventure',
-        cyoaGame.inventory,
-      )
+      expect(gameImageGeneration.generateInventoryImages).toHaveBeenCalledWith('test-adventure', [
+        { name: 'Sword', imageDescription: 'A sharp sword' },
+      ])
       expect(gameImageGeneration.generateResourceImage).toHaveBeenCalledWith(
         'test-adventure',
         'A glowing health orb',
       )
-      expect(dynamodb.setGameById).toHaveBeenCalledWith(
+      expect(dynamodb.setGameGenerationData).toHaveBeenCalledWith(
         'test-adventure',
         expect.objectContaining({
-          title: 'Test Adventure',
+          gameData: expect.objectContaining({ title: 'Test Adventure' }),
+          storyType: expect.objectContaining({ name: 'Classic Adventure' }),
+          inspirationAuthor: expect.objectContaining({ name: 'Test Author' }),
+          choiceCount: 7,
           image: 'test-adventure/cover.png',
-          resourceImage: 'test-adventure/resource.png',
           inventory: [{ name: 'Sword', image: 'test-adventure/inventory/sword' }],
-          initialChoiceId: 'start',
-        }),
-      )
-      expect(narratives.queueNarrativeGeneration).toHaveBeenCalledWith(
-        'test-adventure',
-        expect.objectContaining({ title: 'Test Adventure' }),
-        0,
-      )
-      expect(result).toEqual({
-        game: expect.objectContaining({
-          title: 'Test Adventure',
-          image: 'test-adventure/cover.png',
           resourceImage: 'test-adventure/resource.png',
         }),
-        gameId: 'test-adventure',
-      })
+      )
+      expect(mockLambdaSend).toHaveBeenCalledWith(
+        expect.objectContaining({
+          FunctionName: 'create-game-choices-function',
+          InvocationType: 'Event',
+          Payload: JSON.stringify({ gameId: 'test-adventure' }),
+        }),
+      )
+      expect(result).toEqual({ gameId: 'test-adventure' })
     })
 
     it('should include existing game titles in context', async () => {
@@ -128,30 +124,18 @@ describe('create-games', () => {
       await expect(createGame()).rejects.toThrow('Game ID already exists')
     })
 
-    it('should continue when narrative generation fails', async () => {
-      jest
-        .mocked(narratives)
-        .queueNarrativeGeneration.mockRejectedValueOnce(new Error('Narrative error'))
-
-      const result = await createGame()
-
-      expect(result.gameId).toBe('test-adventure')
-      expect(result.game.title).toBe('Test Adventure')
-    })
-
     it('should continue when cover image generation fails', async () => {
       jest.mocked(gameImageGeneration).generateGameCoverImage.mockResolvedValueOnce(undefined)
 
       const result = await createGame()
 
-      expect(dynamodb.setGameById).toHaveBeenCalledWith(
+      expect(dynamodb.setGameGenerationData).toHaveBeenCalledWith(
         'test-adventure',
         expect.objectContaining({
-          title: 'Test Adventure',
           image: undefined,
         }),
       )
-      expect(result.game.image).toBeUndefined()
+      expect(result).toEqual({ gameId: 'test-adventure' })
     })
 
     it('should continue when resource image generation fails', async () => {
@@ -159,42 +143,13 @@ describe('create-games', () => {
 
       const result = await createGame()
 
-      expect(dynamodb.setGameById).toHaveBeenCalledWith(
+      expect(dynamodb.setGameGenerationData).toHaveBeenCalledWith(
         'test-adventure',
         expect.objectContaining({
-          title: 'Test Adventure',
           resourceImage: undefined,
         }),
       )
-      expect(result.game.resourceImage).toBeUndefined()
-    })
-
-    it('should retry when game choices generation fails on first attempt', async () => {
-      jest
-        .mocked(gameChoices)
-        .generateGameChoices.mockRejectedValueOnce(new Error('Generation failed'))
-
-      const result = await createGame()
-
-      expect(gameChoices.generateGameChoices).toHaveBeenCalledTimes(2)
-      expect(result).toEqual({
-        game: expect.objectContaining({
-          title: 'Test Adventure',
-          image: 'test-adventure/cover.png',
-          resourceImage: 'test-adventure/resource.png',
-        }),
-        gameId: 'test-adventure',
-      })
-    })
-
-    it('should throw error when game choices generation fails after 2 attempts', async () => {
-      jest
-        .mocked(gameChoices)
-        .generateGameChoices.mockRejectedValueOnce(new Error('Generation failed'))
-        .mockRejectedValueOnce(new Error('Generation failed again'))
-
-      await expect(createGame()).rejects.toBe('Game options creation failed after 2 attempts')
-      expect(gameChoices.generateGameChoices).toHaveBeenCalledTimes(2)
+      expect(result).toEqual({ gameId: 'test-adventure' })
     })
   })
 })

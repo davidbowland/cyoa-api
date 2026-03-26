@@ -1,4 +1,4 @@
-import { cyoaGame, gameId } from '../__mocks__'
+import { gameId } from '../__mocks__'
 import { createGameHandler } from '@handlers/create-game'
 import * as createGames from '@services/create-games'
 
@@ -7,9 +7,11 @@ jest.mock('@utils/logging')
 
 describe('create-game', () => {
   describe('createGameHandler', () => {
-    it('should create a game successfully', async () => {
-      jest.mocked(createGames).createGame.mockResolvedValueOnce({ game: cyoaGame, gameId })
+    beforeAll(() => {
+      jest.mocked(createGames).createGame.mockResolvedValue({ gameId })
+    })
 
+    it('should create a game successfully', async () => {
       await createGameHandler()
 
       expect(createGames.createGame).toHaveBeenCalledWith()
@@ -17,7 +19,6 @@ describe('create-game', () => {
 
     it('should retry on game creation failure and eventually succeed', async () => {
       jest.mocked(createGames).createGame.mockRejectedValueOnce(new Error('Creation failed'))
-      jest.mocked(createGames).createGame.mockResolvedValueOnce({ game: cyoaGame, gameId })
 
       await createGameHandler()
 
@@ -26,7 +27,6 @@ describe('create-game', () => {
 
     it('should keep retrying until game creation succeeds', async () => {
       jest.mocked(createGames).createGame.mockRejectedValueOnce(new Error('First failure'))
-      jest.mocked(createGames).createGame.mockResolvedValueOnce({ game: cyoaGame, gameId })
 
       await createGameHandler()
 

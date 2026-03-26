@@ -154,6 +154,20 @@ export interface GameTheme {
 
 // Event Types
 
+export interface CreateGameChoicesEvent {
+  gameId: GameId
+}
+
+export interface GameChoicesGenerationData {
+  gameData: CyoaGameFormatted
+  storyType: GameTheme
+  inspirationAuthor: Author
+  choiceCount: number
+  image?: string
+  inventory: CyoaInventory[]
+  resourceImage?: string
+}
+
 export interface CreateNarrativeEvent {
   gameId: GameId
   narrativeId: NarrativeId

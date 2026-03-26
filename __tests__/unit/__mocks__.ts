@@ -3,6 +3,7 @@ import {
   CyoaGame,
   CyoaNarrative,
   CreateNarrativeEvent,
+  GameChoicesGenerationData,
   GameId,
   ImagePrompt,
   NarrativeGenerationData,
@@ -76,6 +77,31 @@ export const serializedChoice = {
   ],
   inventory: [{ name: 'Sword', image: 'sword-image.jpg' }],
   currentResourceValue: 90,
+}
+
+// Game Choices Generation
+
+export const gameChoicesGenerationData: GameChoicesGenerationData = {
+  gameData: {
+    title: 'Test Adventure',
+    description: 'A test adventure game',
+    outline: 'Test outline',
+    characters: [{ name: 'Hero', voice: 'heroic' }],
+    inventory: [{ name: 'Sword', imageDescription: 'A sharp sword' }],
+    resourceName: 'Health',
+    startingResourceValue: 100,
+    lossResourceThreshold: 0,
+  },
+  storyType: {
+    name: 'Classic Adventure',
+    description: 'A classic adventure story',
+    inspirationAuthors: [{ name: 'Test Author', style: 'Test style' }],
+  },
+  inspirationAuthor: { name: 'Test Author', style: 'Test style' },
+  choiceCount: 7,
+  image: 'test-image.jpg',
+  inventory: [{ name: 'Sword', image: 'sword-image.jpg' }],
+  resourceImage: 'https://cyoa-assets.dbowland.com/images/a-friendly-adventure/resource.png',
 }
 
 // Prompts
