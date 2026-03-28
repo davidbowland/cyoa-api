@@ -24,13 +24,14 @@ export const promptIdResourceImage = process.env.PROMPT_ID_RESOURCE_IMAGE as str
 
 // Games
 
+export const gameChoicesGenerationTime = 900_000 // 15 minutes
 export const inspirationAdjectivesCount = parseInt(
   process.env.INSPIRATION_ADJECTIVES_COUNT as string,
   10,
 )
+export const initialChoiceId = 'start'
 export const inspirationNounsCount = parseInt(process.env.INSPIRATION_NOUNS_COUNT as string, 10)
 export const inspirationVerbsCount = parseInt(process.env.INSPIRATION_VERBS_COUNT as string, 10)
-export const initialChoiceId = 'start'
 export const narrativeGenerationTime = 300_000 // 5 minutes
 export const resourceToAddPercentMax =
   parseInt(process.env.RESOURCE_TO_ADD_PERCENT_MAX as string, 10) / 100

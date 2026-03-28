@@ -111,18 +111,45 @@ describe('dynamodb', () => {
       expect(mockSend).toHaveBeenCalledWith({
         TableName: 'games-table',
       })
-      expect(result).toEqual([
-        { game: cyoaGame, gameId: 'newer-game' },
-        { game: cyoaGame, gameId: 'older-game' },
-      ])
+      expect(result).toEqual({
+        games: [
+          { game: cyoaGame, gameId: 'newer-game' },
+          { game: cyoaGame, gameId: 'older-game' },
+        ],
+        pendingGames: [],
+      })
     })
 
-    it('should return empty array when no items exist', async () => {
+    it('should return empty arrays when no items exist', async () => {
       mockSend.mockResolvedValueOnce({})
 
       const result = await getGames()
 
-      expect(result).toEqual([])
+      expect(result).toEqual({ games: [], pendingGames: [] })
+    })
+
+    it('should filter out generation-only records and return their IDs as pending', async () => {
+      mockSend.mockResolvedValueOnce({
+        Items: [
+          {
+            Data: { S: JSON.stringify(cyoaGame) },
+            GameId: { S: 'complete-game' },
+            CreatedAt: { N: `${mockNow}` },
+          },
+          {
+            GenerationData: { S: JSON.stringify(gameChoicesGenerationData) },
+            GameId: { S: 'pending-game' },
+            CreatedAt: { N: `${mockNow - 1000}` },
+          },
+        ],
+      })
+
+      const result = await getGames()
+
+      expect(result).toEqual({
+        games: [{ game: cyoaGame, gameId: 'complete-game' }],
+        pendingGames: [{ gameId: 'pending-game', generationData: gameChoicesGenerationData }],
+      })
     })
   })
 

@@ -1,73 +1,105 @@
-import { cyoaGame, gameId } from '../__mocks__'
-import eventJson from '@events/get-games.json'
+import { cyoaGame, gameChoicesGenerationData, gameId, serializedGame } from '../__mocks__'
+import event from '@events/get-games.json'
 import { getGamesHandler } from '@handlers/get-games'
+import * as createGameChoicesService from '@services/create-game-choices'
 import * as dynamodb from '@services/dynamodb'
-import { APIGatewayProxyEventV2 } from '@types'
-import status from '@utils/status'
 
+jest.mock('@services/create-game-choices')
 jest.mock('@services/dynamodb')
 jest.mock('@utils/logging')
 
 describe('get-games', () => {
-  const event = eventJson as unknown as APIGatewayProxyEventV2
-  const secondGameId = 'another-great-story'
+  const mockNow = 1640995200000
 
   describe('getGamesHandler', () => {
-    it('should return games in the correct format', async () => {
-      jest.mocked(dynamodb).getGames.mockResolvedValueOnce([
-        { game: cyoaGame, gameId },
-        { game: { ...cyoaGame, title: 'Another Adventure' }, gameId: secondGameId },
-      ])
+    beforeAll(() => {
+      Date.now = jest.fn().mockReturnValue(mockNow)
+      jest
+        .mocked(dynamodb)
+        .getGames.mockResolvedValue({ games: [{ gameId, game: cyoaGame }], pendingGames: [] })
+      jest.mocked(createGameChoicesService).queueGameChoicesGeneration.mockResolvedValue(undefined)
+    })
 
-      const result: any = await getGamesHandler(event)
-      const body = JSON.parse(result.body)
+    it('should return serialized games', async () => {
+      const result = await getGamesHandler(event as any)
 
-      expect(result).toEqual(expect.objectContaining(status.OK))
-      expect(body).toEqual([
-        {
-          description: 'A test adventure game',
-          gameId,
-          image: 'test-image.jpg',
-          initialChoiceId: 'start',
-          lossResourceThreshold: 0,
-          resourceName: 'Health',
-          resourceImage:
-            'https://cyoa-assets.dbowland.com/images/a-friendly-adventure/resource.png',
-          startingResourceValue: 100,
-          title: 'Test Adventure',
-        },
-        {
-          description: 'A test adventure game',
-          gameId: secondGameId,
-          image: 'test-image.jpg',
-          initialChoiceId: 'start',
-          lossResourceThreshold: 0,
-          resourceName: 'Health',
-          resourceImage:
-            'https://cyoa-assets.dbowland.com/images/a-friendly-adventure/resource.png',
-          startingResourceValue: 100,
-          title: 'Another Adventure',
-        },
-      ])
       expect(dynamodb.getGames).toHaveBeenCalledWith()
+      expect(result).toEqual(
+        expect.objectContaining({
+          statusCode: 200,
+          body: JSON.stringify([{ gameId, ...serializedGame }]),
+        }),
+      )
     })
 
-    it('should return empty array when no games exist', async () => {
-      jest.mocked(dynamodb).getGames.mockResolvedValueOnce([])
+    it('should re-queue stalled games whose generation has timed out', async () => {
+      jest.mocked(dynamodb).getGames.mockResolvedValueOnce({
+        games: [],
+        pendingGames: [
+          {
+            gameId: 'stalled-game',
+            generationData: {
+              ...gameChoicesGenerationData,
+              generationStartTime: mockNow - 900_001,
+            },
+          },
+        ],
+      })
 
-      const result: any = await getGamesHandler(event)
-      const body = JSON.parse(result.body)
+      await getGamesHandler(event as any)
 
-      expect(result).toEqual(expect.objectContaining(status.OK))
-      expect(body).toEqual([])
+      expect(createGameChoicesService.queueGameChoicesGeneration).toHaveBeenCalledWith(
+        'stalled-game',
+      )
     })
 
-    it('should handle errors and return internal server error', async () => {
+    it('should not re-queue games that are still generating', async () => {
+      jest.mocked(dynamodb).getGames.mockResolvedValueOnce({
+        games: [],
+        pendingGames: [
+          {
+            gameId: 'active-game',
+            generationData: {
+              ...gameChoicesGenerationData,
+              generationStartTime: mockNow - 100_000,
+            },
+          },
+        ],
+      })
+
+      await getGamesHandler(event as any)
+
+      expect(createGameChoicesService.queueGameChoicesGeneration).not.toHaveBeenCalled()
+    })
+
+    it('should continue when re-queue fails', async () => {
+      jest.mocked(dynamodb).getGames.mockResolvedValueOnce({
+        games: [{ gameId, game: cyoaGame }],
+        pendingGames: [
+          {
+            gameId: 'stalled-game',
+            generationData: {
+              ...gameChoicesGenerationData,
+              generationStartTime: mockNow - 900_001,
+            },
+          },
+        ],
+      })
+      jest
+        .mocked(createGameChoicesService)
+        .queueGameChoicesGeneration.mockRejectedValueOnce(new Error('Lambda error'))
+
+      const result = await getGamesHandler(event as any)
+
+      expect(result).toEqual(expect.objectContaining({ statusCode: 200 }))
+    })
+
+    it('should return 500 when getGames fails', async () => {
       jest.mocked(dynamodb).getGames.mockRejectedValueOnce(new Error('DynamoDB error'))
 
-      const result = await getGamesHandler(event)
+      const result = await getGamesHandler(event as any)
 
-      expect(result).toEqual(status.INTERNAL_SERVER_ERROR)
+      expect(result).toEqual(expect.objectContaining({ statusCode: 500 }))
     })
   })
 })

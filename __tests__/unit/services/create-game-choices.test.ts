@@ -1,15 +1,26 @@
 import { cyoaGame } from '../__mocks__'
-import { createGameChoices } from '@services/create-game-choices'
+import { createGameChoices, queueGameChoicesGeneration } from '@services/create-game-choices'
 import * as dynamodb from '@services/dynamodb'
 import * as gameChoices from '@services/games/choices'
 import * as narratives from '@services/narratives'
 import { GameChoicesGenerationData } from '@types'
 
+const mockLambdaSend = jest.fn()
+jest.mock('@aws-sdk/client-lambda', () => ({
+  InvokeCommand: jest.fn().mockImplementation((x) => x),
+  LambdaClient: jest.fn(() => ({
+    send: (...args: any[]) => mockLambdaSend(...args),
+  })),
+}))
 jest.mock('@services/bedrock')
 jest.mock('@services/dynamodb')
 jest.mock('@services/games/choices')
 jest.mock('@services/narratives')
-jest.mock('@utils/logging')
+jest.mock('@utils/logging', () => ({
+  log: jest.fn(),
+  logError: jest.fn(),
+  xrayCapture: jest.fn().mockImplementation((x) => x),
+}))
 
 describe('create-game-choices', () => {
   const gameId = 'test-adventure'
@@ -34,6 +45,7 @@ describe('create-game-choices', () => {
     image: 'test-adventure/cover.png',
     inventory: [{ name: 'Sword', image: 'test-adventure/inventory/sword' }],
     resourceImage: 'test-adventure/resource.png',
+    generationStartTime: 1640995200000,
   }
 
   beforeAll(() => {
@@ -45,6 +57,21 @@ describe('create-game-choices', () => {
     jest.mocked(dynamodb).setGameById.mockResolvedValue({} as any)
     jest.mocked(gameChoices).generateGameChoices.mockResolvedValue(gameWith7Choices)
     jest.mocked(narratives).queueNarrativeGeneration.mockResolvedValue(undefined)
+    mockLambdaSend.mockResolvedValue({})
+  })
+
+  describe('queueGameChoicesGeneration', () => {
+    it('should invoke the choices lambda with gameId', async () => {
+      await queueGameChoicesGeneration(gameId)
+
+      expect(mockLambdaSend).toHaveBeenCalledWith(
+        expect.objectContaining({
+          FunctionName: 'create-game-choices-function',
+          InvocationType: 'Event',
+          Payload: JSON.stringify({ gameId }),
+        }),
+      )
+    })
   })
 
   describe('createGameChoices', () => {

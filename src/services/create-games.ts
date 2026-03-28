@@ -1,7 +1,4 @@
-import { InvokeCommand, LambdaClient } from '@aws-sdk/client-lambda'
-
 import { choiceCounts } from '../assets/configurations'
-import { createGameChoicesFunctionName } from '../config'
 import {
   CyoaGame,
   CyoaGameFormatted,
@@ -9,9 +6,10 @@ import {
   GameChoicesGenerationData,
   GameId,
 } from '../types'
-import { log, xrayCapture } from '../utils/logging'
+import { log } from '../utils/logging'
 import { getRandomSample } from '../utils/random'
 import { slugify } from '../utils/slugify'
+import { queueGameChoicesGeneration } from './create-game-choices'
 import { getGameById, getGames, setGameGenerationData } from './dynamodb'
 import {
   generateGameCoverImage,
@@ -19,8 +17,6 @@ import {
   generateResourceImage,
 } from './games/game-image-generation'
 import { generateGameOutline } from './games/outlines'
-
-const lambda = xrayCapture(new LambdaClient({ apiVersion: '2012-08-10' }))
 
 const validateGameId = async (gameId: GameId): Promise<void> => {
   const gameIdExists = await getGameById(gameId)
@@ -52,7 +48,7 @@ const generateGameImages = async (
 }
 
 export const createGame = async (): Promise<{ gameId: GameId }> => {
-  const existingGames = await getGames()
+  const { games: existingGames } = await getGames()
   const existingGameTitles = existingGames.map((existingGame) => existingGame.game.title)
 
   const choiceCount = getRandomSample(choiceCounts, 1)[0]
@@ -83,16 +79,11 @@ export const createGame = async (): Promise<{ gameId: GameId }> => {
     image: imageData.image,
     inventory: imageData.inventory as CyoaInventory[],
     resourceImage: imageData.resourceImage,
+    generationStartTime: Date.now(),
   }
   await setGameGenerationData(gameId, generationData)
 
-  const command = new InvokeCommand({
-    FunctionName: createGameChoicesFunctionName,
-    InvocationType: 'Event',
-    Payload: JSON.stringify({ gameId }),
-  })
-  await lambda.send(command)
-  log('Game choices generation queued', { gameId })
+  await queueGameChoicesGeneration(gameId)
 
   return { gameId }
 }

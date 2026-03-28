@@ -21,6 +21,7 @@ import {
   CyoaNarrative,
   GameChoicesGenerationData,
   GameId,
+  GetGamesResult,
   GetNarrativeResult,
   GetNarrativesResult,
   NarrativeGenerationData,
@@ -113,22 +114,32 @@ export const getGameGenerationData = async (gameId: GameId): Promise<GameChoices
   return JSON.parse(response.Items[0].GenerationData.S as string)
 }
 
-export const getGames = async (): Promise<{ gameId: GameId; game: CyoaGame }[]> => {
+export const getGames = async (): Promise<GetGamesResult> => {
   const command = new ScanCommand({
     TableName: dynamodbGamesTableName,
   })
   const response = await dynamodb.send(command)
 
-  const games: CyoaGameWithTimestamp[] =
-    response.Items?.map((item: any) => ({
+  const completedGames: CyoaGameWithTimestamp[] =
+    response.Items?.filter((item: any) => item.Data?.S).map((item: any) => ({
       game: JSON.parse(item.Data.S as string) as CyoaGame,
       gameId: item.GameId.S as GameId,
       createdAt: parseInt(item.CreatedAt.N as string, 10),
     })) || []
 
-  return games
+  const pendingGames =
+    response.Items?.filter((item: any) => item.GenerationData?.S && !item.Data?.S).map(
+      (item: any) => ({
+        gameId: item.GameId.S as GameId,
+        generationData: JSON.parse(item.GenerationData.S as string) as GameChoicesGenerationData,
+      }),
+    ) || []
+
+  const games = completedGames
     .sort((a: CyoaGameWithTimestamp, b: CyoaGameWithTimestamp) => b.createdAt - a.createdAt)
     .map(({ game, gameId }: CyoaGameWithTimestamp) => ({ game, gameId }))
+
+  return { games, pendingGames }
 }
 
 /* Narratives */

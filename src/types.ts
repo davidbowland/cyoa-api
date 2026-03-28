@@ -101,6 +101,11 @@ export interface CyoaNarrative {
   losingNarrative: string
 }
 
+export interface GetGamesResult {
+  games: { gameId: GameId; game: CyoaGame }[]
+  pendingGames: { gameId: GameId; generationData: GameChoicesGenerationData }[]
+}
+
 // Serialized Types (for API responses)
 
 export type CyoaGameSerialized = Pick<
@@ -166,6 +171,7 @@ export interface GameChoicesGenerationData {
   image?: string
   inventory: CyoaInventory[]
   resourceImage?: string
+  generationStartTime: number
 }
 
 export interface CreateNarrativeEvent {

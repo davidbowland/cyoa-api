@@ -102,6 +102,7 @@ export const gameChoicesGenerationData: GameChoicesGenerationData = {
   image: 'test-image.jpg',
   inventory: [{ name: 'Sword', image: 'sword-image.jpg' }],
   resourceImage: 'https://cyoa-assets.dbowland.com/images/a-friendly-adventure/resource.png',
+  generationStartTime: 1640995200000,
 }
 
 // Prompts

@@ -98,8 +98,15 @@ Resources:
         - AWSLambdaBasicExecutionRole
         - DynamoDBReadPolicy:
             TableName: !Ref GamesTable
+        - Version: 2012-10-17
+          Statement:
+            - Action:
+                - 'lambda:InvokeFunction'
+              Effect: Allow
+              Resource: !GetAtt CreateGameChoicesFunction.Arn
       Environment:
         Variables:
+          CREATE_GAME_CHOICES_FUNCTION_NAME: !Ref CreateGameChoicesFunction
           DEBUG_LOGGING: 'false'
           DYNAMODB_GAMES_TABLE_NAME: !Ref GamesTable
       Events:
@@ -552,15 +559,11 @@ Resources:
       AttributeDefinitions:
         - AttributeName: GameId
           AttributeType: S
-        - AttributeName: CreatedAt
-          AttributeType: N
       BillingMode: PAY_PER_REQUEST
       KeySchema:
         - AttributeName: GameId
           KeyType: HASH
-        - AttributeName: CreatedAt
-          KeyType: RANGE
-      TableName: !FindInMap [EnvironmentMap, !Ref Environment, gamesTable]
+      # TableName: !FindInMap [EnvironmentMap, !Ref Environment, gamesTable]
       Tags:
         - Key: 'created-by'
           Value: 'cyoa-api'
