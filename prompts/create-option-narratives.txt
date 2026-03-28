@@ -1,4 +1,4 @@
-# {"anthropicVersion":"bedrock-2023-05-31","maxTokens":115000,"model":"us.anthropic.claude-sonnet-4-6","temperature":0.6,"topK":500}
+# {"anthropicVersion":"bedrock-2023-05-31","maxTokens":115000,"model":"us.anthropic.claude-sonnet-4-6","thinkingBudgetTokens":50000}
 
 <context>
 You are creating a choose-your-own-adventure game. The best choices should lead to the best outcome. Some choices can be puzzles the user needs to figure out or remember. You are writing narratives for available choice options, bridging the gap between the previous narrative and the next one.
@@ -22,7 +22,7 @@ The previous and next narrative have already been generated. Given those and the
 Make sure the narratives are inoffensive and not emmotionally charged
 </instructions>
 <output>
-Output your thinking in <thinking> tags followed by valid JSON with the keys with NOTHING ELSE (double-check that your JSON is valid with \n instead of newlines and " escaped):
+Output valid JSON with the keys with NOTHING ELSE (double-check that your JSON is valid with \n instead of newlines and " escaped):
 
 {
   "options": [{ "name": "string (the option name from the input)", "narrative": "string" }]

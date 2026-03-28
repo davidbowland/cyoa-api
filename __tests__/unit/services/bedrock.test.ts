@@ -19,18 +19,20 @@ describe('invokeModel', () => {
   const mockPrompt = {
     contents: 'Test prompt with ${context}',
     config: {
-      model: 'anthropic.claude-3-sonnet-20240229-v1:0',
+      model: 'us.anthropic.claude-sonnet-4-6',
       anthropicVersion: 'bedrock-2023-05-31',
-      maxTokens: 1000,
-      temperature: 0.7,
-      topK: 250,
+      maxTokens: 115000,
+      thinkingBudgetTokens: 50000,
     },
   }
 
   const mockSuccessResponse = {
     body: new TextEncoder().encode(
       JSON.stringify({
-        content: [{ text: '{"result": "success"}' }],
+        content: [
+          { type: 'thinking', thinking: 'Reasoning about the response...' },
+          { type: 'text', text: '{"result": "success"}' },
+        ],
       }),
     ),
   }
@@ -39,21 +41,20 @@ describe('invokeModel', () => {
     mockSend.mockResolvedValue(mockSuccessResponse)
   })
 
-  it('should invoke model without context', async () => {
+  it('should invoke model with thinking config', async () => {
     const result = await invokeModel(mockPrompt)
 
     expect(mockSend).toHaveBeenCalledWith({
       body: new TextEncoder().encode(
         JSON.stringify({
           anthropic_version: 'bedrock-2023-05-31',
-          max_tokens: 1000,
+          max_tokens: 115000,
           messages: [{ content: 'Test prompt with ${context}', role: 'user' }],
-          temperature: 0.7,
-          top_k: 250,
+          thinking: { type: 'enabled', budget_tokens: 50000 },
         }),
       ),
       contentType: 'application/json',
-      modelId: 'anthropic.claude-3-sonnet-20240229-v1:0',
+      modelId: 'us.anthropic.claude-sonnet-4-6',
     })
 
     expect(result).toEqual({ result: 'success' })
@@ -68,47 +69,93 @@ describe('invokeModel', () => {
       body: new TextEncoder().encode(
         JSON.stringify({
           anthropic_version: 'bedrock-2023-05-31',
-          max_tokens: 1000,
+          max_tokens: 115000,
           messages: [
             { content: 'Test prompt with {"gameId":"test-game","status":"active"}', role: 'user' },
           ],
-          temperature: 0.7,
-          top_k: 250,
+          thinking: { type: 'enabled', budget_tokens: 50000 },
         }),
       ),
       contentType: 'application/json',
-      modelId: 'anthropic.claude-3-sonnet-20240229-v1:0',
+      modelId: 'us.anthropic.claude-sonnet-4-6',
     })
   })
 
-  it('should handle response with thinking tags', async () => {
-    const responseWithThinking = {
+  it('should extract text block from response with thinking and text blocks', async () => {
+    const multiBlockResponse = {
       body: new TextEncoder().encode(
         JSON.stringify({
           content: [
-            { text: '<thinking>This is my thought process</thinking>{"result": "cleaned"}' },
+            { type: 'thinking', thinking: 'Deep analysis of the game structure...' },
+            { type: 'text', text: '{"title": "The Quest", "description": "An adventure"}' },
           ],
         }),
       ),
     }
-    mockSend.mockResolvedValueOnce(responseWithThinking)
+    mockSend.mockResolvedValueOnce(multiBlockResponse)
 
     const result = await invokeModel(mockPrompt)
 
-    expect(result).toEqual({ result: 'cleaned' })
+    expect(result).toEqual({ title: 'The Quest', description: 'An adventure' })
   })
 
-  it('should log and throw error when model response is not valid JSON', async () => {
+  it('should throw when response has no text content block', async () => {
+    const noTextBlockResponse = {
+      body: new TextEncoder().encode(
+        JSON.stringify({
+          content: [{ type: 'thinking', thinking: 'Only thinking, no text' }],
+        }),
+      ),
+    }
+    mockSend.mockResolvedValueOnce(noTextBlockResponse)
+
+    await expect(invokeModel(mockPrompt)).rejects.toThrow('No text content block in model response')
+  })
+
+  it('should strip markdown code fences from response', async () => {
+    const codeFenceResponse = {
+      body: new TextEncoder().encode(
+        JSON.stringify({
+          content: [
+            { type: 'thinking', thinking: 'Reasoning...' },
+            { type: 'text', text: '```json\n{"result": "fenced"}\n```' },
+          ],
+        }),
+      ),
+    }
+    mockSend.mockResolvedValueOnce(codeFenceResponse)
+
+    const result = await invokeModel(mockPrompt)
+
+    expect(result).toEqual({ result: 'fenced' })
+  })
+
+  it('should log and throw error when text block is not valid JSON', async () => {
     const invalidJsonResponse = {
       body: new TextEncoder().encode(
         JSON.stringify({
-          content: [{ text: 'This is not valid JSON' }],
+          content: [
+            { type: 'thinking', thinking: 'Reasoning...' },
+            { type: 'text', text: 'This is not valid JSON' },
+          ],
         }),
       ),
     }
     mockSend.mockResolvedValueOnce(invalidJsonResponse)
 
     await expect(invokeModel(mockPrompt)).rejects.toThrow()
+  })
+
+  it('should not send temperature or top_k', async () => {
+    await invokeModel(mockPrompt)
+
+    const sentBody = JSON.parse(
+      new TextDecoder().decode(
+        (mockSend.mock.calls[mockSend.mock.calls.length - 1][0] as { body: Uint8Array }).body,
+      ),
+    )
+    expect(sentBody).not.toHaveProperty('temperature')
+    expect(sentBody).not.toHaveProperty('top_k')
   })
 })
 

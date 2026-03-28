@@ -185,8 +185,7 @@ export interface TextPromptConfig {
   anthropicVersion: string
   maxTokens: number
   model: string
-  temperature: number
-  topK: number
+  thinkingBudgetTokens: number
 }
 
 export interface ImagePromptConfig {
