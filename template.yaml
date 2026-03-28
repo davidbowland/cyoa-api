@@ -563,7 +563,7 @@ Resources:
       KeySchema:
         - AttributeName: GameId
           KeyType: HASH
-      # TableName: !FindInMap [EnvironmentMap, !Ref Environment, gamesTable]
+      TableName: !FindInMap [EnvironmentMap, !Ref Environment, gamesTable]
       Tags:
         - Key: 'created-by'
           Value: 'cyoa-api'
