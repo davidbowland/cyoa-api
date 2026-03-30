@@ -16,6 +16,8 @@ import {
   getNarrativeById,
   getNarrativesByIds,
   getPromptById,
+  resetChoicesGenerationStarted,
+  setChoicesGenerationStarted,
   setGameById,
   setGameGenerationData,
   setNarrativeById,
@@ -32,6 +34,7 @@ jest.mock('@aws-sdk/client-dynamodb', () => ({
   PutItemCommand: jest.fn().mockImplementation((x) => x),
   QueryCommand: jest.fn().mockImplementation((x) => x),
   ScanCommand: jest.fn().mockImplementation((x) => x),
+  UpdateItemCommand: jest.fn().mockImplementation((x) => x),
 }))
 jest.mock('@utils/logging', () => ({
   xrayCapture: jest.fn().mockImplementation((x) => x),
@@ -396,6 +399,59 @@ describe('dynamodb', () => {
           generationData: undefined,
         },
       ])
+    })
+  })
+
+  describe('setChoicesGenerationStarted', () => {
+    it('should write GenerationStarted and return the timestamp', async () => {
+      mockSend.mockResolvedValueOnce({})
+
+      const result = await setChoicesGenerationStarted(gameId)
+
+      expect(mockSend).toHaveBeenCalledWith({
+        Key: { GameId: { S: gameId } },
+        UpdateExpression: 'SET GenerationStarted = :now',
+        ExpressionAttributeValues: { ':now': { N: `${mockNow}` } },
+        TableName: 'games-table',
+      })
+      expect(result).toBe(mockNow)
+    })
+  })
+
+  describe('resetChoicesGenerationStarted', () => {
+    it('should conditionally update GenerationStarted and return new timestamp', async () => {
+      mockSend.mockResolvedValueOnce({})
+
+      const result = await resetChoicesGenerationStarted(gameId, 12345)
+
+      expect(mockSend).toHaveBeenCalledWith({
+        Key: { GameId: { S: gameId } },
+        UpdateExpression: 'SET GenerationStarted = :now',
+        ConditionExpression: 'GenerationStarted = :expected',
+        ExpressionAttributeValues: {
+          ':now': { N: `${mockNow}` },
+          ':expected': { N: '12345' },
+        },
+        TableName: 'games-table',
+      })
+      expect(result).toBe(mockNow)
+    })
+
+    it('should return false when condition check fails', async () => {
+      const error = new Error('Condition failed')
+      ;(error as any).name = 'ConditionalCheckFailedException'
+      mockSend.mockRejectedValueOnce(error)
+
+      const result = await resetChoicesGenerationStarted(gameId, 12345)
+
+      expect(result).toBe(false)
+    })
+
+    it('should rethrow unexpected errors', async () => {
+      const error = new Error('Network error')
+      mockSend.mockRejectedValueOnce(error)
+
+      await expect(resetChoicesGenerationStarted(gameId, 12345)).rejects.toThrow('Network error')
     })
   })
 })

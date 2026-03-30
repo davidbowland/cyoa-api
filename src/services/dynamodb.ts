@@ -8,6 +8,7 @@ import {
   PutItemOutput,
   QueryCommand,
   ScanCommand,
+  UpdateItemCommand,
 } from '@aws-sdk/client-dynamodb'
 
 import {
@@ -112,6 +113,50 @@ export const getGameGenerationData = async (gameId: GameId): Promise<GameChoices
   })
   const response = await dynamodb.send(command)
   return JSON.parse(response.Items[0].GenerationData.S as string)
+}
+
+export const setChoicesGenerationStarted = async (gameId: GameId): Promise<number> => {
+  const now = Date.now()
+  const command = new UpdateItemCommand({
+    Key: {
+      GameId: { S: `${gameId}` },
+    },
+    UpdateExpression: 'SET GenerationStarted = :now',
+    ExpressionAttributeValues: {
+      ':now': { N: `${now}` },
+    },
+    TableName: dynamodbGamesTableName,
+  })
+  await dynamodb.send(command)
+  return now
+}
+
+export const resetChoicesGenerationStarted = async (
+  gameId: GameId,
+  expectedTimestamp: number,
+): Promise<number | false> => {
+  const now = Date.now()
+  try {
+    const command = new UpdateItemCommand({
+      Key: {
+        GameId: { S: `${gameId}` },
+      },
+      UpdateExpression: 'SET GenerationStarted = :now',
+      ConditionExpression: 'GenerationStarted = :expected',
+      ExpressionAttributeValues: {
+        ':now': { N: `${now}` },
+        ':expected': { N: `${expectedTimestamp}` },
+      },
+      TableName: dynamodbGamesTableName,
+    })
+    await dynamodb.send(command)
+    return now
+  } catch (error: unknown) {
+    if ((error as any).name === 'ConditionalCheckFailedException') {
+      return false
+    }
+    throw error
+  }
 }
 
 export const getGames = async (): Promise<GetGamesResult> => {
