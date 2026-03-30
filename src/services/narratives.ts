@@ -4,7 +4,7 @@ import { createNarrativeFunctionName } from '../config'
 import { CyoaGame, GameId, NarrativeGenerationData } from '../types'
 import { log, xrayCapture } from '../utils/logging'
 import { getNarrativeIdByIndex } from '../utils/narratives'
-import { setNarrativeGenerationData } from './dynamodb'
+import { setNarrativeGenerationData, setNarrativeGenerationStarted } from './dynamodb'
 
 const lambda = xrayCapture(new LambdaClient({ apiVersion: '2012-08-10' }))
 
@@ -32,11 +32,13 @@ export const queueNarrativeGeneration = async (
   }
   await setNarrativeGenerationData(gameId, narrativeId, generationData)
 
+  const generationStartedAt = await setNarrativeGenerationStarted(gameId, narrativeId)
+
   // Invoke create-narrative lambda asynchronously
   const command = new InvokeCommand({
     FunctionName: createNarrativeFunctionName,
     InvocationType: 'Event',
-    Payload: JSON.stringify({ gameId, narrativeId }),
+    Payload: JSON.stringify({ gameId, narrativeId, generationStartedAt }),
   })
   await lambda.send(command)
   log('Narrative generation queued', { gameId, narrativeId })
