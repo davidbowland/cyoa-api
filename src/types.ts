@@ -161,6 +161,8 @@ export interface GameTheme {
 
 export interface CreateGameChoicesEvent {
   gameId: GameId
+  attempt?: number
+  generationStartedAt?: number
 }
 
 export interface GameChoicesGenerationData {
@@ -177,6 +179,12 @@ export interface GameChoicesGenerationData {
 export interface CreateNarrativeEvent {
   gameId: GameId
   narrativeId: NarrativeId
+  attempt?: number
+  generationStartedAt?: number
+}
+
+export interface CreateGameEvent {
+  attempt?: number
 }
 
 // Prompt Configuration Types
