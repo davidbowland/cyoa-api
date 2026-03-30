@@ -8,6 +8,8 @@ process.env.DYNAMODB_PROMPTS_TABLE_NAME = 'prompts-table'
 
 process.env.CREATE_GAME_CHOICES_FUNCTION_NAME = 'create-game-choices-function'
 process.env.CREATE_NARRATIVE_FUNCTION_NAME = 'create-narrative-function'
+process.env.CREATE_GAME_FUNCTION_NAME = 'create-game-function'
+process.env.MAX_RETRY_ATTEMPTS = '3'
 
 // LLM
 
