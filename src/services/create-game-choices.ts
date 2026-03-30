@@ -3,17 +3,18 @@ import { InvokeCommand, LambdaClient } from '@aws-sdk/client-lambda'
 import { createGameChoicesFunctionName } from '../config'
 import { CyoaGame, GameId } from '../types'
 import { log, logError, xrayCapture } from '../utils/logging'
-import { getGameGenerationData, setGameById } from './dynamodb'
+import { getGameGenerationData, setChoicesGenerationStarted, setGameById } from './dynamodb'
 import { generateGameChoices } from './games/choices'
 import { queueNarrativeGeneration } from './narratives'
 
 const lambda = xrayCapture(new LambdaClient({ apiVersion: '2012-08-10' }))
 
 export const queueGameChoicesGeneration = async (gameId: GameId): Promise<void> => {
+  const generationStartedAt = await setChoicesGenerationStarted(gameId)
   const command = new InvokeCommand({
     FunctionName: createGameChoicesFunctionName,
     InvocationType: 'Event',
-    Payload: JSON.stringify({ gameId }),
+    Payload: JSON.stringify({ gameId, generationStartedAt }),
   })
   await lambda.send(command)
   log('Game choices generation queued', { gameId })

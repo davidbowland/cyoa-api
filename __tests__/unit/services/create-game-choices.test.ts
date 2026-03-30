@@ -55,20 +55,22 @@ describe('create-game-choices', () => {
     }
     jest.mocked(dynamodb).getGameGenerationData.mockResolvedValue(generationData)
     jest.mocked(dynamodb).setGameById.mockResolvedValue({} as any)
+    jest.mocked(dynamodb).setChoicesGenerationStarted.mockResolvedValue(1640995200000)
     jest.mocked(gameChoices).generateGameChoices.mockResolvedValue(gameWith7Choices)
     jest.mocked(narratives).queueNarrativeGeneration.mockResolvedValue(undefined)
     mockLambdaSend.mockResolvedValue({})
   })
 
   describe('queueGameChoicesGeneration', () => {
-    it('should invoke the choices lambda with gameId', async () => {
+    it('should set GenerationStarted, then invoke the choices lambda with gameId and timestamp', async () => {
       await queueGameChoicesGeneration(gameId)
 
+      expect(dynamodb.setChoicesGenerationStarted).toHaveBeenCalledWith(gameId)
       expect(mockLambdaSend).toHaveBeenCalledWith(
         expect.objectContaining({
           FunctionName: 'create-game-choices-function',
           InvocationType: 'Event',
-          Payload: JSON.stringify({ gameId }),
+          Payload: JSON.stringify({ gameId, generationStartedAt: 1640995200000 }),
         }),
       )
     })
