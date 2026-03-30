@@ -282,3 +282,53 @@ export const setNarrativeGenerationData = async (
   })
   return await dynamodb.send(command)
 }
+
+export const setNarrativeGenerationStarted = async (
+  gameId: GameId,
+  narrativeId: NarrativeId,
+): Promise<number> => {
+  const now = Date.now()
+  const command = new UpdateItemCommand({
+    Key: {
+      GameId: { S: gameId },
+      NarrativeId: { S: narrativeId },
+    },
+    UpdateExpression: 'SET GenerationStarted = :now',
+    ExpressionAttributeValues: {
+      ':now': { N: `${now}` },
+    },
+    TableName: dynamodbNarrativesTableName,
+  })
+  await dynamodb.send(command)
+  return now
+}
+
+export const resetNarrativeGenerationStarted = async (
+  gameId: GameId,
+  narrativeId: NarrativeId,
+  expectedTimestamp: number,
+): Promise<number | false> => {
+  const now = Date.now()
+  try {
+    const command = new UpdateItemCommand({
+      Key: {
+        GameId: { S: gameId },
+        NarrativeId: { S: narrativeId },
+      },
+      UpdateExpression: 'SET GenerationStarted = :now',
+      ConditionExpression: 'GenerationStarted = :expected',
+      ExpressionAttributeValues: {
+        ':now': { N: `${now}` },
+        ':expected': { N: `${expectedTimestamp}` },
+      },
+      TableName: dynamodbNarrativesTableName,
+    })
+    await dynamodb.send(command)
+    return now
+  } catch (error: unknown) {
+    if ((error as any).name === 'ConditionalCheckFailedException') {
+      return false
+    }
+    throw error
+  }
+}

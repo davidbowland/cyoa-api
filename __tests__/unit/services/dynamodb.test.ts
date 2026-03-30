@@ -17,11 +17,13 @@ import {
   getNarrativesByIds,
   getPromptById,
   resetChoicesGenerationStarted,
+  resetNarrativeGenerationStarted,
   setChoicesGenerationStarted,
   setGameById,
   setGameGenerationData,
   setNarrativeById,
   setNarrativeGenerationData,
+  setNarrativeGenerationStarted,
 } from '@services/dynamodb'
 
 const mockSend = jest.fn()
@@ -452,6 +454,67 @@ describe('dynamodb', () => {
       mockSend.mockRejectedValueOnce(error)
 
       await expect(resetChoicesGenerationStarted(gameId, 12345)).rejects.toThrow('Network error')
+    })
+  })
+
+  describe('setNarrativeGenerationStarted', () => {
+    it('should write GenerationStarted and return the timestamp', async () => {
+      mockSend.mockResolvedValueOnce({})
+
+      const result = await setNarrativeGenerationStarted(gameId, narrativeId)
+
+      expect(mockSend).toHaveBeenCalledWith({
+        Key: {
+          GameId: { S: gameId },
+          NarrativeId: { S: narrativeId },
+        },
+        UpdateExpression: 'SET GenerationStarted = :now',
+        ExpressionAttributeValues: { ':now': { N: `${mockNow}` } },
+        TableName: 'narratives-table',
+      })
+      expect(result).toBe(mockNow)
+    })
+  })
+
+  describe('resetNarrativeGenerationStarted', () => {
+    it('should conditionally update GenerationStarted and return new timestamp', async () => {
+      mockSend.mockResolvedValueOnce({})
+
+      const result = await resetNarrativeGenerationStarted(gameId, narrativeId, 12345)
+
+      expect(mockSend).toHaveBeenCalledWith({
+        Key: {
+          GameId: { S: gameId },
+          NarrativeId: { S: narrativeId },
+        },
+        UpdateExpression: 'SET GenerationStarted = :now',
+        ConditionExpression: 'GenerationStarted = :expected',
+        ExpressionAttributeValues: {
+          ':now': { N: `${mockNow}` },
+          ':expected': { N: '12345' },
+        },
+        TableName: 'narratives-table',
+      })
+      expect(result).toBe(mockNow)
+    })
+
+    it('should return false when condition check fails', async () => {
+      const error = new Error('Condition failed')
+      ;(error as any).name = 'ConditionalCheckFailedException'
+      mockSend.mockRejectedValueOnce(error)
+
+      const result = await resetNarrativeGenerationStarted(gameId, narrativeId, 12345)
+
+      expect(result).toBe(false)
+    })
+
+    it('should rethrow unexpected errors', async () => {
+      const error = new Error('DynamoDB error')
+      mockSend.mockRejectedValueOnce(error)
+
+      await expect(resetNarrativeGenerationStarted(gameId, narrativeId, 12345)).rejects.toThrow(
+        'DynamoDB error',
+      )
     })
   })
 })
