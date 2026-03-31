@@ -103,10 +103,10 @@ Resources:
             - Action:
                 - 'lambda:InvokeFunction'
               Effect: Allow
-              Resource: !GetAtt CreateGameChoicesFunction.Arn
+              Resource: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${AWS::StackName}-CreateGameChoicesFunction'
       Environment:
         Variables:
-          CREATE_GAME_CHOICES_FUNCTION_NAME: !Ref CreateGameChoicesFunction
+          CREATE_GAME_CHOICES_FUNCTION_NAME: !Sub '${AWS::StackName}-CreateGameChoicesFunction'
           DEBUG_LOGGING: 'false'
           DYNAMODB_GAMES_TABLE_NAME: !Ref GamesTable
       Events:
@@ -219,6 +219,7 @@ Resources:
   CreateGameFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: !Sub '${AWS::StackName}-CreateGameFunction'
       Handler: src/handlers/create-game.createGameHandler
       Runtime: nodejs24.x
       Architectures:
@@ -246,16 +247,24 @@ Resources:
             - Action:
                 - 'lambda:InvokeFunction'
               Effect: Allow
-              Resource: !GetAtt CreateGameChoicesFunction.Arn
+              Resource: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${AWS::StackName}-CreateGameChoicesFunction'
+        - Version: 2012-10-17
+          Statement:
+            - Action:
+                - 'lambda:InvokeFunction'
+              Effect: Allow
+              Resource: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${AWS::StackName}-CreateGameFunction'
       Environment:
         Variables:
-          CREATE_GAME_CHOICES_FUNCTION_NAME: !Ref CreateGameChoicesFunction
+          CREATE_GAME_CHOICES_FUNCTION_NAME: !Sub '${AWS::StackName}-CreateGameChoicesFunction'
+          CREATE_GAME_FUNCTION_NAME: !Sub '${AWS::StackName}-CreateGameFunction'
           DEBUG_LOGGING: 'false'
           DYNAMODB_GAMES_TABLE_NAME: !Ref GamesTable
           DYNAMODB_PROMPTS_TABLE_NAME: !Ref PromptsTable
           INSPIRATION_ADJECTIVES_COUNT: 15
           INSPIRATION_NOUNS_COUNT: 25
           INSPIRATION_VERBS_COUNT: 20
+          MAX_RETRY_ATTEMPTS: 3
           PROMPT_ID_COVER_IMAGE: cover-image
           PROMPT_ID_CREATE_GAME: create-game
           PROMPT_ID_INVENTORY_IMAGE: inventory-image
@@ -311,6 +320,7 @@ Resources:
   CreateGameChoicesFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: !Sub '${AWS::StackName}-CreateGameChoicesFunction'
       Handler: src/handlers/create-game-choices.createGameChoicesHandler
       Runtime: nodejs24.x
       Architectures:
@@ -338,10 +348,17 @@ Resources:
             - Action:
                 - 'lambda:InvokeFunction'
               Effect: Allow
-              Resource: !GetAtt CreateNarrativeFunction.Arn
+              Resource: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${AWS::StackName}-CreateNarrativeFunction'
+        - Version: 2012-10-17
+          Statement:
+            - Action:
+                - 'lambda:InvokeFunction'
+              Effect: Allow
+              Resource: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${AWS::StackName}-CreateGameChoicesFunction'
       Environment:
         Variables:
-          CREATE_NARRATIVE_FUNCTION_NAME: !Ref CreateNarrativeFunction
+          CREATE_GAME_CHOICES_FUNCTION_NAME: !Sub '${AWS::StackName}-CreateGameChoicesFunction'
+          CREATE_NARRATIVE_FUNCTION_NAME: !Sub '${AWS::StackName}-CreateNarrativeFunction'
           DEBUG_LOGGING: 'false'
           DYNAMODB_GAMES_TABLE_NAME: !Ref GamesTable
           DYNAMODB_NARRATIVES_TABLE_NAME: !Ref NarrativesTable
@@ -349,6 +366,7 @@ Resources:
           INSPIRATION_ADJECTIVES_COUNT: 15
           INSPIRATION_NOUNS_COUNT: 25
           INSPIRATION_VERBS_COUNT: 20
+          MAX_RETRY_ATTEMPTS: 3
           PROMPT_ID_CREATE_CHOICES: create-choices
           RESOURCE_TO_ADD_PERCENT_MAX: 275
           RESOURCE_TO_ADD_PERCENT_MIN: 175
@@ -413,10 +431,10 @@ Resources:
             - Action:
                 - 'lambda:InvokeFunction'
               Effect: Allow
-              Resource: !GetAtt CreateNarrativeFunction.Arn
+              Resource: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${AWS::StackName}-CreateNarrativeFunction'
       Environment:
         Variables:
-          CREATE_NARRATIVE_FUNCTION_NAME: !Ref CreateNarrativeFunction
+          CREATE_NARRATIVE_FUNCTION_NAME: !Sub '${AWS::StackName}-CreateNarrativeFunction'
           DEBUG_LOGGING: 'false'
           DYNAMODB_GAMES_TABLE_NAME: !Ref GamesTable
           DYNAMODB_NARRATIVES_TABLE_NAME: !Ref NarrativesTable
@@ -471,6 +489,7 @@ Resources:
   CreateNarrativeFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: !Sub '${AWS::StackName}-CreateNarrativeFunction'
       Handler: src/handlers/create-narrative.createNarrativeHandler
       Runtime: nodejs24.x
       Architectures:
@@ -495,8 +514,15 @@ Resources:
                 - 'bedrock:InvokeModel*'
               Effect: Allow
               Resource: '*'
+        - Version: 2012-10-17
+          Statement:
+            - Action:
+                - 'lambda:InvokeFunction'
+              Effect: Allow
+              Resource: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${AWS::StackName}-CreateNarrativeFunction'
       Environment:
         Variables:
+          CREATE_NARRATIVE_FUNCTION_NAME: !Sub '${AWS::StackName}-CreateNarrativeFunction'
           DEBUG_LOGGING: 'false'
           DYNAMODB_GAMES_TABLE_NAME: !Ref GamesTable
           DYNAMODB_NARRATIVES_TABLE_NAME: !Ref NarrativesTable
@@ -504,6 +530,7 @@ Resources:
           INSPIRATION_ADJECTIVES_COUNT: 1
           INSPIRATION_NOUNS_COUNT: 3
           INSPIRATION_VERBS_COUNT: 2
+          MAX_RETRY_ATTEMPTS: 3
           PROMPT_ID_COVER_IMAGE: cover-image
           PROMPT_ID_CREATE_ENDING_NARRATIVE: create-ending-narrative
           PROMPT_ID_CREATE_NARRATIVE: create-narrative

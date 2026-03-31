@@ -1,4 +1,4 @@
-# {"anthropicVersion":"bedrock-2023-05-31","maxTokens":100000,"model":"us.anthropic.claude-sonnet-4-6","temperature":0.8,"topK":500}
+# {"anthropicVersion":"bedrock-2023-05-31","maxTokens":100000,"model":"us.anthropic.claude-sonnet-4-6","thinkingBudgetTokens":40000}
 
 <context>
 You are creating a choose-your-own-adventure game. The best choices should lead to the best outcome. Some choices can be puzzles the user needs to figure out or remember. You are writing the final narrative to wrap up the story after the player has completed game.
@@ -35,7 +35,7 @@ An outline and the important parts of the narrative have already been generated.
 Make sure the narratives, titles, and image are inoffensive and not emmotionally charged
 </instructions>
 <output>
-Output your thinking in <thinking> tags followed by valid JSON with the keys with NOTHING ELSE (double-check that your JSON is valid with \n instead of newlines and " escaped):
+Output valid JSON with the keys with NOTHING ELSE (double-check that your JSON is valid with \n instead of newlines and " escaped):
 
 {
   "chapterTitle": "string"

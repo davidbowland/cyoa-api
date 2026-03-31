@@ -1,4 +1,4 @@
-# {"anthropicVersion":"bedrock-2023-05-31","maxTokens":115000,"model":"us.anthropic.claude-sonnet-4-6","temperature":0.6,"topK":500}
+# {"anthropicVersion":"bedrock-2023-05-31","maxTokens":115000,"model":"us.anthropic.claude-sonnet-4-6","thinkingBudgetTokens":50000}
 
 <context>
 You are creating a choose-your-own-adventure game. The best choices should lead to the best outcome. Some choices can be puzzles the player needs to figure out or remember. You are creating the outline for the game that will be used in subsequent LLM prompts to generate the narrative and choices.
@@ -61,7 +61,7 @@ Come up with the outline for a choose-your-own-adventure story based on the them
 Think deeply about the most engaging story that is suitable for cyoa. What is the overall idea? What makes the most sense as a loss condition? Who is it important to meet and who should voice them?
 </instructions>
 <output>
-Output your thinking in <thinking> tags followed by valid JSON with the keys with NOTHING ELSE (double-check that your JSON is valid with \n instead of newlines and " escaped):
+Output valid JSON with the keys with NOTHING ELSE (double-check that your JSON is valid with \n instead of newlines and " escaped):
 
 {
   "title": "string",

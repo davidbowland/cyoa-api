@@ -16,8 +16,16 @@ export const invokeModel = async <T>(
   return invokeModelMessage(promptWithContext)
 }
 
-const removeThinkingTags = (input: string): string =>
-  input.replace(/(^\s*<thinking>.*?<\/thinking>\s*|^\s*|\s*`(json)?\s*|\s*$)/gs, '')
+const extractTextFromResponse = (content: { type: string; text?: string }[]): string => {
+  const textBlock = content.find((block) => block.type === 'text')
+  if (!textBlock?.text) {
+    throw new Error('No text content block in model response')
+  }
+  return textBlock.text
+}
+
+const stripCodeFences = (input: string): string =>
+  input.replace(/^\s*```(?:json)?\s*|\s*```\s*$/gs, '').trim()
 
 const invokeModelMessage = async <T>(prompt: TextPrompt): Promise<T> => {
   logDebug('Invoking model', { prompt })
@@ -25,28 +33,28 @@ const invokeModelMessage = async <T>(prompt: TextPrompt): Promise<T> => {
     anthropic_version: prompt.config.anthropicVersion,
     max_tokens: prompt.config.maxTokens,
     messages: [{ content: prompt.contents, role: 'user' }],
-    temperature: prompt.config.temperature,
-    top_k: prompt.config.topK,
+    thinking: { type: 'enabled', budget_tokens: prompt.config.thinkingBudgetTokens },
   }
   logDebug('Model body', {
     messageBody,
     messages: JSON.stringify(messageBody.messages, null, 2),
   })
   const command = new InvokeModelCommand({
-    body: new TextEncoder().encode(JSON.stringify(messageBody)), // new Uint8Array(), // e.g. Buffer.from("") or new TextEncoder().encode("")
+    body: new TextEncoder().encode(JSON.stringify(messageBody)),
     contentType: 'application/json',
     modelId: prompt.config.model,
   })
   const response = await runtimeClient.send(command)
   const modelResponse = JSON.parse(new TextDecoder().decode(response.body))
-  logDebug('Model response', { modelResponse, text: modelResponse.content[0].text })
+  const responseText = extractTextFromResponse(modelResponse.content)
+  logDebug('Model response', { modelResponse, text: responseText })
 
   try {
-    return JSON.parse(removeThinkingTags(modelResponse.content[0].text))
+    return JSON.parse(stripCodeFences(responseText))
   } catch (error) {
     log('Failed to parse model response as JSON', {
       error,
-      response: modelResponse.content[0].text,
+      response: responseText,
     })
     throw error
   }

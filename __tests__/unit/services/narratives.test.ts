@@ -21,6 +21,7 @@ describe('narratives', () => {
   beforeAll(() => {
     Date.now = jest.fn().mockReturnValue(mockNow)
     jest.mocked(dynamodb).setNarrativeGenerationData.mockResolvedValue(undefined)
+    jest.mocked(dynamodb).setNarrativeGenerationStarted.mockResolvedValue(mockNow)
     mockSend.mockResolvedValue({})
   })
 
@@ -48,11 +49,16 @@ describe('narratives', () => {
           generationStartTime: mockNow,
         }),
       )
+      expect(dynamodb.setNarrativeGenerationStarted).toHaveBeenCalledWith(gameId, 'narrative-0')
       expect(mockSend).toHaveBeenCalledWith(
         expect.objectContaining({
           FunctionName: 'create-narrative-function',
           InvocationType: 'Event',
-          Payload: JSON.stringify({ gameId, narrativeId: 'narrative-0' }),
+          Payload: JSON.stringify({
+            gameId,
+            narrativeId: 'narrative-0',
+            generationStartedAt: mockNow,
+          }),
         }),
       )
     })
@@ -80,6 +86,18 @@ describe('narratives', () => {
             { name: 'Fight', rank: 1, consequence: 'You fight bravely', resourcesToAdd: -10 },
             { name: 'Run', rank: 2, consequence: 'You flee the scene', resourcesToAdd: -20 },
           ],
+        }),
+      )
+      expect(dynamodb.setNarrativeGenerationStarted).toHaveBeenCalledWith(gameId, 'narrative-1')
+      expect(mockSend).toHaveBeenCalledWith(
+        expect.objectContaining({
+          FunctionName: 'create-narrative-function',
+          InvocationType: 'Event',
+          Payload: JSON.stringify({
+            gameId,
+            narrativeId: 'narrative-1',
+            generationStartedAt: mockNow,
+          }),
         }),
       )
     })
@@ -110,6 +128,7 @@ describe('narratives', () => {
           Payload: JSON.stringify({
             gameId,
             narrativeId: `narrative-${cyoaGame.choicePoints.length}`,
+            generationStartedAt: mockNow,
           }),
         }),
       )

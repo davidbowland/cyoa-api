@@ -55,20 +55,22 @@ describe('create-game-choices', () => {
     }
     jest.mocked(dynamodb).getGameGenerationData.mockResolvedValue(generationData)
     jest.mocked(dynamodb).setGameById.mockResolvedValue({} as any)
+    jest.mocked(dynamodb).setChoicesGenerationStarted.mockResolvedValue(1640995200000)
     jest.mocked(gameChoices).generateGameChoices.mockResolvedValue(gameWith7Choices)
     jest.mocked(narratives).queueNarrativeGeneration.mockResolvedValue(undefined)
     mockLambdaSend.mockResolvedValue({})
   })
 
   describe('queueGameChoicesGeneration', () => {
-    it('should invoke the choices lambda with gameId', async () => {
+    it('should set GenerationStarted, then invoke the choices lambda with gameId and timestamp', async () => {
       await queueGameChoicesGeneration(gameId)
 
+      expect(dynamodb.setChoicesGenerationStarted).toHaveBeenCalledWith(gameId)
       expect(mockLambdaSend).toHaveBeenCalledWith(
         expect.objectContaining({
           FunctionName: 'create-game-choices-function',
           InvocationType: 'Event',
-          Payload: JSON.stringify({ gameId }),
+          Payload: JSON.stringify({ gameId, generationStartedAt: 1640995200000 }),
         }),
       )
     })
@@ -116,34 +118,12 @@ describe('create-game-choices', () => {
       expect(result.game.title).toBe('Test Adventure')
     })
 
-    it('should retry when game choices generation fails on first attempt', async () => {
+    it('should throw when generateGameChoices fails', async () => {
       jest
         .mocked(gameChoices)
         .generateGameChoices.mockRejectedValueOnce(new Error('Generation failed'))
 
-      const result = await createGameChoices(gameId)
-
-      expect(gameChoices.generateGameChoices).toHaveBeenCalledTimes(2)
-      expect(result).toEqual({
-        game: expect.objectContaining({
-          title: 'Test Adventure',
-          image: 'test-adventure/cover.png',
-          resourceImage: 'test-adventure/resource.png',
-        }),
-        gameId: 'test-adventure',
-      })
-    })
-
-    it('should throw error when game choices generation fails after 2 attempts', async () => {
-      jest
-        .mocked(gameChoices)
-        .generateGameChoices.mockRejectedValueOnce(new Error('Generation failed'))
-        .mockRejectedValueOnce(new Error('Generation failed again'))
-
-      await expect(createGameChoices(gameId)).rejects.toBe(
-        'Game options creation failed after 2 attempts',
-      )
-      expect(gameChoices.generateGameChoices).toHaveBeenCalledTimes(2)
+      await expect(createGameChoices(gameId)).rejects.toThrow('Generation failed')
     })
   })
 })

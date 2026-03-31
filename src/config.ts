@@ -8,6 +8,8 @@ export const dynamodbPromptsTableName = process.env.DYNAMODB_PROMPTS_TABLE_NAME 
 
 export const createGameChoicesFunctionName = process.env.CREATE_GAME_CHOICES_FUNCTION_NAME as string
 export const createNarrativeFunctionName = process.env.CREATE_NARRATIVE_FUNCTION_NAME as string
+export const createGameFunctionName = process.env.CREATE_GAME_FUNCTION_NAME as string
+export const maxRetryAttempts = parseInt(process.env.MAX_RETRY_ATTEMPTS as string, 10)
 
 // LLM
 

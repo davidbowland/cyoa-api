@@ -1,9 +1,5 @@
 {
-  "Records": [
-    {
-      "body": "{\"messageType\":\"narrative-generation\",\"gameId\":\"test-game-id\",\"narrativeId\":\"test-narrative-id\",\"uuid\":\"test-game-id-test-narrative-id\"}",
-      "messageId": "test-message-id-123",
-      "receiptHandle": "test-receipt-handle"
-    }
-  ]
+  "gameId": "a-friendly-adventure",
+  "narrativeId": "narrative-0",
+  "generationStartedAt": 1640995200000
 }

@@ -111,8 +111,7 @@ export const promptConfig: TextPromptConfig = {
   anthropicVersion: 'bedrock-2023-05-31',
   maxTokens: 256,
   model: 'the-best-ai:1.0',
-  temperature: 0.5,
-  topK: 250,
+  thinkingBudgetTokens: 128,
 }
 
 export const promptId: PromptId = '5253'
