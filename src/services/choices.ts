@@ -54,14 +54,14 @@ export const retrieveChoiceById = async (
     }
   }
 
-  const current = game.choicePoints[choicePointIndex]
-  if (choicePointIndex > 0 && current?.options[latestOptionSelected] === undefined) {
-    return { status: 'not_found', message: 'Choice not found' }
-  }
-
   if (existing?.generationData && isGenerating(existing.generationData)) {
     log('Narrative generation in progress', { gameId, choiceId, narrativeId })
     return { status: 'generating', message: 'Narrative is being generated' }
+  }
+
+  const current = game.choicePoints[choicePointIndex]
+  if (choicePointIndex > 0 && current?.options[latestOptionSelected] === undefined) {
+    return { status: 'not_found', message: 'Choice not found' }
   }
 
   await queueNarrativeGeneration(gameId, game, choicePointIndex)

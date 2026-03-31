@@ -69,6 +69,21 @@ describe('choices', () => {
       expect(narratives.queueNarrativeGeneration).not.toHaveBeenCalled()
     })
 
+    it('returns generating when narrative is being generated even if option index is out of bounds', async () => {
+      const invalidOptionChoiceId: ChoiceId = 'start-5'
+      jest.mocked(dynamodb).getGameById.mockResolvedValueOnce(gameWithTwoChoices)
+      jest.mocked(dynamodb).getNarrativeById.mockResolvedValueOnce({
+        generationData: { ...narrativeGenerationData, generationStartTime: mockNow },
+      })
+
+      const result = await retrieveChoiceById(gameId, invalidOptionChoiceId)
+
+      expect(result).toEqual({
+        status: 'generating',
+        message: 'Narrative is being generated',
+      })
+    })
+
     it('queues generation for initial narrative when it does not exist', async () => {
       const initialChoiceId: ChoiceId = 'start'
       jest.mocked(dynamodb).getGameById.mockResolvedValueOnce(gameWithTwoChoices)
