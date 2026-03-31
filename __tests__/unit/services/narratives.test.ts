@@ -88,6 +88,18 @@ describe('narratives', () => {
           ],
         }),
       )
+      expect(dynamodb.setNarrativeGenerationStarted).toHaveBeenCalledWith(gameId, 'narrative-1')
+      expect(mockSend).toHaveBeenCalledWith(
+        expect.objectContaining({
+          FunctionName: 'create-narrative-function',
+          InvocationType: 'Event',
+          Payload: JSON.stringify({
+            gameId,
+            narrativeId: 'narrative-1',
+            generationStartedAt: mockNow,
+          }),
+        }),
+      )
     })
 
     it('should queue ending narrative generation when choiceIndex is beyond choicePoints', async () => {
