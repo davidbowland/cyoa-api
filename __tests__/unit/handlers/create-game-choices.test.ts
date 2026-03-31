@@ -45,7 +45,7 @@ describe('create-game-choices', () => {
     })
 
     it('should call setChoicesGenerationStarted when generationStartedAt is absent', async () => {
-      await createGameChoicesHandler(createGameChoicesEvent)
+      await createGameChoicesHandler({ ...createGameChoicesEvent, generationStartedAt: undefined })
 
       expect(dynamodb.setChoicesGenerationStarted).toHaveBeenCalledWith(
         createGameChoicesEvent.gameId,
